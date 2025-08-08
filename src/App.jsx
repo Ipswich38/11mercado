@@ -27,7 +27,7 @@ function App() {
       const sessionTimeout = 30 * 60 * 1000; // 30 minutes
 
       // Validate session structure and required fields
-      if (!session || typeof session !== 'object' || !session.lastActivity || !session.userId) {
+      if (!session || typeof session !== 'object' || !session.lastActivity || !session.id) {
         throw new Error('Invalid session structure');
       }
 

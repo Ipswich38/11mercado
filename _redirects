@@ -1,0 +1,10 @@
+# Redirect root to login
+/               /login.html    200
+
+# Handle all other routes to their respective files
+/login          /login.html    200
+/admin          /admin-dashboard.html    200
+/dashboard      /standalone.html    200
+
+# SPA fallback for React routes (if needed)
+/*              /index.html    200

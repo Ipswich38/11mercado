@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Function Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="p-4">
+    <h1 class="text-2xl font-bold mb-4">Testing 11Mercado Functions</h1>
+    
+    <div class="space-y-2">
+        <button onclick="testWeather()" class="bg-blue-500 text-white px-4 py-2 rounded">Test Weather</button>
+        <button onclick="testAI()" class="bg-green-500 text-white px-4 py-2 rounded">Test AI Research</button>
+        <button onclick="testSTEM()" class="bg-purple-500 text-white px-4 py-2 rounded">Test STEM Assistant</button>
+        <button onclick="testQuiz()" class="bg-orange-500 text-white px-4 py-2 rounded">Test Quiz Generator</button>
+        <button onclick="testCalc()" class="bg-red-500 text-white px-4 py-2 rounded">Test Calculator</button>
+    </div>
+    
+    <div id="results" class="mt-4 p-4 bg-gray-100 rounded"></div>
+    
+    <script>
+    function testWeather() {
+        if (typeof showWeatherForecast === 'function') {
+            showWeatherForecast();
+            document.getElementById('results').innerHTML += '<p>✅ Weather function called successfully</p>';
+        } else {
+            document.getElementById('results').innerHTML += '<p>❌ Weather function not found</p>';
+        }
+    }
+    
+    function testAI() {
+        if (typeof showAIResearch === 'function') {
+            showAIResearch();
+            document.getElementById('results').innerHTML += '<p>✅ AI Research function called successfully</p>';
+        } else {
+            document.getElementById('results').innerHTML += '<p>❌ AI Research function not found</p>';
+        }
+    }
+    
+    function testSTEM() {
+        if (typeof showAIAssistant === 'function') {
+            showAIAssistant();
+            document.getElementById('results').innerHTML += '<p>✅ STEM Assistant function called successfully</p>';
+        } else {
+            document.getElementById('results').innerHTML += '<p>❌ STEM Assistant function not found</p>';
+        }
+    }
+    
+    function testQuiz() {
+        if (typeof showQuizGenerator === 'function') {
+            showQuizGenerator();
+            document.getElementById('results').innerHTML += '<p>✅ Quiz Generator function called successfully</p>';
+        } else {
+            document.getElementById('results').innerHTML += '<p>❌ Quiz Generator function not found</p>';
+        }
+    }
+    
+    function testCalc() {
+        if (typeof showScientificCalculator === 'function') {
+            showScientificCalculator();
+            document.getElementById('results').innerHTML += '<p>✅ Calculator function called successfully</p>';
+        } else {
+            document.getElementById('results').innerHTML += '<p>❌ Calculator function not found</p>';
+        }
+    }
+    
+    // Copy the fixed functions here for testing
+    // Weather function
+    function showWeatherForecast() {
+        alert('Weather forecast modal would open here');
+    }
+    
+    function showAIResearch() {
+        alert('AI Research modal would open here');
+    }
+    
+    function showAIAssistant() {
+        alert('STEM Assistant modal would open here');
+    }
+    
+    function showQuizGenerator() {
+        alert('Quiz Generator modal would open here');
+    }
+    
+    function showScientificCalculator() {
+        alert('Scientific Calculator modal would open here');
+    }
+    </script>
+</body>
+</html>

@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>In-Kind Donations - 11Mercado</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .animate-fadeIn {
+        animation: fadeIn 0.5s ease-in-out;
+      }
+    </style>
+  </head>
+  <body
+    class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50"
+  >
+    <!-- Header -->
+    <header class="bg-white shadow-lg border-b border-gray-200">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center py-4">
+          <div class="flex items-center space-x-3">
+            <div
+              class="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center"
+            >
+              <span class="text-white font-bold text-lg">11M</span>
+            </div>
+            <div>
+              <h1 class="text-xl font-bold text-gray-900">In-Kind Donations</h1>
+              <p class="text-sm text-gray-600">
+                Items & Supplies for 11Mercado
+              </p>
+            </div>
+          </div>
+          <button
+            onclick="goBack()"
+            class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+          >
+            ← Back to Dashboard
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <!-- Add New Donation Form -->
+        <div
+          class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 animate-fadeIn"
+        >
+          <h2
+            class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2"
+          >
+            📦 Add New Donation
+          </h2>
+
+          <form id="donationForm" class="space-y-4">
+            <div>
+              <label
+                for="donorName"
+                class="block text-sm font-medium text-gray-700 mb-1"
+              >
+                👤 Donor Name
+              </label>
+              <input
+                type="text"
+                id="donorName"
+                required
+                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Enter your name"
+              />
+            </div>
+
+            <div>
+              <label
+                for="itemName"
+                class="block text-sm font-medium text-gray-700 mb-1"
+              >
+                📋 Item Description
+              </label>
+              <input
+                type="text"
+                id="itemName"
+                required
+                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="e.g., Science books, School supplies, Laboratory equipment"
+              />
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label
+                  for="quantity"
+                  class="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  🔢 Quantity
+                </label>
+                <input
+                  type="number"
+                  id="quantity"
+                  required
+                  min="1"
+                  class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="e.g., 5"
+                />
+              </div>
+              <div>
+                <label
+                  for="category"
+                  class="block text-sm font-medium text-gray-700 mb-1"
+                >
+                  📂 Category
+                </label>
+                <select
+                  id="category"
+                  required
+                  class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">Select category</option>
+                  <option value="Books & Educational Materials">
+                    📚 Books & Educational Materials
+                  </option>
+                  <option value="School Supplies">✏️ School Supplies</option>
+                  <option value="Laboratory Equipment">
+                    🔬 Laboratory Equipment
+                  </option>
+                  <option value="Technology & Electronics">
+                    💻 Technology & Electronics
+                  </option>
+                  <option value="Sports Equipment">⚽ Sports Equipment</option>
+                  <option value="Arts & Crafts">🎨 Arts & Crafts</option>
+                  <option value="Furniture">🪑 Furniture</option>
+                  <option value="Other">📦 Other</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label
+                for="notes"
+                class="block text-sm font-medium text-gray-700 mb-1"
+              >
+                📝 Additional Notes (Optional)
+              </label>
+              <textarea
+                id="notes"
+                rows="3"
+                class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Any additional details about the donation..."
+              ></textarea>
+            </div>
+
+            <!-- Anti-monetary validation -->
+            <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
+              <div class="flex">
+                <div class="flex-shrink-0">
+                  <span class="text-yellow-400">⚠️</span>
+                </div>
+                <div class="ml-3">
+                  <p class="text-sm text-yellow-800">
+                    <strong>Note:</strong> This form is for physical items only.
+                    For cash donations, please use the
+                    <button
+                      type="button"
+                      onclick="redirectToCashDonations()"
+                      class="underline font-semibold hover:text-yellow-900"
+                    >
+                      Cash Donations form</button
+                    >.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              class="w-full bg-blue-500 text-white py-3 px-6 rounded-lg hover:bg-blue-600 transition-colors font-medium"
+            >
+              ✅ Add Donation
+            </button>
+          </form>
+        </div>
+
+        <!-- Donations List -->
+        <div
+          class="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 animate-fadeIn"
+        >
+          <div class="flex justify-between items-center mb-6">
+            <h2
+              class="text-2xl font-bold text-gray-900 flex items-center gap-2"
+            >
+              📋 Recent Donations
+            </h2>
+            <div class="text-right">
+              <div class="text-2xl font-bold text-blue-600" id="totalItems">
+                24
+              </div>
+              <div class="text-sm text-gray-600">Total Items</div>
+            </div>
+          </div>
+
+          <div class="space-y-3 max-h-96 overflow-y-auto" id="donationsList">
+            <!-- Sample donations - will be populated by JavaScript -->
+          </div>
+
+          <!-- Empty state -->
+          <div id="emptyState" class="hidden text-center py-8 text-gray-500">
+            <div class="text-4xl mb-2">📦</div>
+            <p>No donations yet. Be the first to contribute!</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
+        <div
+          class="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center"
+        >
+          <div class="text-3xl mb-2">📚</div>
+          <div class="text-2xl font-bold text-blue-600" id="booksCount">8</div>
+          <div class="text-sm text-gray-600">Books & Materials</div>
+        </div>
+        <div
+          class="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center"
+        >
+          <div class="text-3xl mb-2">✏️</div>
+          <div class="text-2xl font-bold text-green-600" id="suppliesCount">
+            12
+          </div>
+          <div class="text-sm text-gray-600">School Supplies</div>
+        </div>
+        <div
+          class="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center"
+        >
+          <div class="text-3xl mb-2">🔬</div>
+          <div class="text-2xl font-bold text-purple-600" id="equipmentCount">
+            3
+          </div>
+          <div class="text-sm text-gray-600">Lab Equipment</div>
+        </div>
+        <div
+          class="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center"
+        >
+          <div class="text-3xl mb-2">📦</div>
+          <div class="text-2xl font-bold text-orange-600" id="otherCount">
+            1
+          </div>
+          <div class="text-sm text-gray-600">Other Items</div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // In-kind donations management
+      class InKindDonations {
+        constructor() {
+          this.donations = this.loadDonations();
+          this.loadDonationsList();
+          this.updateStats();
+          this.initializeForm();
+        }
+
+        loadDonations() {
+          const stored = localStorage.getItem('11m_inkind_donations');
+          if (stored) {
+            return JSON.parse(stored);
+          } else {
+            // Sample data
+            const sampleData = [
+              {
+                id: 1,
+                donorName: 'Maria Santos',
+                itemName: 'Grade 11 Physics Textbooks',
+                quantity: 5,
+                category: 'Books & Educational Materials',
+                notes: 'Brand new, latest edition',
+                timestamp: Date.now() - 86400000, // 1 day ago
+              },
+              {
+                id: 2,
+                donorName: 'Juan Dela Cruz',
+                itemName: 'Scientific Calculators',
+                quantity: 3,
+                category: 'Technology & Electronics',
+                notes: 'Casio fx-991ES PLUS',
+                timestamp: Date.now() - 172800000, // 2 days ago
+              },
+              {
+                id: 3,
+                donorName: 'Anonymous Donor',
+                itemName: 'Laboratory Test Tubes',
+                quantity: 20,
+                category: 'Laboratory Equipment',
+                notes: 'Various sizes, with rack included',
+                timestamp: Date.now() - 259200000, // 3 days ago
+              },
+            ];
+            localStorage.setItem(
+              '11m_inkind_donations',
+              JSON.stringify(sampleData),
+            );
+            return sampleData;
+          }
+        }
+
+        saveDonations() {
+          localStorage.setItem(
+            '11m_inkind_donations',
+            JSON.stringify(this.donations),
+          );
+        }
+
+        addDonation(donation) {
+          const newDonation = {
+            id: Date.now(),
+            ...donation,
+            timestamp: Date.now(),
+          };
+          this.donations.unshift(newDonation);
+          this.saveDonations();
+          this.loadDonationsList();
+          this.updateStats();
+          return newDonation;
+        }
+
+        loadDonationsList() {
+          const container = document.getElementById('donationsList');
+          const emptyState = document.getElementById('emptyState');
+
+          if (this.donations.length === 0) {
+            container.classList.add('hidden');
+            emptyState.classList.remove('hidden');
+            return;
+          }
+
+          container.classList.remove('hidden');
+          emptyState.classList.add('hidden');
+
+          container.innerHTML = this.donations
+            .map(
+              (donation) => `
+                    <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                        <div class="flex justify-between items-start">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="text-lg">${this.getCategoryIcon(donation.category)}</span>
+                                    <h3 class="font-semibold text-gray-900">${donation.itemName}</h3>
+                                </div>
+                                <div class="text-sm text-gray-600 space-y-1">
+                                    <p><strong>Donor:</strong> ${donation.donorName}</p>
+                                    <p><strong>Quantity:</strong> ${donation.quantity}</p>
+                                    <p><strong>Category:</strong> ${donation.category}</p>
+                                    ${donation.notes ? `<p><strong>Notes:</strong> ${donation.notes}</p>` : ''}
+                                </div>
+                            </div>
+                            <div class="text-xs text-gray-500 text-right">
+                                ${new Date(donation.timestamp).toLocaleDateString()}
+                            </div>
+                        </div>
+                    </div>
+                `,
+            )
+            .join('');
+        }
+
+        getCategoryIcon(category) {
+          const icons = {
+            'Books & Educational Materials': '📚',
+            'School Supplies': '✏️',
+            'Laboratory Equipment': '🔬',
+            'Technology & Electronics': '💻',
+            'Sports Equipment': '⚽',
+            'Arts & Crafts': '🎨',
+            Furniture: '🪑',
+            Other: '📦',
+          };
+          return icons[category] || '📦';
+        }
+
+        updateStats() {
+          const stats = {
+            'Books & Educational Materials': 0,
+            'School Supplies': 0,
+            'Laboratory Equipment': 0,
+            Other: 0,
+          };
+
+          this.donations.forEach((donation) => {
+            if (stats.hasOwnProperty(donation.category)) {
+              stats[donation.category] += parseInt(donation.quantity);
+            } else {
+              stats['Other'] += parseInt(donation.quantity);
+            }
+          });
+
+          document.getElementById('totalItems').textContent =
+            this.donations.reduce((sum, d) => sum + parseInt(d.quantity), 0);
+          document.getElementById('booksCount').textContent =
+            stats['Books & Educational Materials'];
+          document.getElementById('suppliesCount').textContent =
+            stats['School Supplies'];
+          document.getElementById('equipmentCount').textContent =
+            stats['Laboratory Equipment'];
+          document.getElementById('otherCount').textContent = stats['Other'];
+        }
+
+        initializeForm() {
+          document
+            .getElementById('donationForm')
+            .addEventListener('submit', (e) => {
+              e.preventDefault();
+
+              const formData = {
+                donorName: document.getElementById('donorName').value.trim(),
+                itemName: document.getElementById('itemName').value.trim(),
+                quantity: document.getElementById('quantity').value,
+                category: document.getElementById('category').value,
+                notes: document.getElementById('notes').value.trim(),
+              };
+
+              // Validate for monetary amounts
+              if (
+                this.containsMonetaryTerms(formData.itemName) ||
+                this.containsMonetaryTerms(formData.notes)
+              ) {
+                alert(
+                  '❌ Error: This form is for physical items only!\n\nFor cash donations, please use the Cash Donations form.\n\nClick "Cash Donations form" link below or go back to the main dashboard.',
+                );
+                return;
+              }
+
+              this.addDonation(formData);
+
+              // Reset form
+              document.getElementById('donationForm').reset();
+
+              // Show success message
+              alert(
+                '✅ Donation added successfully!\n\nThank you for your contribution to 11Mercado!',
+              );
+            });
+        }
+
+        containsMonetaryTerms(text) {
+          if (!text) return false;
+
+          const monetaryTerms = [
+            'peso',
+            'pesos',
+            'php',
+            '₱',
+            'money',
+            'cash',
+            'payment',
+            'fund',
+            'dollars',
+            '$',
+            'amount',
+            'pay',
+            'donation',
+            'contribute',
+            '100',
+            '200',
+            '500',
+            '1000',
+            '50',
+            '20',
+            '10',
+            'thousand',
+          ];
+
+          const lowerText = text.toLowerCase();
+          return monetaryTerms.some((term) => lowerText.includes(term));
+        }
+      }
+
+      // Helper functions
+      function goBack() {
+        window.location.href = 'standalone.html';
+      }
+
+      function redirectToCashDonations() {
+        window.open('https://forms.gle/MDj8jhiZpMjyGZKL8', '_blank');
+      }
+
+      // Initialize the donations system
+      const donationsSystem = new InKindDonations();
+
+      // Update parent dashboard counter
+      window.addEventListener('beforeunload', function () {
+        const totalItems = document.getElementById('totalItems').textContent;
+        localStorage.setItem('11m_inkind_total', totalItems);
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>11Mercado - Secure Access Portal</title>
+    <link rel="icon" type="image/svg+xml" href="/javascript.svg" />
+    <meta
+      name="description"
+      content="11Mercado - Exclusive platform for DepEd CSJ-DMNSHS community"
+    />
+    <script>
+      // Check if user is already logged in
+      const userSession = localStorage.getItem('11m_user_session');
+      if (userSession) {
+        try {
+          const session = JSON.parse(userSession);
+          const now = Date.now();
+          const sessionTimeout = 30 * 60 * 1000; // 30 minutes
+
+          if (now - session.lastActivity < sessionTimeout) {
+            // Valid session - stay on React app for users, redirect admin to dashboard
+            if (session.isAdmin) {
+              window.location.href = './admin-dashboard.html';
+            }
+            // For regular users, stay on this page (React app will load)
+          } else {
+            // Expired session
+            localStorage.removeItem('11m_user_session');
+            localStorage.removeItem('11m_admin_session');
+            window.location.href = './login.html';
+          }
+        } catch {
+          // Invalid session data
+          localStorage.removeItem('11m_user_session');
+          localStorage.removeItem('11m_admin_session');
+          window.location.href = './login.html';
+        }
+      } else {
+        // No session, redirect to login
+        window.location.href = './login.html';
+      }
+    </script>
+  </head>
+  <body>
+    <div
+      style="
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        font-family: Arial, sans-serif;
+      "
+    >
+      <p>🔄 Checking authentication...</p>
+    </div>
+  </body>
+</html>

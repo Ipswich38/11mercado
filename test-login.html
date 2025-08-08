@@ -1,0 +1,87 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Login Test</title>
+  </head>
+  <body>
+    <h1>Login Verification Test</h1>
+
+    <script>
+      // Test the exact same logic as login.html
+      const CONFIG = {
+        USER_ACCESS_CODE: 'MERCADO112025',
+        ADMIN_ACCESS_CODE: 'ADMIN2025MERCADO',
+        ADMIN_EMAIL: '11mercado.pta@gmail.com',
+        MAX_USERS: 100,
+        SESSION_TIMEOUT: 30 * 60 * 1000,
+      };
+
+      console.log('Testing credentials:');
+      console.log('Expected user access code:', CONFIG.USER_ACCESS_CODE);
+      console.log('Expected admin access code:', CONFIG.ADMIN_ACCESS_CODE);
+      console.log('Expected admin email:', CONFIG.ADMIN_EMAIL);
+
+      // Test function
+      function testLogin(nickname, accessCode, isAdmin) {
+        console.log(`\n--- Testing Login ---`);
+        console.log(`Name: "${nickname}"`);
+        console.log(`Access Code: "${accessCode}"`);
+        console.log(`Is Admin: ${isAdmin}`);
+
+        // Check access code based on admin status
+        const expectedCode = isAdmin ? CONFIG.ADMIN_ACCESS_CODE : CONFIG.USER_ACCESS_CODE;
+        if (accessCode !== expectedCode) {
+          const codeType = isAdmin ? 'admin access code' : 'user access code';
+          console.log(`❌ ${codeType} validation failed`);
+          console.log(`Expected: "${expectedCode}"`);
+          console.log(`Received: "${accessCode}"`);
+          return false;
+        }
+        console.log('✅ Access code validated');
+
+        // Check if admin
+        if (isAdmin && !nickname.includes('@gmail.com')) {
+          console.log('❌ Admin login requires email address');
+          return false;
+        }
+
+        if (isAdmin && nickname !== CONFIG.ADMIN_EMAIL) {
+          console.log('❌ Unauthorized admin email');
+          console.log(`Expected: "${CONFIG.ADMIN_EMAIL}"`);
+          console.log(`Received: "${nickname}"`);
+          return false;
+        }
+
+        console.log('✅ All validations passed!');
+        return true;
+      }
+
+      // Run tests
+      document.addEventListener('DOMContentLoaded', function () {
+        console.log('=== RUNNING LOGIN TESTS ===');
+
+        // Test admin login with correct admin code
+        console.log('\n🔍 Test 1: Admin Login (Correct)');
+        testLogin('11mercado.pta@gmail.com', 'ADMIN2025MERCADO', true);
+
+        // Test admin login with user code (should fail)
+        console.log('\n🔍 Test 2: Admin Login with User Code (Should Fail)');
+        testLogin('11mercado.pta@gmail.com', 'MERCADO112025', true);
+
+        // Test regular user login
+        console.log('\n🔍 Test 3: Regular User Login');
+        testLogin('John Doe', 'MERCADO112025', false);
+
+        // Test user with admin code (should fail)
+        console.log('\n🔍 Test 4: User with Admin Code (Should Fail)');
+        testLogin('John Doe', 'ADMIN2025MERCADO', false);
+
+        // Test wrong access code
+        console.log('\n🔍 Test 5: Wrong Access Code');
+        testLogin('11mercado.pta@gmail.com', 'WRONG_CODE', true);
+      });
+    </script>
+
+    <p>Check the browser console (F12) for test results.</p>
+  </body>
+</html>

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Function Test</title>
+</head>
+<body>
+    <button onclick="testFunction()">Test Function</button>
+    <div id="result"></div>
+    
+    <script>
+        function testFunction() {
+            document.getElementById('result').innerHTML = 'Function works!';
+        }
+        
+        // Test if AI Research function exists
+        setTimeout(() => {
+            if (typeof showAIResearch === 'function') {
+                console.log('showAIResearch function exists');
+            } else {
+                console.log('showAIResearch function NOT found');
+            }
+        }, 1000);
+    </script>
+</body>
+</html>

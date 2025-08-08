@@ -15,36 +15,54 @@ function App() {
     const userSession = localStorage.getItem('11m_user_session');
     const adminSession = localStorage.getItem('11m_admin_session');
 
+    console.log('Debug - userSession:', userSession);
+    console.log('Debug - adminSession:', adminSession);
+
     if (!userSession) {
       // Redirect to login page
+      console.log('Debug - No user session found, redirecting to login');
       window.location.href = '/login.html';
       return;
     }
 
     try {
       const session = JSON.parse(userSession);
+      console.log('Debug - Parsed session:', session);
       const now = Date.now();
       const sessionTimeout = 30 * 60 * 1000; // 30 minutes
 
       // Validate session structure and required fields
       if (!session || typeof session !== 'object' || !session.lastActivity || !session.id) {
+        console.log('Debug - Session validation failed:', {
+          hasSession: !!session,
+          isObject: typeof session === 'object',
+          hasLastActivity: !!session.lastActivity,
+          hasId: !!session.id
+        });
         throw new Error('Invalid session structure');
       }
 
       // Check if session is still valid
       if (now - session.lastActivity < sessionTimeout) {
+        console.log('Debug - Session is valid, setting up user');
         // Update last activity with timestamp validation
         if (typeof session.lastActivity === 'number' && session.lastActivity > 0) {
           session.lastActivity = now;
           localStorage.setItem('11m_user_session', JSON.stringify(session));
 
+          console.log('Debug - Setting authenticated state:', {
+            isAuthenticated: true,
+            isAdmin: session.isAdmin || false
+          });
           setIsAuthenticated(true);
           setIsAdmin(session.isAdmin || false);
           setLoading(false);
         } else {
+          console.log('Debug - Invalid timestamp');
           throw new Error('Invalid timestamp');
         }
       } else {
+        console.log('Debug - Session expired');
         // Session expired
         localStorage.removeItem('11m_user_session');
         localStorage.removeItem('11m_admin_session');

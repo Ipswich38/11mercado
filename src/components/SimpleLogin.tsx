@@ -58,7 +58,7 @@ export default function SimpleLogin({ onLogin, getContrastClass }) {
               "text-slate-600 text-sm",
               "text-yellow-200 text-sm"
             )}>
-              Student Portal Access
+              Access to Integrated Platform
             </p>
           </div>
         </div>

@@ -33,6 +33,7 @@ import Legal from './components/Legal';
 import MiniTutorial from './components/MiniTutorial';
 import SimpleLogin from './components/SimpleLogin';
 import AdminDashboard from './components/AdminDashboard';
+import FinancialOfficerDashboard from './components/FinancialOfficerDashboard';
 
 export default function MobileApp() {
   // Check for admin monitor access via URL parameter
@@ -390,6 +391,17 @@ export default function MobileApp() {
       <SimpleLogin 
         onLogin={handleLogin}
         getContrastClass={getContrastClass}
+      />
+    );
+  }
+
+  // Show financial officer dashboard for financial officers
+  if (userInfo?.isFinancialOfficer) {
+    return (
+      <FinancialOfficerDashboard
+        getContrastClass={getContrastClass}
+        onLogout={handleLogout}
+        userInfo={userInfo}
       />
     );
   }

@@ -23,6 +23,11 @@
 - **Additional Features**: Full admin dashboard with monitoring capabilities
 - **What you get**: Everything students get PLUS administrative tools
 
+### **For Treasurer & Auditor (Financial Officers)**
+- **Access Code**: `FINANCE2025`
+- **Specialized Features**: Dedicated financial dashboard for donation tracking only
+- **What you get**: Complete donation records, financial reports, and audit trails
+
 ---
 
 ## 🎯 **Key Features for Everyone**
@@ -180,6 +185,14 @@ Comprehensive monitoring and management tools for PTA officers:
 - **Data Analytics**: Make informed decisions based on usage data
 - **Issue Resolution**: Quickly identify and resolve technical problems
 - **Community Building**: Foster engagement through platform features
+
+### **💰 Treasurer & Auditor**
+- **Financial Dashboard**: Specialized interface focused solely on donation tracking
+- **Complete Audit Trail**: Every donation recorded with full documentation
+- **Financial Reports**: Generate summary reports and export detailed CSV files
+- **Real-time Analytics**: Live donation statistics and allocation breakdowns
+- **Document Verification**: View all uploaded receipts and photo evidence
+- **Compliance Tracking**: Monitor electronic signatures and agreement timestamps
 
 ---
 

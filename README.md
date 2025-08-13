@@ -73,6 +73,10 @@ A comprehensive educational platform designed for student learning and PTA commu
 - **Code**: `ADMIN2025`
 - **Features**: Full admin dashboard, user monitoring, system analytics
 
+### Financial Officer Access (Treasurer/Auditor)
+- **Code**: `FINANCE2025`
+- **Features**: Specialized financial dashboard, donation tracking, audit reports
+
 ## 🛠️ Environment Setup
 
 ### Required Environment Variables

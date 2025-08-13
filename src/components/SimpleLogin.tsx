@@ -15,18 +15,34 @@ export default function SimpleLogin({ onLogin, getContrastClass }) {
     // Simulate validation delay
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // Access codes for users and admin
+    // Access codes for different user types
     const MASTER_CODE = 'MERCADO80';
     const ADMIN_CODE = 'ADMIN2025';
+    const FINANCIAL_CODE = 'FINANCE2025';
+    
     const isValidUser = accessCode.toUpperCase() === MASTER_CODE;
     const isValidAdmin = accessCode.toUpperCase() === ADMIN_CODE;
+    const isValidFinancial = accessCode.toUpperCase() === FINANCIAL_CODE;
     
-    if (isValidUser || isValidAdmin) {
+    if (isValidUser || isValidAdmin || isValidFinancial) {
+      let userType = 'student';
+      let isAdmin = false;
+      let isFinancialOfficer = false;
+      
+      if (isValidAdmin) {
+        userType = 'admin';
+        isAdmin = true;
+      } else if (isValidFinancial) {
+        userType = 'financial';
+        isFinancialOfficer = true;
+      }
+      
       onLogin({ 
         firstName, 
         accessCode, 
-        isAdmin: isValidAdmin,
-        userType: isValidAdmin ? 'admin' : 'student'
+        isAdmin,
+        isFinancialOfficer,
+        userType
       });
     } else {
       alert('Invalid access code. Please try again.');

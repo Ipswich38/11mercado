@@ -89,12 +89,6 @@ export default function SimpleLogin({ onLogin, getContrastClass }) {
                 required
               />
             </div>
-            <p className={getContrastClass(
-              "text-xs text-gray-500 mt-1",
-              "text-xs text-yellow-300 mt-1"
-            )}>
-              Contact your teacher for the access code
-            </p>
           </div>
 
           {/* First Name Input */}
@@ -146,15 +140,6 @@ export default function SimpleLogin({ onLogin, getContrastClass }) {
           </button>
         </form>
 
-        {/* Footer */}
-        <div className="text-center p-6 pt-0">
-          <div className={getContrastClass(
-            "text-xs text-gray-500 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2",
-            "text-xs text-yellow-300 bg-gray-800 border border-yellow-400 rounded-lg px-3 py-2"
-          )}>
-            💡 Contact your teacher or PTA officer for the access code
-          </div>
-        </div>
       </div>
     </div>
   );

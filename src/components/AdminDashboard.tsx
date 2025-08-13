@@ -15,11 +15,13 @@ import {
   CheckCircle,
   XCircle,
   Eye,
-  Filter
+  Filter,
+  FileSpreadsheet,
+  DollarSign
 } from 'lucide-react';
 import { useAdminSession } from '../utils/adminSessionManager';
 
-export default function AdminDashboard({ getContrastClass, onClose }) {
+export default function AdminDashboard({ getContrastClass, onClose, onShowTutorial, onNavigate }) {
   const [stats, setStats] = useState(null);
   const [sessions, setSessions] = useState([]);
   const [errors, setErrors] = useState([]);
@@ -219,7 +221,8 @@ What would you like to know about?`;
     { id: 'overview', name: 'Overview', icon: TrendingUp },
     { id: 'users', name: 'Active Users', icon: Users },
     { id: 'errors', name: 'Error Logs', icon: AlertTriangle },
-    { id: 'activities', name: 'Activities', icon: Activity }
+    { id: 'activities', name: 'Activities', icon: Activity },
+    { id: 'donations', name: 'Donation Tracking', icon: FileSpreadsheet }
   ];
 
   return (
@@ -575,6 +578,156 @@ What would you like to know about?`;
                         </div>
                       </div>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {selectedTab === 'donations' && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h2 className={getContrastClass("text-xl font-semibold text-gray-900", "text-xl font-semibold text-yellow-400")}>
+                      Donation Tracking
+                    </h2>
+                    <button
+                      onClick={() => {
+                        onClose();
+                        if (onNavigate) onNavigate('donation-tracking');
+                      }}
+                      className={getContrastClass(
+                        "px-4 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700 transition-colors flex items-center gap-2",
+                        "px-4 py-2 rounded-xl bg-yellow-400 text-black hover:bg-yellow-300 transition-colors flex items-center gap-2"
+                      )}
+                    >
+                      <FileSpreadsheet size={16} />
+                      Open Full Spreadsheet
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className={getContrastClass(
+                      "bg-white/70 backdrop-blur-md rounded-2xl p-6 border border-white/30",
+                      "bg-gray-900/70 backdrop-blur-md rounded-2xl p-6 border-2 border-yellow-400/50"
+                    )}>
+                      <div className="flex items-center gap-3 mb-2">
+                        <DollarSign className={getContrastClass("text-green-600", "text-green-400")} size={24} />
+                        <h3 className={getContrastClass("font-medium text-gray-700", "font-medium text-yellow-200")}>
+                          Total Donations
+                        </h3>
+                      </div>
+                      <div className={getContrastClass("text-2xl font-bold text-gray-900", "text-2xl font-bold text-yellow-400")}>
+                        {(() => {
+                          const donations = JSON.parse(localStorage.getItem('donationEntries') || '[]');
+                          const total = donations.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
+                          return `₱${total.toLocaleString()}`;
+                        })()}
+                      </div>
+                      <div className={getContrastClass("text-sm text-gray-500", "text-sm text-yellow-300")}>
+                        {(() => {
+                          const donations = JSON.parse(localStorage.getItem('donationEntries') || '[]');
+                          return `${donations.length} entries`;
+                        })()}
+                      </div>
+                    </div>
+
+                    <div className={getContrastClass(
+                      "bg-white/70 backdrop-blur-md rounded-2xl p-6 border border-white/30",
+                      "bg-gray-900/70 backdrop-blur-md rounded-2xl p-6 border-2 border-blue-400/50"
+                    )}>
+                      <div className="flex items-center gap-3 mb-2">
+                        <FileSpreadsheet className={getContrastClass("text-blue-600", "text-blue-400")} size={24} />
+                        <h3 className={getContrastClass("font-medium text-gray-700", "font-medium text-yellow-200")}>
+                          General SPTA
+                        </h3>
+                      </div>
+                      <div className={getContrastClass("text-2xl font-bold text-gray-900", "text-2xl font-bold text-blue-400")}>
+                        {(() => {
+                          const donations = JSON.parse(localStorage.getItem('donationEntries') || '[]');
+                          const total = donations.reduce((sum, d) => sum + (d.allocation?.generalSPTA || 0), 0);
+                          return `₱${total.toLocaleString()}`;
+                        })()}
+                      </div>
+                      <div className={getContrastClass("text-sm text-gray-500", "text-sm text-yellow-300")}>
+                        Allocated funds
+                      </div>
+                    </div>
+
+                    <div className={getContrastClass(
+                      "bg-white/70 backdrop-blur-md rounded-2xl p-6 border border-white/30",
+                      "bg-gray-900/70 backdrop-blur-md rounded-2xl p-6 border-2 border-purple-400/50"
+                    )}>
+                      <div className="flex items-center gap-3 mb-2">
+                        <FileSpreadsheet className={getContrastClass("text-purple-600", "text-purple-400")} size={24} />
+                        <h3 className={getContrastClass("font-medium text-gray-700", "font-medium text-yellow-200")}>
+                          11Mercado PTA
+                        </h3>
+                      </div>
+                      <div className={getContrastClass("text-2xl font-bold text-gray-900", "text-2xl font-bold text-purple-400")}>
+                        {(() => {
+                          const donations = JSON.parse(localStorage.getItem('donationEntries') || '[]');
+                          const total = donations.reduce((sum, d) => sum + (d.allocation?.mercadoPTA || 0), 0);
+                          return `₱${total.toLocaleString()}`;
+                        })()}
+                      </div>
+                      <div className={getContrastClass("text-sm text-gray-500", "text-sm text-yellow-300")}>
+                        Allocated funds
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={getContrastClass(
+                    "bg-white/70 backdrop-blur-md rounded-2xl p-6 border border-white/30",
+                    "bg-gray-900/70 backdrop-blur-md rounded-2xl p-6 border-2 border-yellow-400/50"
+                  )}>
+                    <h3 className={getContrastClass("font-medium text-gray-900 mb-4", "font-medium text-yellow-400 mb-4")}>
+                      Recent Donation Entries
+                    </h3>
+                    <div className="space-y-3 max-h-64 overflow-auto">
+                      {(() => {
+                        const donations = JSON.parse(localStorage.getItem('donationEntries') || '[]');
+                        return donations
+                          .sort((a, b) => new Date(b.submissionTimestamp).getTime() - new Date(a.submissionTimestamp).getTime())
+                          .slice(0, 5)
+                          .map((donation, index) => (
+                            <div
+                              key={index}
+                              className={getContrastClass(
+                                "bg-white/50 rounded-lg p-3 border border-white/30",
+                                "bg-gray-800/50 rounded-lg p-3 border border-gray-600"
+                              )}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <div className={getContrastClass("font-medium text-gray-900", "font-medium text-yellow-400")}>
+                                    {donation.parentName}
+                                  </div>
+                                  <div className={getContrastClass("text-sm text-gray-600", "text-sm text-yellow-200")}>
+                                    {donation.donationMode.toUpperCase()} • {donation.eSignature}
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <div className={getContrastClass("font-bold text-gray-900", "font-bold text-yellow-400")}>
+                                    {donation.amount ? `₱${parseFloat(donation.amount).toLocaleString()}` : 'In-kind'}
+                                  </div>
+                                  <div className={getContrastClass("text-xs text-gray-500", "text-xs text-yellow-300")}>
+                                    {donation.submissionDate}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ));
+                      })()}
+                      {(() => {
+                        const donations = JSON.parse(localStorage.getItem('donationEntries') || '[]');
+                        return donations.length === 0 ? (
+                          <div className={getContrastClass(
+                            "text-center py-8 text-gray-500",
+                            "text-center py-8 text-yellow-300"
+                          )}>
+                            No donation entries yet
+                          </div>
+                        ) : null;
+                      })()}
+                    </div>
                   </div>
                 </div>
               )}

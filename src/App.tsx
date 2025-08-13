@@ -19,6 +19,8 @@ import CSANSCILinks from './components/CSANSCILinks';
 import DonationTiles from './components/DonationTiles';
 import AIChatBot from './components/AIChatBot';
 import DonationForm from './components/DonationForm';
+import EnhancedDonationForm from './components/EnhancedDonationForm';
+import DonationTrackingSpreadsheet from './components/DonationTrackingSpreadsheet';
 import ContactUs from './components/ContactUs';
 import Projects from './components/Projects';
 import { ChatBotBubbleWithPreview } from './components/ChatBotBubble';
@@ -303,7 +305,7 @@ export default function MobileApp() {
           getContrastClass={getContrastClass}
         />;
       case 'donation-upload':
-        return <DonationForm 
+        return <EnhancedDonationForm 
           getContrastClass={getContrastClass}
           onClose={() => setActiveApp('home')}
         />;
@@ -363,6 +365,11 @@ export default function MobileApp() {
         />;
       case 'legal':
         return <Legal 
+          getContrastClass={getContrastClass}
+          onClose={() => setActiveApp('home')}
+        />;
+      case 'donation-tracking':
+        return <DonationTrackingSpreadsheet 
           getContrastClass={getContrastClass}
           onClose={() => setActiveApp('home')}
         />;
@@ -503,6 +510,11 @@ export default function MobileApp() {
           <AdminDashboard
             getContrastClass={getContrastClass}
             onClose={() => setShowAdminDashboard(false)}
+            onShowTutorial={setShowTutorial}
+            onNavigate={(appId) => {
+              setActiveApp(appId);
+              setShowAdminDashboard(false);
+            }}
           />
         )}
       </div>
@@ -525,7 +537,8 @@ export default function MobileApp() {
       'upcat-quiz-generator': 'College Entrance Exam: Quiz Generator',
       'ai-scientific-calculator': 'AI Scientific Calculator',
       'ai-assistant': 'Research and STEM-GPT',
-      'legal': 'Legal Information'
+      'legal': 'Legal Information',
+      'donation-tracking': 'Donation Tracking Spreadsheet'
     };
     return titles[appId] || 'App';
   }

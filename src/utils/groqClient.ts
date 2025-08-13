@@ -1,8 +1,24 @@
 import Groq from 'groq-sdk';
 
-const groq = new Groq({
-  apiKey: import.meta.env.VITE_GROQ_API_KEY || 'your-groq-api-key-here',
-  dangerouslyAllowBrowser: true // Allow client-side usage
-});
+// Check if API key is properly configured
+const apiKey = import.meta.env.VITE_GROQ_API_KEY;
+const isGroqConfigured = apiKey && apiKey !== 'your-groq-api-key-here';
+
+let groq = null;
+
+if (isGroqConfigured) {
+  try {
+    groq = new Groq({
+      apiKey: apiKey,
+      dangerouslyAllowBrowser: true // Allow client-side usage
+    });
+  } catch (error) {
+    console.warn('Groq client initialization failed:', error);
+    groq = null;
+  }
+} else {
+  console.warn('Groq API key not configured. AI features will be disabled.');
+}
 
 export default groq;
+export { isGroqConfigured };

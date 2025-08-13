@@ -14,7 +14,7 @@ import {
   Timer,
   Lightbulb
 } from 'lucide-react';
-import groq from '../utils/groqClient';
+import groq, { isGroqConfigured } from '../utils/groqClient';
 
 interface Question {
   id: number;
@@ -163,6 +163,10 @@ SUBJECTS TO COVER:
 Make questions challenging but fair, requiring analytical thinking and comprehensive understanding.`;
 
     try {
+      if (!groq || !isGroqConfigured) {
+        throw new Error('AI service not configured. Please check environment variables.');
+      }
+      
       const response = await groq.chat.completions.create({
         messages: [{ role: 'user', content: prompt }],
         model: 'llama3-70b-8192',
@@ -253,6 +257,10 @@ Provide a detailed analysis explaining:
 Keep it encouraging and educational.`;
 
     try {
+      if (!groq || !isGroqConfigured) {
+        throw new Error('AI service not configured. Please check environment variables.');
+      }
+      
       const response = await groq.chat.completions.create({
         messages: [{ role: 'user', content: analysisPrompt }],
         model: 'llama3-8b-8192',

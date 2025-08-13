@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, X, Loader, ArrowLeft } from 'lucide-react';
-import groq from '../utils/groqClient';
+import groq, { isGroqConfigured } from '../utils/groqClient';
 import { depedOmnibusKnowledge, miniAppsKnowledge, searchKnowledge, getAllKnowledge } from '../utils/knowledgeBase';
 
 interface Message {
@@ -86,6 +86,10 @@ AVAILABLE MINI APPS IN 11MERCADO:
 
 Answer the user's question based on this knowledge.`;
 
+      if (!groq || !isGroqConfigured) {
+        throw new Error('AI service not configured');
+      }
+      
       const response = await groq.chat.completions.create({
         messages: [
           { role: 'system', content: systemPrompt },

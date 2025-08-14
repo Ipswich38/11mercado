@@ -20,13 +20,40 @@ export default function AIChatBot({ getContrastClass, onClose }: AIChatBotProps)
     {
       id: '1',
       role: 'assistant',
-      content: 'Hello! I\'m your PTA assistant for the 11Mercado hub. I can help you with:\n\n🏛️ DepEd PTA guidelines (formation, roles, financial management, meetings)\n📱 How to use all 9 mini apps in 11Mercado\n💡 Tips for donation forms, project proposals, and community features\n\nWhat would you like to know?',
+      content: 'Hello! I\'m your PTA assistant for the 11Mercado hub. I can help you with DepEd PTA guidelines including formation, roles, financial management, and meetings. I also know how to use all 9 mini apps in 11Mercado and can provide tips for donation forms, project proposals, and community features.\n\nWhat would you like to know? I\'m here to make your PTA experience smoother and more efficient.',
       timestamp: new Date()
     }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Clean and format AI response text
+  const formatAIResponse = (text: string) => {
+    // Remove all asterisks and markdown formatting
+    let cleaned = text.replace(/\*+/g, '');
+    
+    // Remove excessive whitespace and normalize line breaks
+    cleaned = cleaned.replace(/\s+/g, ' ').trim();
+    
+    // Split into sentences
+    const sentences = cleaned.split(/[.!?]+/).filter(sentence => sentence.trim().length > 0);
+    
+    // Group sentences into paragraphs of 3 sentences each
+    const paragraphs = [];
+    for (let i = 0; i < sentences.length; i += 3) {
+      const paragraph = sentences.slice(i, i + 3)
+        .map(sentence => sentence.trim())
+        .filter(sentence => sentence.length > 0)
+        .join('. ');
+      
+      if (paragraph) {
+        paragraphs.push(paragraph + (paragraph.endsWith('.') ? '' : '.'));
+      }
+    }
+    
+    return paragraphs.join('\n\n');
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -71,7 +98,9 @@ INSTRUCTIONS:
 - For PTA policy questions, reference DepEd guidelines
 - If asked about features not covered in the knowledge base, acknowledge the limitation
 - Be friendly and conversational while staying informative
-- Use emojis sparingly to make responses engaging
+- Write in clean, readable paragraphs without using asterisks, bold text, or markdown formatting
+- Use simple, clear language organized in easy-to-read paragraphs
+- Avoid bullet points and use flowing paragraph text instead
 
 AVAILABLE MINI APPS IN 11MERCADO:
 1. STEM Resources (AI tools + educational links)
@@ -102,10 +131,13 @@ Answer the user's question based on this knowledge.`;
         stream: false
       });
 
+      const rawContent = response.choices[0]?.message?.content || 'I apologize, but I couldn\'t generate a response. Please try again.';
+      const formattedContent = formatAIResponse(rawContent);
+      
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: response.choices[0]?.message?.content || 'I apologize, but I couldn\'t generate a response. Please try again.',
+        content: formattedContent,
         timestamp: new Date()
       };
 

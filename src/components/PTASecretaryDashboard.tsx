@@ -338,6 +338,33 @@ Make it professional, organized, and suitable for official PTA records. Focus on
     }).join('\n');
   };
 
+  // Clean and format AI response text
+  const formatAIResponse = (text: string) => {
+    // Remove all asterisks and markdown formatting
+    let cleaned = text.replace(/\*+/g, '');
+    
+    // Remove excessive whitespace and normalize line breaks
+    cleaned = cleaned.replace(/\s+/g, ' ').trim();
+    
+    // Split into sentences
+    const sentences = cleaned.split(/[.!?]+/).filter(sentence => sentence.trim().length > 0);
+    
+    // Group sentences into paragraphs of 3 sentences each
+    const paragraphs = [];
+    for (let i = 0; i < sentences.length; i += 3) {
+      const paragraph = sentences.slice(i, i + 3)
+        .map(sentence => sentence.trim())
+        .filter(sentence => sentence.length > 0)
+        .join('. ');
+      
+      if (paragraph) {
+        paragraphs.push(paragraph + (paragraph.endsWith('.') ? '' : '.'));
+      }
+    }
+    
+    return paragraphs.join('\n\n');
+  };
+
   // Handle AI processing choice
   const handleAIChoice = async (type: 'summary' | 'minutes') => {
     if (!currentInput.trim()) {
@@ -350,8 +377,8 @@ Make it professional, organized, and suitable for official PTA records. Focus on
     setShowAIChoiceModal(false);
     
     const systemPrompt = type === 'summary' 
-      ? 'You are an expert assistant that creates clear, concise summaries from notes. Focus on key points, main ideas, and important details. Organize the content logically and professionally.'
-      : 'You are a professional PTA Secretary assistant. Create formal meeting minutes from notes. Include proper structure with agenda items, discussions, decisions made, action items, and next steps. Format professionally for official PTA records.';
+      ? 'You are an expert assistant that creates clear, concise summaries from notes. Focus on key points, main ideas, and important details. Organize the content logically and professionally. Write in clean, readable paragraphs without using asterisks, bold text, or markdown formatting. Use simple, clear language.'
+      : 'You are a professional PTA Secretary assistant. Create formal meeting minutes from notes. Include proper structure with agenda items, discussions, decisions made, action items, and next steps. Format professionally for official PTA records. Write in clean, readable paragraphs without using asterisks, bold text, or markdown formatting. Use simple, clear language.';
 
     const userPrompt = type === 'summary'
       ? `Please create a clear and organized summary from these notes:\n\n${currentInput}\n\nOrganize the content logically and highlight the most important points.`
@@ -379,7 +406,8 @@ Make it professional, organized, and suitable for official PTA records. Focus on
       });
 
       const result = response.choices[0]?.message?.content || `Unable to generate ${type}.`;
-      setAiResult(result);
+      const formattedResult = formatAIResponse(result);
+      setAiResult(formattedResult);
       setShowMinutesModal(true);
     } catch (error) {
       console.error(`Error generating ${type}:`, error);

@@ -7,6 +7,33 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
   const [response, setResponse] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  // Clean and format AI response text
+  const formatAIResponse = (text) => {
+    // Remove all asterisks and markdown formatting
+    let cleaned = text.replace(/\*+/g, '');
+    
+    // Remove excessive whitespace and normalize line breaks
+    cleaned = cleaned.replace(/\s+/g, ' ').trim();
+    
+    // Split into sentences
+    const sentences = cleaned.split(/[.!?]+/).filter(sentence => sentence.trim().length > 0);
+    
+    // Group sentences into paragraphs of 3 sentences each
+    const paragraphs = [];
+    for (let i = 0; i < sentences.length; i += 3) {
+      const paragraph = sentences.slice(i, i + 3)
+        .map(sentence => sentence.trim())
+        .filter(sentence => sentence.length > 0)
+        .join('. ');
+      
+      if (paragraph) {
+        paragraphs.push(paragraph + (paragraph.endsWith('.') ? '' : '.'));
+      }
+    }
+    
+    return paragraphs.join('\n\n');
+  };
+
   const getRelevantResources = (question) => {
     const lowerQuestion = question.toLowerCase();
     const resources = [];
@@ -90,16 +117,16 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
     
     // Mathematics responses
     if (lowerQuestion.includes('algebra') || lowerQuestion.includes('equation')) {
-      return `🤖 About Algebra:\n\nAlgebra is the branch of mathematics that uses symbols and letters to represent numbers and quantities in formulas and equations. It allows us to solve problems by finding unknown values.\n\nKey concepts:\n• Variables (like x, y) represent unknown numbers\n• Equations show relationships between quantities\n• You can perform the same operation on both sides of an equation\n• Common operations: addition, subtraction, multiplication, division\n\nExample: If 2x + 5 = 15, then x = 5 because 2(5) + 5 = 15.`;
+      return `About Algebra:\n\nAlgebra is the branch of mathematics that uses symbols and letters to represent numbers and quantities in formulas and equations. It allows us to solve problems by finding unknown values. This mathematical system helps us work with unknowns in a systematic way.\n\nKey concepts include variables like x and y that represent unknown numbers. Equations show relationships between quantities and you can perform the same operation on both sides of an equation. Common operations include addition, subtraction, multiplication, and division.\n\nFor example, if 2x + 5 = 15, then x = 5 because 2 times 5 plus 5 equals 15. This demonstrates how algebra helps us find unknown values through logical steps. Understanding these principles opens doors to more advanced mathematical concepts.`;
     }
     
     if (lowerQuestion.includes('geometry')) {
-      return `🤖 About Geometry:\n\nGeometry is the study of shapes, sizes, relative positions of figures, and properties of space. It's fundamental to understanding the physical world around us.\n\nBasic elements:\n• Points: exact locations with no size\n• Lines: extend infinitely in both directions\n• Angles: formed when two lines meet\n• Shapes: circles, triangles, rectangles, etc.\n\nPractical applications: Architecture, engineering, art, navigation, and computer graphics all rely heavily on geometric principles.`;
+      return `About Geometry:\n\nGeometry is the study of shapes, sizes, relative positions of figures, and properties of space. It is fundamental to understanding the physical world around us. This branch of mathematics helps us analyze and work with spatial relationships.\n\nBasic elements include points which are exact locations with no size. Lines extend infinitely in both directions while angles are formed when two lines meet. Common shapes include circles, triangles, rectangles, and many other geometric figures.\n\nPractical applications are everywhere in our daily lives. Architecture, engineering, art, navigation, and computer graphics all rely heavily on geometric principles. Understanding geometry helps us solve real-world problems involving space and measurement.`;
     }
     
     // Science responses
     if (lowerQuestion.includes('molecule') || lowerQuestion.includes('chemistry')) {
-      return `🤖 About Molecules and Chemistry:\n\nMolecules are groups of two or more atoms held together by chemical bonds. They're the building blocks of all matter around us.\n\nKey facts:\n• Water (H₂O): 2 hydrogen atoms + 1 oxygen atom\n• Chemical bonds form when atoms share or transfer electrons\n• Molecules determine the properties of substances\n• Different arrangements of the same atoms create different compounds\n\nExamples: Oxygen gas (O₂), carbon dioxide (CO₂), glucose (C₆H₁₂O₆). Understanding molecules helps explain everything from why water boils to how medicines work in our bodies.`;
+      return `About Molecules and Chemistry:\n\nMolecules are groups of two or more atoms held together by chemical bonds. They are the building blocks of all matter around us. Understanding molecules is essential to comprehending how the physical world operates.\n\nKey facts include that water consists of 2 hydrogen atoms and 1 oxygen atom. Chemical bonds form when atoms share or transfer electrons. Molecules determine the properties of substances we encounter daily.\n\nExamples include oxygen gas, carbon dioxide, and glucose. Different arrangements of the same atoms create different compounds with unique properties. Understanding molecules helps explain everything from why water boils to how medicines work in our bodies.`;
     }
     
     if (lowerQuestion.includes('physics') || lowerQuestion.includes('force') || lowerQuestion.includes('energy')) {
@@ -144,7 +171,7 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
             messages: [
               {
                 role: 'system',
-                content: 'You are Research and STEM-GPT, an educational AI assistant. Provide clear, detailed, and educational explanations about STEM topics and research methodology. Focus on helping students understand concepts with examples and practical applications. Keep responses informative but accessible.'
+                content: 'You are Research and STEM-GPT, an educational AI assistant. Provide clear, detailed, and educational explanations about STEM topics and research methodology. Focus on helping students understand concepts with examples and practical applications. Keep responses informative but accessible. Write in clean, readable paragraphs without using asterisks, bold text, or markdown formatting. Use simple, clear language organized in easy-to-read paragraphs.'
               },
               {
                 role: 'user',
@@ -156,7 +183,8 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
             max_tokens: 500
           });
 
-          aiResponse = response.choices[0]?.message?.content || '';
+          const rawResponse = response.choices[0]?.message?.content || '';
+          aiResponse = formatAIResponse(rawResponse);
         }
       } catch (apiError) {
         console.log('Groq API not available, using fallback response');

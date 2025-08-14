@@ -19,15 +19,18 @@ export default function SimpleLogin({ onLogin, getContrastClass }) {
     const MASTER_CODE = 'MERCADO80';
     const ADMIN_CODE = 'ADMIN2025';
     const FINANCIAL_CODE = 'FINANCE2025';
+    const SECRETARY_CODE = 'NOTE2025';
     
     const isValidUser = accessCode.toUpperCase() === MASTER_CODE;
     const isValidAdmin = accessCode.toUpperCase() === ADMIN_CODE;
     const isValidFinancial = accessCode.toUpperCase() === FINANCIAL_CODE;
+    const isValidSecretary = accessCode.toUpperCase() === SECRETARY_CODE;
     
-    if (isValidUser || isValidAdmin || isValidFinancial) {
+    if (isValidUser || isValidAdmin || isValidFinancial || isValidSecretary) {
       let userType = 'student';
       let isAdmin = false;
       let isFinancialOfficer = false;
+      let isSecretary = false;
       
       if (isValidAdmin) {
         userType = 'admin';
@@ -35,6 +38,9 @@ export default function SimpleLogin({ onLogin, getContrastClass }) {
       } else if (isValidFinancial) {
         userType = 'financial';
         isFinancialOfficer = true;
+      } else if (isValidSecretary) {
+        userType = 'secretary';
+        isSecretary = true;
       }
       
       onLogin({ 
@@ -42,6 +48,7 @@ export default function SimpleLogin({ onLogin, getContrastClass }) {
         accessCode, 
         isAdmin,
         isFinancialOfficer,
+        isSecretary,
         userType
       });
     } else {

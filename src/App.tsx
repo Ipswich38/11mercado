@@ -31,6 +31,7 @@ import UPCATQuizGenerator from './components/UPCATQuizGenerator';
 import AIScientificCalculator from './components/AIScientificCalculator';
 import HuggingFaceAI from './components/HuggingFaceAI';
 import Legal from './components/Legal';
+import PTASecretaryDashboard from './components/PTASecretaryDashboard';
 import MiniTutorial from './components/MiniTutorial';
 import SimpleLogin from './components/SimpleLogin';
 import AdminDashboard from './components/AdminDashboard';
@@ -466,6 +467,16 @@ export default function MobileApp() {
         getContrastClass={getContrastClass}
         onLogout={handleLogout}
         userInfo={userInfo}
+      />
+    );
+  }
+
+  // Show PTA Secretary dashboard for secretaries
+  if (userInfo?.isSecretary) {
+    return (
+      <PTASecretaryDashboard
+        getContrastClass={getContrastClass}
+        onClose={handleLogout}
       />
     );
   }

@@ -532,8 +532,8 @@ export default function MobileApp() {
 
         {/* Developer Credit Footer */}
         <div className={getContrastClass(
-          "fixed bottom-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-sm border-t border-gray-200",
-          "fixed bottom-0 left-0 right-0 z-40 bg-black/80 backdrop-blur-sm border-t border-yellow-400/20"
+          "fixed bottom-0 left-0 right-0 z-10 bg-white/80 backdrop-blur-sm border-t border-gray-200",
+          "fixed bottom-0 left-0 right-0 z-10 bg-black/80 backdrop-blur-sm border-t border-yellow-400/20"
         )}>
           <div className={getContrastClass(
             "text-center text-xs text-gray-400 py-2",

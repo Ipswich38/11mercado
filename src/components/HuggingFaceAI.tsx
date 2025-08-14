@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Send } from 'lucide-react';
+import groq, { isGroqConfigured } from '../utils/groqClient';
 
 export default function HuggingFaceAI({ getContrastClass, onClose }) {
   const [inputText, setInputText] = useState('');
@@ -136,35 +137,29 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
       // Create a comprehensive response with resources
       let aiResponse = '';
       
-      // Try to get AI response first
+      // Try to get AI response from Groq first
       try {
-        const apiResponse = await fetch(
-          "https://api-inference.huggingface.co/models/facebook/blenderbot-400M-distill",
-          {
-            headers: {
-              Authorization: `Bearer ${import.meta.env.VITE_HUGGINGFACE_API_KEY || 'hf_demo'}`,
-              "Content-Type": "application/json",
-            },
-            method: "POST",
-            body: JSON.stringify({
-              inputs: `Explain in detail: ${inputText}`,
-              parameters: {
-                max_length: 300,
-                temperature: 0.3,
-                do_sample: true
+        if (groq && isGroqConfigured) {
+          const response = await groq.chat.completions.create({
+            messages: [
+              {
+                role: 'system',
+                content: 'You are Research and STEM-GPT, an educational AI assistant. Provide clear, detailed, and educational explanations about STEM topics and research methodology. Focus on helping students understand concepts with examples and practical applications. Keep responses informative but accessible.'
+              },
+              {
+                role: 'user',
+                content: inputText
               }
-            }),
-          }
-        );
-        
-        if (apiResponse.ok) {
-          const result = await apiResponse.json();
-          if (result && result.length > 0 && result[0].generated_text) {
-            aiResponse = result[0].generated_text;
-          }
+            ],
+            model: 'llama3-70b-8192',
+            temperature: 0.3,
+            max_tokens: 500
+          });
+
+          aiResponse = response.choices[0]?.message?.content || '';
         }
       } catch (apiError) {
-        console.log('API not available, using fallback response');
+        console.log('Groq API not available, using fallback response');
       }
 
       // Create comprehensive response
@@ -225,14 +220,14 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
             "text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded-full",
             "text-xs bg-gray-800 text-blue-400 px-3 py-1 rounded-full border border-blue-400"
           )}>
-            Hugging Face AI
+            Groq AI
           </div>
         </div>
         <p className={getContrastClass(
           "text-gray-600 text-sm",
           "text-yellow-200 text-sm"
         )}>
-          Powered by Hugging Face AI models • STEM subjects and research methodology
+          Powered by Groq AI (LLaMA 3) • STEM subjects and research methodology
         </p>
       </div>
 
@@ -376,11 +371,11 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
           <div className="flex items-center gap-2 mb-2">
             <div className="text-blue-600">🤖</div>
             <h4 className={getContrastClass("font-medium text-blue-900", "font-medium text-blue-400")}>
-              Powered by Hugging Face AI
+              Powered by Groq AI
             </h4>
           </div>
           <p className={getContrastClass("text-blue-800 text-sm", "text-blue-200 text-sm")}>
-            Open-source AI models for STEM education and research methodology guidance. Perfect for students and researchers.
+            High-performance LLaMA 3 model for STEM education and research methodology guidance. Fast, accurate responses for students and researchers.
           </p>
         </div>
       </div>

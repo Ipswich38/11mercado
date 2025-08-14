@@ -26,6 +26,7 @@ import Projects from './components/Projects';
 import { ChatBotBubbleWithPreview } from './components/ChatBotBubble';
 import UserLimitGate from './components/UserLimitGate';
 import AdminMonitor from './components/AdminMonitor';
+import { useAdminSession } from './utils/adminSessionManager';
 import UPCATQuizGenerator from './components/UPCATQuizGenerator';
 import AIScientificCalculator from './components/AIScientificCalculator';
 import HuggingFaceAI from './components/HuggingFaceAI';
@@ -50,7 +51,16 @@ export default function MobileApp() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userInfo, setUserInfo] = useState(null);
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
+  const [currentSessionId, setCurrentSessionId] = useState(null);
   const fileInputRef = useRef(null);
+  
+  // Admin session manager
+  const { 
+    requestAccess, 
+    releaseSession, 
+    updateActivity, 
+    logActivity 
+  } = useAdminSession();
 
   // New AI STEM Tools
   const [aiSTEMTools] = useState([
@@ -145,10 +155,36 @@ export default function MobileApp() {
 
   const [messages, setMessages] = useState([]);
 
-  const handleLogin = (loginData) => {
-    setUserInfo(loginData);
-    setIsLoggedIn(true);
-    localStorage.setItem('11mercado_user', JSON.stringify(loginData));
+  const handleLogin = async (loginData) => {
+    try {
+      // Register session with admin session manager
+      const sessionResult = await requestAccess(loginData);
+      
+      if (sessionResult.success) {
+        setUserInfo(loginData);
+        setIsLoggedIn(true);
+        setCurrentSessionId(sessionResult.sessionId);
+        localStorage.setItem('11mercado_user', JSON.stringify(loginData));
+        localStorage.setItem('11mercado_session_id', sessionResult.sessionId);
+        
+        // Show success notification
+        setNotificationMessage(sessionResult.message);
+        setNotificationType('success');
+        setShowNotification(true);
+      } else {
+        // Show error if access denied
+        setNotificationMessage(sessionResult.message);
+        setNotificationType('error');
+        setShowNotification(true);
+        return; // Don't proceed with login
+      }
+    } catch (error) {
+      console.error('Error registering session:', error);
+      // Fallback: still allow login but without session tracking
+      setUserInfo(loginData);
+      setIsLoggedIn(true);
+      localStorage.setItem('11mercado_user', JSON.stringify(loginData));
+    }
     
     // Auto-open admin dashboard for admin users
     if (loginData.isAdmin) {
@@ -157,8 +193,15 @@ export default function MobileApp() {
   };
 
   const handleLogout = () => {
+    // Release session from admin session manager
+    if (currentSessionId) {
+      releaseSession(currentSessionId);
+      localStorage.removeItem('11mercado_session_id');
+    }
+    
     setIsLoggedIn(false);
     setUserInfo(null);
+    setCurrentSessionId(null);
     setActiveApp('home');
     setShowAdminDashboard(false);
     localStorage.removeItem('11mercado_user');
@@ -168,17 +211,38 @@ export default function MobileApp() {
   // Check for existing login on component mount
   React.useEffect(() => {
     const savedUser = localStorage.getItem('11mercado_user');
+    const savedSessionId = localStorage.getItem('11mercado_session_id');
+    
     if (savedUser) {
       try {
         const userData = JSON.parse(savedUser);
         setUserInfo(userData);
         setIsLoggedIn(true);
+        
+        // Restore session if it exists and is still valid
+        if (savedSessionId) {
+          setCurrentSessionId(savedSessionId);
+          // Update activity to keep session alive
+          updateActivity(savedSessionId);
+        }
       } catch (error) {
         console.warn('Failed to parse saved user data');
         localStorage.removeItem('11mercado_user');
+        localStorage.removeItem('11mercado_session_id');
       }
     }
-  }, []);
+  }, [updateActivity]);
+
+  // Periodically update user activity to keep session alive
+  React.useEffect(() => {
+    if (currentSessionId && isLoggedIn) {
+      const activityInterval = setInterval(() => {
+        updateActivity(currentSessionId);
+      }, 60000); // Update every minute
+      
+      return () => clearInterval(activityInterval);
+    }
+  }, [currentSessionId, isLoggedIn, updateActivity]);
 
   const [weather, setWeather] = useState({
     location: "San Jose del Monte, Bulacan",

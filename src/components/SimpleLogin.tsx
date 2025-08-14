@@ -156,6 +156,16 @@ export default function SimpleLogin({ onLogin, getContrastClass }) {
           </button>
         </form>
 
+        {/* Developer Credit */}
+        <div className="px-8 pb-6">
+          <div className={getContrastClass(
+            "text-center text-xs text-gray-400 border-t border-gray-200 pt-4",
+            "text-center text-xs text-yellow-500/60 border-t border-yellow-400/20 pt-4"
+          )}>
+            Designed and developed by Cherwin Fernandez / KreativLoops • v1.1
+          </div>
+        </div>
+
       </div>
     </div>
   );

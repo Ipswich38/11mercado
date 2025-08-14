@@ -409,8 +409,8 @@ export default function MobileApp() {
   return (
     <UserLimitGate getContrastClass={getContrastClass}>
       <div className={getContrastClass(
-        "min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30",
-        "min-h-screen bg-black"
+        "min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 pb-10",
+        "min-h-screen bg-black pb-10"
       )}>
         {/* Notification */}
         {showNotification && (
@@ -529,6 +529,19 @@ export default function MobileApp() {
             }}
           />
         )}
+
+        {/* Developer Credit Footer */}
+        <div className={getContrastClass(
+          "fixed bottom-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-sm border-t border-gray-200",
+          "fixed bottom-0 left-0 right-0 z-40 bg-black/80 backdrop-blur-sm border-t border-yellow-400/20"
+        )}>
+          <div className={getContrastClass(
+            "text-center text-xs text-gray-400 py-2",
+            "text-center text-xs text-yellow-500/60 py-2"
+          )}>
+            Designed and developed by Cherwin Fernandez / KreativLoops • v1.1
+          </div>
+        </div>
       </div>
     </UserLimitGate>
   );

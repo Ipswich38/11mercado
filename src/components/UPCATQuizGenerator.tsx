@@ -656,6 +656,19 @@ Keep it encouraging and educational.`;
             Generate Quiz
           </button>
         </div>
+
+        {/* Developer Credit Footer */}
+        <div className={getContrastClass(
+          "fixed bottom-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-sm border-t border-gray-200",
+          "fixed bottom-0 left-0 right-0 z-40 bg-black/80 backdrop-blur-sm border-t border-yellow-400/20"
+        )}>
+          <div className={getContrastClass(
+            "text-center text-xs text-gray-400 py-2",
+            "text-center text-xs text-yellow-500/60 py-2"
+          )}>
+            Designed and developed by Cherwin Fernandez / KreativLoops • v1.1
+          </div>
+        </div>
       </div>
     );
   }

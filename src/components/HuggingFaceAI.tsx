@@ -84,6 +84,45 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
     return resources;
   };
 
+  const generateEducationalResponse = (question) => {
+    const lowerQuestion = question.toLowerCase();
+    
+    // Mathematics responses
+    if (lowerQuestion.includes('algebra') || lowerQuestion.includes('equation')) {
+      return `🤖 About Algebra:\n\nAlgebra is the branch of mathematics that uses symbols and letters to represent numbers and quantities in formulas and equations. It allows us to solve problems by finding unknown values.\n\nKey concepts:\n• Variables (like x, y) represent unknown numbers\n• Equations show relationships between quantities\n• You can perform the same operation on both sides of an equation\n• Common operations: addition, subtraction, multiplication, division\n\nExample: If 2x + 5 = 15, then x = 5 because 2(5) + 5 = 15.`;
+    }
+    
+    if (lowerQuestion.includes('geometry')) {
+      return `🤖 About Geometry:\n\nGeometry is the study of shapes, sizes, relative positions of figures, and properties of space. It's fundamental to understanding the physical world around us.\n\nBasic elements:\n• Points: exact locations with no size\n• Lines: extend infinitely in both directions\n• Angles: formed when two lines meet\n• Shapes: circles, triangles, rectangles, etc.\n\nPractical applications: Architecture, engineering, art, navigation, and computer graphics all rely heavily on geometric principles.`;
+    }
+    
+    // Science responses
+    if (lowerQuestion.includes('molecule') || lowerQuestion.includes('chemistry')) {
+      return `🤖 About Molecules and Chemistry:\n\nMolecules are groups of two or more atoms held together by chemical bonds. They're the building blocks of all matter around us.\n\nKey facts:\n• Water (H₂O): 2 hydrogen atoms + 1 oxygen atom\n• Chemical bonds form when atoms share or transfer electrons\n• Molecules determine the properties of substances\n• Different arrangements of the same atoms create different compounds\n\nExamples: Oxygen gas (O₂), carbon dioxide (CO₂), glucose (C₆H₁₂O₆). Understanding molecules helps explain everything from why water boils to how medicines work in our bodies.`;
+    }
+    
+    if (lowerQuestion.includes('physics') || lowerQuestion.includes('force') || lowerQuestion.includes('energy')) {
+      return `🤖 About Physics:\n\nPhysics is the science that seeks to understand how the universe works, from the smallest particles to the largest galaxies.\n\nFundamental concepts:\n• Force: a push or pull that can change motion\n• Energy: the ability to do work or cause change\n• Matter: anything that has mass and takes up space\n• Motion: change in position over time\n\nEveryday physics: When you walk, throw a ball, or use electricity, you're experiencing physics principles. Understanding these helps explain everything from why planes fly to how your smartphone works.`;
+    }
+    
+    if (lowerQuestion.includes('biology') || lowerQuestion.includes('cell') || lowerQuestion.includes('life')) {
+      return `🤖 About Biology:\n\nBiology is the study of living organisms and their interactions with each other and their environment.\n\nCore principles:\n• All living things are made of cells\n• Organisms need energy to survive and grow\n• DNA carries genetic information\n• Evolution explains the diversity of life\n• Ecosystems show how organisms interact\n\nFrom tiny bacteria to giant whales, biology helps us understand life processes like growth, reproduction, and adaptation to environments.`;
+    }
+    
+    // Research methodology
+    if (lowerQuestion.includes('research') || lowerQuestion.includes('study') || lowerQuestion.includes('methodology')) {
+      return `🤖 About Research Methodology:\n\nResearch methodology is the systematic approach to investigating questions and solving problems using scientific methods.\n\nKey steps:\n1. Define your research question clearly\n2. Review existing literature and studies\n3. Choose appropriate research methods\n4. Collect and analyze data systematically\n5. Draw conclusions based on evidence\n6. Share findings with others\n\nGood research is objective, reproducible, and builds on previous knowledge. Whether studying human behavior, testing new medicines, or exploring space, proper methodology ensures reliable results.`;
+    }
+    
+    // General STEM response
+    if (lowerQuestion.includes('engineering') || lowerQuestion.includes('technology')) {
+      return `🤖 About Engineering and Technology:\n\nEngineering applies scientific knowledge to design and build solutions that improve human life.\n\nMain branches:\n• Civil: Infrastructure like bridges and buildings\n• Mechanical: Machines and mechanical systems\n• Electrical: Electronics and power systems\n• Software: Computer programs and applications\n• Chemical: Chemical processes and materials\n\nEngineers solve real-world problems by combining creativity with scientific principles. From smartphones to space shuttles, engineering makes modern life possible.`;
+    }
+    
+    // Default comprehensive response
+    return `🤖 Research and STEM-GPT Response:\n\nI'm here to help with STEM subjects and research methodology! Your question about "${question}" touches on important scientific concepts.\n\nTo provide you with the most helpful answer, could you be more specific about what aspect you'd like to explore? For example:\n• Are you looking for basic definitions and concepts?\n• Do you need help with problem-solving steps?\n• Are you working on a specific assignment or project?\n• Would you like to understand real-world applications?\n\nSTEM fields are interconnected - mathematics provides tools for science, science informs engineering, and technology enables new research. I'm here to help you understand these connections and concepts clearly.`;
+  };
+
   const handleSubmit = async () => {
     if (!inputText.trim()) return;
     
@@ -100,7 +139,7 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
       // Try to get AI response first
       try {
         const apiResponse = await fetch(
-          "https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium",
+          "https://api-inference.huggingface.co/models/facebook/blenderbot-400M-distill",
           {
             headers: {
               Authorization: `Bearer ${import.meta.env.VITE_HUGGINGFACE_API_KEY || 'hf_demo'}`,
@@ -108,11 +147,11 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
             },
             method: "POST",
             body: JSON.stringify({
-              inputs: `You are Research and STEM-GPT. Provide a clear, educational answer about: ${inputText}`,
+              inputs: `Explain in detail: ${inputText}`,
               parameters: {
-                max_new_tokens: 200,
-                temperature: 0.7,
-                return_full_text: false
+                max_length: 300,
+                temperature: 0.3,
+                do_sample: true
               }
             }),
           }
@@ -131,43 +170,28 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
       // Create comprehensive response
       let fullResponse = '';
       
-      if (aiResponse) {
+      if (aiResponse && aiResponse.trim().length > 10) {
         fullResponse = `🤖 AI Response:\n${aiResponse}\n\n`;
-      } else {
-        // Fallback educational response
-        if (inputText.toLowerCase().includes('molecule')) {
-          fullResponse = `🤖 About Molecules:\n\nMolecules are groups of two or more atoms held together by chemical bonds. They are the smallest units of chemical compounds that retain the chemical properties of that compound. For example, a water molecule (H₂O) consists of two hydrogen atoms and one oxygen atom.\n\n`;
-        } else {
-          fullResponse = `🤖 Research and STEM-GPT Response:\n\nI'm analyzing your question about "${inputText}". This appears to be a ${inputText.toLowerCase().includes('research') ? 'research methodology' : 'STEM'} topic that requires detailed exploration.\n\n`;
+        // Only add resources if the AI response is short or seems incomplete
+        if (aiResponse.length < 100) {
+          fullResponse += `📚 For more information:\n${relevantResources.slice(0, 2).join('\n')}\n\n`;
         }
-      }
-
-      // Add relevant resources
-      if (relevantResources.length > 0) {
-        fullResponse += `📚 Recommended Resources:\n\n`;
-        relevantResources.forEach(resource => {
-          fullResponse += `${resource}\n`;
-        });
-        fullResponse += `\n💡 These credible, open-source resources will provide detailed information and interactive tools for deeper understanding.`;
       } else {
-        // Add general resources if no specific match
-        fullResponse += `📚 General STEM Resources:\n\n📐 Khan Academy: https://www.khanacademy.org\n🔬 PhET Simulations: https://phet.colorado.edu\n📚 OpenStax Textbooks: https://openstax.org\n🔍 Google Scholar: https://scholar.google.com`;
+        // Enhanced fallback responses with actual educational content
+        fullResponse = generateEducationalResponse(inputText);
+        
+        // Add a few relevant resources only if the question is very specific
+        if (relevantResources.length > 0 && inputText.length > 20) {
+          fullResponse += `\n\n📚 Additional Resources:\n${relevantResources.slice(0, 3).join('\n')}`;
+        }
       }
 
       setResponse(fullResponse);
       
     } catch (error) {
       console.error('Error:', error);
-      const fallbackResources = getRelevantResources(inputText);
-      let fallbackResponse = `🤖 Question: "${inputText}"\n\nI'm Research and STEM-GPT, here to help with STEM subjects and research methodology.\n\n`;
-      
-      if (fallbackResources.length > 0) {
-        fallbackResponse += `📚 Relevant Resources:\n\n`;
-        fallbackResources.forEach(resource => {
-          fallbackResponse += `${resource}\n`;
-        });
-      }
-      
+      // Use the same educational response system for errors
+      const fallbackResponse = generateEducationalResponse(inputText);
       setResponse(fallbackResponse);
     } finally {
       setIsLoading(false);

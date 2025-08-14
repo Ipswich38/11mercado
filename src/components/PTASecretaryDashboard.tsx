@@ -29,7 +29,10 @@ import {
   Hash,
   Type,
   Settings,
-  Zap
+  Zap,
+  Menu,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import groq, { isGroqConfigured } from '../utils/groqClient';
 
@@ -87,6 +90,9 @@ export default function PTASecretaryDashboard({ getContrastClass, onClose }: PTA
   const [isProcessingAI, setIsProcessingAI] = useState(false);
   const [aiResult, setAiResult] = useState('');
   const [aiResultType, setAiResultType] = useState<'summary' | 'minutes'>('summary');
+  
+  // Side panel state
+  const [showSidePanel, setShowSidePanel] = useState(false);
 
   // Voice recording refs
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -410,79 +416,192 @@ Make it professional, organized, and suitable for official PTA records. Focus on
 
   return (
     <div className={getContrastClass(
-      "fixed inset-0 bg-white z-50 flex flex-col",
-      "fixed inset-0 bg-black z-50 flex flex-col"
+      "fixed inset-0 bg-white z-50 flex",
+      "fixed inset-0 bg-black z-50 flex"
     )}>
-      {/* Header */}
-      <div className={getContrastClass(
-        "bg-gradient-to-r from-blue-600 to-indigo-600 p-4 text-white",
-        "bg-gray-900 border-b-2 border-yellow-400 p-4"
-      )}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+      {/* Side Panel */}
+      <div className={`fixed inset-y-0 left-0 z-60 w-80 transform transition-transform duration-300 ease-in-out ${
+        showSidePanel ? 'translate-x-0' : '-translate-x-full'
+      } ${getContrastClass(
+        "bg-white border-r border-gray-200 shadow-xl",
+        "bg-gray-900 border-r-2 border-yellow-400/50 shadow-xl"
+      )}`}>
+        {/* Side Panel Header */}
+        <div className={getContrastClass(
+          "bg-gray-50 p-4 border-b border-gray-200",
+          "bg-gray-800 p-4 border-b border-yellow-400/20"
+        )}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <FileText size={20} className={getContrastClass("text-gray-700", "text-yellow-400")} />
+              <h2 className={getContrastClass(
+                "text-lg font-semibold text-gray-900",
+                "text-lg font-semibold text-yellow-400"
+              )}>
+                Notes History
+              </h2>
+            </div>
             <button
-              onClick={onClose}
+              onClick={() => setShowSidePanel(false)}
               className={getContrastClass(
-                "p-2 rounded-lg hover:bg-white/20 transition-colors",
-                "p-2 rounded-lg hover:bg-gray-800 transition-colors text-yellow-400"
+                "p-2 rounded-lg hover:bg-gray-200 transition-colors text-gray-600",
+                "p-2 rounded-lg hover:bg-gray-700 transition-colors text-yellow-400"
               )}
             >
-              <ArrowLeft size={20} />
+              <ChevronLeft size={18} />
             </button>
-            <FileText size={24} className={getContrastClass("text-white", "text-yellow-400")} />
-            <div>
-              <h1 className={getContrastClass(
-                "text-xl font-bold text-white",
-                "text-xl font-bold text-yellow-400"
-              )}>
-                PTA Secretary Dashboard
-              </h1>
-              <p className={getContrastClass(
-                "text-sm text-white/80",
-                "text-sm text-yellow-200"
-              )}>
-                Notes, Voice Recording & Meeting Minutes
+          </div>
+          
+          {/* Search within side panel */}
+          <div className="relative mt-4">
+            <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search notes..."
+              className={getContrastClass(
+                "w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm",
+                "w-full pl-10 pr-4 py-2 bg-gray-800 border border-yellow-400/50 text-yellow-100 rounded-lg focus:ring-2 focus:ring-yellow-400 text-sm"
+              )}
+            />
+          </div>
+        </div>
+
+        {/* Notes List in Side Panel */}
+        <div className="flex-1 overflow-y-auto p-4">
+          {filteredNotes.length === 0 ? (
+            <div className="text-center py-8">
+              <FileText size={32} className={getContrastClass("text-gray-300 mx-auto mb-3", "text-gray-600 mx-auto mb-3")} />
+              <p className={getContrastClass("text-gray-500 text-sm", "text-gray-400 text-sm")}>
+                {searchQuery ? 'No notes found' : 'No notes yet'}
               </p>
             </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => createNote('text')}
-              className={getContrastClass(
-                "p-2 rounded-lg hover:bg-white/20 transition-colors",
-                "p-2 rounded-lg hover:bg-gray-800 transition-colors text-yellow-400"
-              )}
-              title="New Text Note"
-            >
-              <Plus size={20} />
-            </button>
-            <button
-              onClick={() => createNote('voice')}
-              className={getContrastClass(
-                "p-2 rounded-lg hover:bg-white/20 transition-colors",
-                "p-2 rounded-lg hover:bg-gray-800 transition-colors text-yellow-400"
-              )}
-              title="New Voice Note"
-            >
-              <Mic size={20} />
-            </button>
-            <button
-              onClick={() => createNote('meeting')}
-              className={getContrastClass(
-                "p-2 rounded-lg hover:bg-white/20 transition-colors",
-                "p-2 rounded-lg hover:bg-gray-800 transition-colors text-yellow-400"
-              )}
-              title="New Meeting Notes"
-            >
-              <Users size={20} />
-            </button>
-          </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredNotes.map(note => (
+                <div
+                  key={note.id}
+                  onClick={() => {
+                    setCurrentInput(note.content);
+                    setShowSidePanel(false); // Close side panel when note is selected
+                  }}
+                  className={getContrastClass(
+                    "p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 cursor-pointer transition-all",
+                    "p-3 bg-gray-800 rounded-lg border border-gray-600 hover:bg-gray-700 cursor-pointer transition-all"
+                  )}
+                  style={{ backgroundColor: note.color !== '#ffffff' ? note.color : undefined }}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <h4 className={getContrastClass(
+                      "font-medium text-gray-900 text-sm truncate",
+                      "font-medium text-yellow-400 text-sm truncate"
+                    )}>
+                      {note.title}
+                    </h4>
+                    <div className="flex items-center gap-1">
+                      {note.type === 'voice' && <Mic size={10} className="text-blue-500" />}
+                      {note.type === 'meeting' && <Users size={10} className="text-green-500" />}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteNote(note.id);
+                        }}
+                        className="text-red-400 hover:text-red-600 transition-colors"
+                      >
+                        <X size={10} />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <p className={getContrastClass(
+                    "text-xs text-gray-600 line-clamp-2",
+                    "text-xs text-yellow-200 line-clamp-2"
+                  )}>
+                    {note.content || 'No content...'}
+                  </p>
+                  
+                  <div className="mt-2 text-xs text-gray-500">
+                    {note.updatedAt.toLocaleDateString()}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Main AI Input Interface */}
-      <div className="flex-1 flex flex-col max-w-6xl mx-auto w-full p-6">
+      {/* Side Panel Overlay */}
+      {showSidePanel && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-50"
+          onClick={() => setShowSidePanel(false)}
+        />
+      )}
+
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col">
+        {/* Header */}
+        <div className={getContrastClass(
+          "bg-gradient-to-r from-blue-600 to-indigo-600 p-4 text-white",
+          "bg-gray-900 border-b-2 border-yellow-400 p-4"
+        )}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={onClose}
+                className={getContrastClass(
+                  "p-2 rounded-lg hover:bg-white/20 transition-colors",
+                  "p-2 rounded-lg hover:bg-gray-800 transition-colors text-yellow-400"
+                )}
+              >
+                <ArrowLeft size={20} />
+              </button>
+              <button
+                onClick={() => setShowSidePanel(true)}
+                className={getContrastClass(
+                  "p-2 rounded-lg hover:bg-white/20 transition-colors",
+                  "p-2 rounded-lg hover:bg-gray-800 transition-colors text-yellow-400"
+                )}
+                title="Show Notes History"
+              >
+                <Menu size={20} />
+              </button>
+              <FileText size={24} className={getContrastClass("text-white", "text-yellow-400")} />
+              <div>
+                <h1 className={getContrastClass(
+                  "text-xl font-bold text-white",
+                  "text-xl font-bold text-yellow-400"
+                )}>
+                  PTA Secretary Dashboard
+                </h1>
+                <p className={getContrastClass(
+                  "text-sm text-white/80",
+                  "text-sm text-yellow-200"
+                )}>
+                  AI-Powered Notes & Meeting Minutes
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => createNote('voice')}
+                className={getContrastClass(
+                  "p-2 rounded-lg hover:bg-white/20 transition-colors",
+                  "p-2 rounded-lg hover:bg-gray-800 transition-colors text-yellow-400"
+                )}
+                title="New Voice Note"
+              >
+                <Mic size={20} />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Main AI Input Interface - Scrollable */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-4xl mx-auto w-full p-6 pb-20">
         
         {/* AI Input Section */}
         <div className={getContrastClass(
@@ -635,107 +754,6 @@ Use the formatting tools above to organize your notes, then click Send to genera
             </div>
           </div>
         </div>
-
-        {/* Saved Notes Section */}
-        <div className={getContrastClass(
-          "bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/30",
-          "bg-gray-900/60 backdrop-blur-md rounded-2xl shadow-lg border border-yellow-400/30"
-        )}>
-          <div className="p-4 border-b border-gray-200">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className={getContrastClass(
-                "text-lg font-semibold text-gray-900",
-                "text-lg font-semibold text-yellow-400"
-              )}>
-                Saved Notes & Results
-              </h3>
-              
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => createNote('text')}
-                  className={getContrastClass(
-                    "p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors",
-                    "p-2 bg-yellow-400 text-black rounded-lg hover:bg-yellow-300 transition-colors"
-                  )}
-                  title="Save Current Input as Note"
-                >
-                  <Plus size={16} />
-                </button>
-              </div>
-            </div>
-            
-            <div className="relative">
-              <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search saved notes..."
-                className={getContrastClass(
-                  "w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500",
-                  "w-full pl-10 pr-4 py-2 bg-gray-800 border border-yellow-400 text-yellow-100 rounded-lg focus:ring-2 focus:ring-yellow-400"
-                )}
-              />
-            </div>
-          </div>
-
-          {/* Notes Grid */}
-          <div className="p-4">
-            {filteredNotes.length === 0 ? (
-              <div className="text-center py-12">
-                <FileText size={48} className={getContrastClass("text-gray-300 mx-auto mb-4", "text-gray-600 mx-auto mb-4")} />
-                <p className={getContrastClass("text-gray-500", "text-gray-400")}>
-                  {searchQuery ? 'No notes found matching your search' : 'No saved notes yet. Create your first note above!'}
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredNotes.map(note => (
-                  <div
-                    key={note.id}
-                    onClick={() => setCurrentInput(note.content)}
-                    className={getContrastClass(
-                      "p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-all hover:shadow-md",
-                      "p-4 bg-gray-800 rounded-lg border border-gray-600 hover:bg-gray-700 cursor-pointer transition-all hover:shadow-md"
-                    )}
-                    style={{ backgroundColor: note.color !== '#ffffff' ? note.color : undefined }}
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <h4 className={getContrastClass(
-                        "font-medium text-gray-900 text-sm truncate",
-                        "font-medium text-yellow-400 text-sm truncate"
-                      )}>
-                        {note.title}
-                      </h4>
-                      <div className="flex items-center gap-1">
-                        {note.type === 'voice' && <Mic size={12} className="text-blue-500" />}
-                        {note.type === 'meeting' && <Users size={12} className="text-green-500" />}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteNote(note.id);
-                          }}
-                          className="text-red-400 hover:text-red-600 transition-colors"
-                        >
-                          <X size={12} />
-                        </button>
-                      </div>
-                    </div>
-                    
-                    <p className={getContrastClass(
-                      "text-xs text-gray-600 line-clamp-3",
-                      "text-xs text-yellow-200 line-clamp-3"
-                    )}>
-                      {note.content || 'No content...'}
-                    </p>
-                    
-                    <div className="mt-3 text-xs text-gray-500">
-                      {note.updatedAt.toLocaleDateString()}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         </div>
       </div>

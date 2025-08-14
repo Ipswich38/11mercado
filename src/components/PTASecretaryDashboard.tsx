@@ -32,7 +32,9 @@ import {
   Zap,
   Menu,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  PenTool,
+  BookOpen
 } from 'lucide-react';
 import groq, { isGroqConfigured } from '../utils/groqClient';
 
@@ -420,7 +422,7 @@ Make it professional, organized, and suitable for official PTA records. Focus on
       "fixed inset-0 bg-black z-50 flex"
     )}>
       {/* Side Panel */}
-      <div className={`fixed inset-y-0 left-0 z-60 w-80 transform transition-transform duration-300 ease-in-out ${
+      <div className={`fixed inset-y-0 left-0 z-[70] w-80 transform transition-transform duration-300 ease-in-out ${
         showSidePanel ? 'translate-x-0' : '-translate-x-full'
       } ${getContrastClass(
         "bg-white border-r border-gray-200 shadow-xl",
@@ -534,7 +536,7 @@ Make it professional, organized, and suitable for official PTA records. Focus on
       {/* Side Panel Overlay */}
       {showSidePanel && (
         <div 
-          className="fixed inset-0 bg-black/50 z-50"
+          className="fixed inset-0 bg-black/50 z-[65]"
           onClick={() => setShowSidePanel(false)}
         />
       )}
@@ -615,21 +617,7 @@ Make it professional, organized, and suitable for official PTA records. Focus on
           )}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Brain size={28} className={getContrastClass("text-white", "text-yellow-400")} />
-                <div>
-                  <h2 className={getContrastClass(
-                    "text-xl font-bold text-white",
-                    "text-xl font-bold text-yellow-400"
-                  )}>
-                    KreativLoops AI Note Assistant
-                  </h2>
-                  <p className={getContrastClass(
-                    "text-sm text-white/80",
-                    "text-sm text-yellow-200"
-                  )}>
-                    Type your notes and let AI create summaries or meeting minutes
-                  </p>
-                </div>
+                <PenTool size={28} className={getContrastClass("text-white", "text-yellow-400")} />
               </div>
               
               {/* Formatting Tools */}
@@ -648,8 +636,8 @@ Make it professional, organized, and suitable for official PTA records. Focus on
                   
                   {showFormatMenu && (
                     <div className={getContrastClass(
-                      "absolute right-0 top-12 bg-white border border-gray-200 rounded-lg shadow-xl p-2 min-w-48 z-10",
-                      "absolute right-0 top-12 bg-gray-800 border border-yellow-400 rounded-lg shadow-xl p-2 min-w-48 z-10"
+                      "absolute right-0 top-12 bg-white border border-gray-200 rounded-lg shadow-xl p-2 min-w-48 z-[80]",
+                      "absolute right-0 top-12 bg-gray-800 border border-yellow-400 rounded-lg shadow-xl p-2 min-w-48 z-[80]"
                     )}>
                       <div className={getContrastClass(
                         "text-xs font-medium text-gray-600 mb-2 px-2",
@@ -760,7 +748,7 @@ Use the formatting tools above to organize your notes, then click Send to genera
 
       {/* AI Choice Modal */}
       {showAIChoiceModal && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/50">
+        <div className="fixed inset-0 z-[75] flex items-center justify-center bg-black/50">
           <div className={getContrastClass(
             "bg-white rounded-2xl shadow-xl max-w-md w-full mx-4",
             "bg-gray-900 border-2 border-yellow-400 rounded-2xl shadow-xl max-w-md w-full mx-4"
@@ -771,7 +759,7 @@ Use the formatting tools above to organize your notes, then click Send to genera
             )}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Brain size={24} className={getContrastClass("text-white", "text-yellow-400")} />
+                  <PenTool size={24} className={getContrastClass("text-white", "text-yellow-400")} />
                   <h3 className={getContrastClass(
                     "text-lg font-semibold text-white",
                     "text-lg font-semibold text-yellow-400"
@@ -876,7 +864,7 @@ Use the formatting tools above to organize your notes, then click Send to genera
 
       {/* Generated Minutes Modal */}
       {showMinutesModal && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/50">
+        <div className="fixed inset-0 z-[75] flex items-center justify-center bg-black/50">
           <div className={getContrastClass(
             "bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[80vh] overflow-hidden",
             "bg-gray-900 border-2 border-yellow-400 rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[80vh] overflow-hidden"

@@ -22,7 +22,14 @@ import {
   Brain, 
   Sparkles,
   Copy,
-  Check
+  Check,
+  Send,
+  List,
+  CheckSquare,
+  Hash,
+  Type,
+  Settings,
+  Zap
 } from 'lucide-react';
 import groq, { isGroqConfigured } from '../utils/groqClient';
 
@@ -71,6 +78,15 @@ export default function PTASecretaryDashboard({ getContrastClass, onClose }: PTA
   const [generatedMinutes, setGeneratedMinutes] = useState('');
   const [showMinutesModal, setShowMinutesModal] = useState(false);
   const [copiedToClipboard, setCopiedToClipboard] = useState(false);
+  
+  // New AI Input Features
+  const [currentInput, setCurrentInput] = useState('');
+  const [listFormat, setListFormat] = useState<'bullets' | 'numbers' | 'letters' | 'checkboxes'>('bullets');
+  const [showFormatMenu, setShowFormatMenu] = useState(false);
+  const [showAIChoiceModal, setShowAIChoiceModal] = useState(false);
+  const [isProcessingAI, setIsProcessingAI] = useState(false);
+  const [aiResult, setAiResult] = useState('');
+  const [aiResultType, setAiResultType] = useState<'summary' | 'minutes'>('summary');
 
   // Voice recording refs
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -291,6 +307,99 @@ Make it professional, organized, and suitable for official PTA records. Focus on
     }
   };
 
+  // Format text with selected list style
+  const formatTextWithList = (text: string, format: string) => {
+    const lines = text.split('\n').filter(line => line.trim());
+    
+    return lines.map((line, index) => {
+      const trimmedLine = line.trim();
+      if (!trimmedLine) return line;
+      
+      switch (format) {
+        case 'bullets':
+          return `• ${trimmedLine}`;
+        case 'numbers':
+          return `${index + 1}. ${trimmedLine}`;
+        case 'letters':
+          return `${String.fromCharCode(97 + index)}. ${trimmedLine}`;
+        case 'checkboxes':
+          return `☐ ${trimmedLine}`;
+        default:
+          return trimmedLine;
+      }
+    }).join('\n');
+  };
+
+  // Handle AI processing choice
+  const handleAIChoice = async (type: 'summary' | 'minutes') => {
+    if (!currentInput.trim()) {
+      alert('Please enter some notes first.');
+      return;
+    }
+
+    setIsProcessingAI(true);
+    setAiResultType(type);
+    setShowAIChoiceModal(false);
+    
+    const systemPrompt = type === 'summary' 
+      ? 'You are an expert assistant that creates clear, concise summaries from notes. Focus on key points, main ideas, and important details. Organize the content logically and professionally.'
+      : 'You are a professional PTA Secretary assistant. Create formal meeting minutes from notes. Include proper structure with agenda items, discussions, decisions made, action items, and next steps. Format professionally for official PTA records.';
+
+    const userPrompt = type === 'summary'
+      ? `Please create a clear and organized summary from these notes:\n\n${currentInput}\n\nOrganize the content logically and highlight the most important points.`
+      : `Please create formal PTA meeting minutes from these notes:\n\n${currentInput}\n\nFormat as proper meeting minutes with:\n1. Meeting details\n2. Agenda items discussed\n3. Key decisions made\n4. Action items with responsible parties\n5. Next meeting information`;
+
+    try {
+      if (!groq || !isGroqConfigured) {
+        throw new Error('KreativLoops AI not configured');
+      }
+
+      const response = await groq.chat.completions.create({
+        messages: [
+          {
+            role: 'system',
+            content: systemPrompt
+          },
+          {
+            role: 'user',
+            content: userPrompt
+          }
+        ],
+        model: 'llama3-70b-8192',
+        temperature: 0.3,
+        max_tokens: 1000
+      });
+
+      const result = response.choices[0]?.message?.content || `Unable to generate ${type}.`;
+      setAiResult(result);
+      setShowMinutesModal(true);
+    } catch (error) {
+      console.error(`Error generating ${type}:`, error);
+      alert(`Error generating ${type}. Please try again.`);
+    } finally {
+      setIsProcessingAI(false);
+    }
+  };
+
+  // Handle Send button click
+  const handleSendToAI = () => {
+    if (!currentInput.trim()) {
+      alert('Please enter some notes first.');
+      return;
+    }
+    setShowAIChoiceModal(true);
+  };
+
+  // Apply formatting to current input
+  const applyFormatting = (format: string) => {
+    if (currentInput.trim()) {
+      const formatted = formatTextWithList(currentInput, format);
+      setCurrentInput(formatted);
+    }
+    setListFormat(format as any);
+    setShowFormatMenu(false);
+  };
+
   // Filter notes
   const filteredNotes = notes.filter(note => {
     const matchesSearch = note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -372,274 +481,380 @@ Make it professional, organized, and suitable for official PTA records. Focus on
         </div>
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
-        {/* Notes List Sidebar */}
+      {/* Main AI Input Interface */}
+      <div className="flex-1 flex flex-col max-w-6xl mx-auto w-full p-6">
+        
+        {/* AI Input Section */}
         <div className={getContrastClass(
-          "w-80 bg-gray-50 border-r border-gray-200 flex flex-col",
-          "w-80 bg-gray-900 border-r border-yellow-400/20 flex flex-col"
+          "bg-white/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 mb-6",
+          "bg-gray-900/90 backdrop-blur-xl rounded-3xl shadow-2xl border-2 border-yellow-400/50 mb-6"
         )}>
-          {/* Search and Filter */}
+          {/* Input Header */}
+          <div className={getContrastClass(
+            "bg-gradient-to-r from-blue-500 to-purple-600 p-6 rounded-t-3xl",
+            "bg-gradient-to-r from-gray-800 to-gray-700 border-b-2 border-yellow-400/30 p-6 rounded-t-3xl"
+          )}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Brain size={28} className={getContrastClass("text-white", "text-yellow-400")} />
+                <div>
+                  <h2 className={getContrastClass(
+                    "text-xl font-bold text-white",
+                    "text-xl font-bold text-yellow-400"
+                  )}>
+                    KreativLoops AI Note Assistant
+                  </h2>
+                  <p className={getContrastClass(
+                    "text-sm text-white/80",
+                    "text-sm text-yellow-200"
+                  )}>
+                    Type your notes and let AI create summaries or meeting minutes
+                  </p>
+                </div>
+              </div>
+              
+              {/* Formatting Tools */}
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <button
+                    onClick={() => setShowFormatMenu(!showFormatMenu)}
+                    className={getContrastClass(
+                      "p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors text-white",
+                      "p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors text-yellow-400 border border-yellow-400/50"
+                    )}
+                    title="Formatting Options"
+                  >
+                    <Settings size={18} />
+                  </button>
+                  
+                  {showFormatMenu && (
+                    <div className={getContrastClass(
+                      "absolute right-0 top-12 bg-white border border-gray-200 rounded-lg shadow-xl p-2 min-w-48 z-10",
+                      "absolute right-0 top-12 bg-gray-800 border border-yellow-400 rounded-lg shadow-xl p-2 min-w-48 z-10"
+                    )}>
+                      <div className={getContrastClass(
+                        "text-xs font-medium text-gray-600 mb-2 px-2",
+                        "text-xs font-medium text-yellow-400 mb-2 px-2"
+                      )}>
+                        List Formatting
+                      </div>
+                      
+                      {[
+                        { key: 'bullets', icon: List, label: 'Bullet Points', example: '• Item' },
+                        { key: 'numbers', icon: Hash, label: 'Numbers', example: '1. Item' },
+                        { key: 'letters', icon: Type, label: 'Letters', example: 'a. Item' },
+                        { key: 'checkboxes', icon: CheckSquare, label: 'Checkboxes', example: '☐ Item' }
+                      ].map(format => (
+                        <button
+                          key={format.key}
+                          onClick={() => applyFormatting(format.key)}
+                          className={`w-full flex items-center gap-3 p-2 rounded-lg transition-colors ${
+                            listFormat === format.key
+                              ? getContrastClass('bg-blue-100 text-blue-800', 'bg-yellow-400/20 text-yellow-300')
+                              : getContrastClass('hover:bg-gray-100 text-gray-700', 'hover:bg-gray-700 text-yellow-200')
+                          }`}
+                        >
+                          <format.icon size={16} />
+                          <div className="flex-1 text-left">
+                            <div className="text-sm font-medium">{format.label}</div>
+                            <div className="text-xs opacity-60">{format.example}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                
+                <button
+                  onClick={() => createNote('voice')}
+                  className={getContrastClass(
+                    "p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors text-white",
+                    "p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors text-yellow-400 border border-yellow-400/50"
+                  )}
+                  title="Voice Recording"
+                >
+                  <Mic size={18} />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Input Area */}
+          <div className="p-6">
+            <div className="relative">
+              <textarea
+                value={currentInput}
+                onChange={(e) => setCurrentInput(e.target.value)}
+                placeholder="Start typing your notes here... 
+
+Examples:
+• Meeting agenda items
+• Discussion points
+• Action items and decisions
+• Important observations
+
+Use the formatting tools above to organize your notes, then click Send to generate a summary or meeting minutes!"
+                className={getContrastClass(
+                  "w-full h-64 p-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 resize-none text-gray-900 bg-gray-50",
+                  "w-full h-64 p-4 border-2 border-yellow-400/50 rounded-xl focus:ring-4 focus:ring-yellow-400/20 focus:border-yellow-400 resize-none text-yellow-100 bg-gray-800/50"
+                )}
+                style={{ fontFamily: 'inherit', fontSize: '15px', lineHeight: '1.6' }}
+              />
+              
+              {/* Send Button */}
+              <button
+                onClick={handleSendToAI}
+                disabled={!currentInput.trim() || isProcessingAI}
+                className={`absolute bottom-4 right-4 flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
+                  getContrastClass(
+                    "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg hover:shadow-xl",
+                    "bg-gradient-to-r from-yellow-400 to-yellow-500 text-black shadow-lg hover:shadow-xl"
+                  )
+                }`}
+              >
+                {isProcessingAI ? (
+                  <>
+                    <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <Send size={18} />
+                    Send to AI
+                  </>
+                )}
+              </button>
+            </div>
+            
+            {/* Character Count */}
+            <div className={getContrastClass(
+              "text-xs text-gray-500 mt-2 text-right",
+              "text-xs text-yellow-400/60 mt-2 text-right"
+            )}>
+              {currentInput.length} characters
+            </div>
+          </div>
+        </div>
+
+        {/* Saved Notes Section */}
+        <div className={getContrastClass(
+          "bg-white/60 backdrop-blur-md rounded-2xl shadow-lg border border-white/30",
+          "bg-gray-900/60 backdrop-blur-md rounded-2xl shadow-lg border border-yellow-400/30"
+        )}>
           <div className="p-4 border-b border-gray-200">
-            <div className="relative mb-3">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className={getContrastClass(
+                "text-lg font-semibold text-gray-900",
+                "text-lg font-semibold text-yellow-400"
+              )}>
+                Saved Notes & Results
+              </h3>
+              
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => createNote('text')}
+                  className={getContrastClass(
+                    "p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors",
+                    "p-2 bg-yellow-400 text-black rounded-lg hover:bg-yellow-300 transition-colors"
+                  )}
+                  title="Save Current Input as Note"
+                >
+                  <Plus size={16} />
+                </button>
+              </div>
+            </div>
+            
+            <div className="relative">
               <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search notes..."
+                placeholder="Search saved notes..."
                 className={getContrastClass(
                   "w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500",
                   "w-full pl-10 pr-4 py-2 bg-gray-800 border border-yellow-400 text-yellow-100 rounded-lg focus:ring-2 focus:ring-yellow-400"
                 )}
               />
             </div>
-            
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value as any)}
-              className={getContrastClass(
-                "w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500",
-                "w-full p-2 bg-gray-800 border border-yellow-400 text-yellow-100 rounded-lg focus:ring-2 focus:ring-yellow-400"
-              )}
-            >
-              <option value="all">All Notes</option>
-              <option value="text">Text Notes</option>
-              <option value="voice">Voice Notes</option>
-              <option value="meeting">Meeting Notes</option>
-            </select>
           </div>
 
-          {/* Notes List */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {filteredNotes.map(note => (
-              <div
-                key={note.id}
-                onClick={() => {
-                  setSelectedNote(note);
-                  setIsCreating(false);
-                }}
-                className={`p-4 rounded-lg cursor-pointer transition-all border-2 ${
-                  selectedNote?.id === note.id
-                    ? getContrastClass('bg-blue-100 border-blue-300', 'bg-gray-800 border-yellow-400')
-                    : getContrastClass('bg-white border-gray-200 hover:bg-gray-50', 'bg-gray-800 border-gray-600 hover:bg-gray-700')
-                }`}
-                style={{ backgroundColor: selectedNote?.id !== note.id ? note.color : undefined }}
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <h3 className={getContrastClass(
-                    "font-medium text-gray-900 text-sm line-clamp-1",
-                    "font-medium text-yellow-400 text-sm line-clamp-1"
-                  )}>
-                    {note.title}
-                  </h3>
-                  <div className="flex items-center gap-1">
-                    {note.type === 'voice' && <Mic size={12} className="text-blue-500" />}
-                    {note.type === 'meeting' && <Users size={12} className="text-green-500" />}
-                    {note.isRecording && <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />}
-                  </div>
-                </div>
-                
-                <p className={getContrastClass(
-                  "text-xs text-gray-600 line-clamp-3",
-                  "text-xs text-yellow-200 line-clamp-3"
-                )}>
-                  {note.content || 'No content...'}
-                </p>
-                
-                <div className="flex items-center justify-between mt-3">
-                  <span className={getContrastClass(
-                    "text-xs text-gray-500",
-                    "text-xs text-yellow-300"
-                  )}>
-                    {note.updatedAt.toLocaleDateString()}
-                  </span>
-                  {note.tags.length > 0 && (
-                    <div className="flex gap-1">
-                      {note.tags.slice(0, 2).map(tag => (
-                        <span
-                          key={tag}
-                          className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-            
-            {filteredNotes.length === 0 && (
-              <div className="text-center py-8">
+          {/* Notes Grid */}
+          <div className="p-4">
+            {filteredNotes.length === 0 ? (
+              <div className="text-center py-12">
                 <FileText size={48} className={getContrastClass("text-gray-300 mx-auto mb-4", "text-gray-600 mx-auto mb-4")} />
                 <p className={getContrastClass("text-gray-500", "text-gray-400")}>
-                  {searchQuery ? 'No notes found' : 'No notes yet. Create your first note!'}
+                  {searchQuery ? 'No notes found matching your search' : 'No saved notes yet. Create your first note above!'}
                 </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredNotes.map(note => (
+                  <div
+                    key={note.id}
+                    onClick={() => setCurrentInput(note.content)}
+                    className={getContrastClass(
+                      "p-4 bg-white rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-all hover:shadow-md",
+                      "p-4 bg-gray-800 rounded-lg border border-gray-600 hover:bg-gray-700 cursor-pointer transition-all hover:shadow-md"
+                    )}
+                    style={{ backgroundColor: note.color !== '#ffffff' ? note.color : undefined }}
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <h4 className={getContrastClass(
+                        "font-medium text-gray-900 text-sm truncate",
+                        "font-medium text-yellow-400 text-sm truncate"
+                      )}>
+                        {note.title}
+                      </h4>
+                      <div className="flex items-center gap-1">
+                        {note.type === 'voice' && <Mic size={12} className="text-blue-500" />}
+                        {note.type === 'meeting' && <Users size={12} className="text-green-500" />}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteNote(note.id);
+                          }}
+                          className="text-red-400 hover:text-red-600 transition-colors"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <p className={getContrastClass(
+                      "text-xs text-gray-600 line-clamp-3",
+                      "text-xs text-yellow-200 line-clamp-3"
+                    )}>
+                      {note.content || 'No content...'}
+                    </p>
+                    
+                    <div className="mt-3 text-xs text-gray-500">
+                      {note.updatedAt.toLocaleDateString()}
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
         </div>
+      </div>
 
-        {/* Note Editor */}
-        <div className="flex-1 flex flex-col">
-          {selectedNote ? (
-            <>
-              {/* Note Header */}
-              <div className={getContrastClass(
-                "bg-white border-b border-gray-200 p-4",
-                "bg-gray-900 border-b border-yellow-400/20 p-4"
-              )}>
-                <div className="flex items-center justify-between mb-4">
-                  <input
-                    type="text"
-                    value={selectedNote.title}
-                    onChange={(e) => updateNote(selectedNote.id, { title: e.target.value })}
-                    className={getContrastClass(
-                      "text-xl font-bold bg-transparent border-none focus:outline-none text-gray-900",
-                      "text-xl font-bold bg-transparent border-none focus:outline-none text-yellow-400"
-                    )}
-                    placeholder="Note title..."
-                  />
-                  
-                  <div className="flex items-center gap-2">
-                    {selectedNote.type === 'voice' && (
-                      <button
-                        onClick={isRecording ? stopVoiceRecording : startVoiceRecording}
-                        className={`p-2 rounded-lg transition-colors ${
-                          isRecording
-                            ? 'bg-red-500 text-white hover:bg-red-600'
-                            : getContrastClass(
-                                'bg-blue-500 text-white hover:bg-blue-600',
-                                'bg-yellow-400 text-black hover:bg-yellow-300'
-                              )
-                        }`}
-                        title={isRecording ? 'Stop Recording' : 'Start Recording'}
-                      >
-                        {isRecording ? <Square size={16} /> : <Mic size={16} />}
-                      </button>
-                    )}
-                    
-                    {selectedNote.type === 'meeting' && (
-                      <button
-                        onClick={generateMeetingMinutes}
-                        disabled={isGeneratingMinutes}
-                        className={getContrastClass(
-                          "p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50",
-                          "p-2 bg-green-400 text-black rounded-lg hover:bg-green-300 disabled:opacity-50"
-                        )}
-                        title="Generate Meeting Minutes"
-                      >
-                        {isGeneratingMinutes ? (
-                          <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
-                        ) : (
-                          <Sparkles size={16} />
-                        )}
-                      </button>
-                    )}
-                    
-                    <button
-                      onClick={() => deleteNote(selectedNote.id)}
-                      className={getContrastClass(
-                        "p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors",
-                        "p-2 text-red-400 hover:bg-gray-800 rounded-lg transition-colors"
-                      )}
-                      title="Delete Note"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
+      {/* AI Choice Modal */}
+      {showAIChoiceModal && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/50">
+          <div className={getContrastClass(
+            "bg-white rounded-2xl shadow-xl max-w-md w-full mx-4",
+            "bg-gray-900 border-2 border-yellow-400 rounded-2xl shadow-xl max-w-md w-full mx-4"
+          )}>
+            <div className={getContrastClass(
+              "bg-gradient-to-r from-blue-500 to-purple-600 p-6 rounded-t-2xl",
+              "bg-gradient-to-r from-gray-800 to-gray-700 border-b-2 border-yellow-400/30 p-6 rounded-t-2xl"
+            )}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Brain size={24} className={getContrastClass("text-white", "text-yellow-400")} />
+                  <h3 className={getContrastClass(
+                    "text-lg font-semibold text-white",
+                    "text-lg font-semibold text-yellow-400"
+                  )}>
+                    Choose AI Analysis Type
+                  </h3>
                 </div>
-
-                {/* Meeting Details */}
-                {selectedNote.type === 'meeting' && (
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <label className={getContrastClass(
-                        "block text-sm font-medium text-gray-700 mb-1",
-                        "block text-sm font-medium text-yellow-400 mb-1"
-                      )}>
-                        Meeting Date
-                      </label>
-                      <input
-                        type="datetime-local"
-                        value={selectedNote.meetingDate?.toISOString().slice(0, 16) || ''}
-                        onChange={(e) => updateNote(selectedNote.id, { 
-                          meetingDate: e.target.value ? new Date(e.target.value) : undefined 
-                        })}
-                        className={getContrastClass(
-                          "w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500",
-                          "w-full p-2 bg-gray-800 border border-yellow-400 text-yellow-100 rounded-lg focus:ring-2 focus:ring-yellow-400"
-                        )}
-                      />
-                    </div>
-                    <div>
-                      <label className={getContrastClass(
-                        "block text-sm font-medium text-gray-700 mb-1",
-                        "block text-sm font-medium text-yellow-400 mb-1"
-                      )}>
-                        Attendees (comma separated)
-                      </label>
-                      <input
-                        type="text"
-                        value={selectedNote.attendees?.join(', ') || ''}
-                        onChange={(e) => updateNote(selectedNote.id, { 
-                          attendees: e.target.value.split(',').map(a => a.trim()).filter(a => a) 
-                        })}
-                        placeholder="John Doe, Jane Smith..."
-                        className={getContrastClass(
-                          "w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500",
-                          "w-full p-2 bg-gray-800 border border-yellow-400 text-yellow-100 rounded-lg focus:ring-2 focus:ring-yellow-400"
-                        )}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Recording Status */}
-                {isRecording && (
-                  <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
-                    <span className="text-red-700 text-sm font-medium">Recording in progress...</span>
-                    <Volume2 size={16} className="text-red-500" />
-                  </div>
-                )}
-              </div>
-
-              {/* Note Content */}
-              <div className="flex-1 p-4">
-                <textarea
-                  value={selectedNote.content}
-                  onChange={(e) => updateNote(selectedNote.id, { content: e.target.value })}
-                  placeholder={
-                    selectedNote.type === 'meeting' 
-                      ? "• Agenda item 1\n• Discussion points\n• Decisions made\n• Action items\n• Next steps..."
-                      : selectedNote.type === 'voice'
-                      ? "Start recording to capture voice notes automatically, or type additional notes here..."
-                      : "Start typing your notes here..."
-                  }
+                <button
+                  onClick={() => setShowAIChoiceModal(false)}
                   className={getContrastClass(
-                    "w-full h-full resize-none border-none focus:outline-none text-gray-900 bg-transparent",
-                    "w-full h-full resize-none border-none focus:outline-none text-yellow-100 bg-transparent"
+                    "p-2 text-white/70 hover:text-white hover:bg-white/20 rounded-lg transition-colors",
+                    "p-2 text-yellow-400/70 hover:text-yellow-400 hover:bg-gray-600 rounded-lg transition-colors"
                   )}
-                  style={{ fontFamily: 'inherit', fontSize: '14px', lineHeight: '1.5' }}
-                />
-              </div>
-            </>
-          ) : (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center">
-                <FileText size={64} className={getContrastClass("text-gray-300 mx-auto mb-4", "text-gray-600 mx-auto mb-4")} />
-                <h2 className={getContrastClass("text-xl font-medium text-gray-600 mb-2", "text-xl font-medium text-gray-400 mb-2")}>
-                  Select a note to start editing
-                </h2>
-                <p className={getContrastClass("text-gray-500", "text-gray-500")}>
-                  Choose from the sidebar or create a new note
-                </p>
+                >
+                  <X size={16} />
+                </button>
               </div>
             </div>
-          )}
+            
+            <div className="p-6">
+              <p className={getContrastClass(
+                "text-gray-600 mb-6 text-center",
+                "text-yellow-200 mb-6 text-center"
+              )}>
+                What would you like KreativLoops AI to create from your notes?
+              </p>
+              
+              <div className="space-y-3">
+                <button
+                  onClick={() => handleAIChoice('summary')}
+                  disabled={isProcessingAI}
+                  className={getContrastClass(
+                    "w-full flex items-center gap-4 p-4 rounded-xl border-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50 transition-all group",
+                    "w-full flex items-center gap-4 p-4 rounded-xl border-2 border-yellow-400/50 hover:border-yellow-400 hover:bg-gray-800/50 transition-all group"
+                  )}
+                >
+                  <div className={getContrastClass(
+                    "p-3 bg-blue-100 rounded-xl group-hover:bg-blue-200 transition-colors",
+                    "p-3 bg-yellow-400/20 rounded-xl group-hover:bg-yellow-400/30 transition-colors"
+                  )}>
+                    <FileText size={20} className={getContrastClass("text-blue-600", "text-yellow-400")} />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <h4 className={getContrastClass(
+                      "font-semibold text-gray-900 mb-1",
+                      "font-semibold text-yellow-400 mb-1"
+                    )}>
+                      Create Summary
+                    </h4>
+                    <p className={getContrastClass(
+                      "text-sm text-gray-600",
+                      "text-sm text-yellow-200"
+                    )}>
+                      Organize and summarize your notes with key points highlighted
+                    </p>
+                  </div>
+                </button>
+                
+                <button
+                  onClick={() => handleAIChoice('minutes')}
+                  disabled={isProcessingAI}
+                  className={getContrastClass(
+                    "w-full flex items-center gap-4 p-4 rounded-xl border-2 border-green-200 hover:border-green-400 hover:bg-green-50 transition-all group",
+                    "w-full flex items-center gap-4 p-4 rounded-xl border-2 border-yellow-400/50 hover:border-yellow-400 hover:bg-gray-800/50 transition-all group"
+                  )}
+                >
+                  <div className={getContrastClass(
+                    "p-3 bg-green-100 rounded-xl group-hover:bg-green-200 transition-colors",
+                    "p-3 bg-yellow-400/20 rounded-xl group-hover:bg-yellow-400/30 transition-colors"
+                  )}>
+                    <Users size={20} className={getContrastClass("text-green-600", "text-yellow-400")} />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <h4 className={getContrastClass(
+                      "font-semibold text-gray-900 mb-1",
+                      "font-semibold text-yellow-400 mb-1"
+                    )}>
+                      Generate Meeting Minutes
+                    </h4>
+                    <p className={getContrastClass(
+                      "text-sm text-gray-600",
+                      "text-sm text-yellow-200"
+                    )}>
+                      Create formal PTA meeting minutes with proper structure and format
+                    </p>
+                  </div>
+                </button>
+              </div>
+              
+              {isProcessingAI && (
+                <div className="mt-4 flex items-center justify-center gap-3">
+                  <div className="animate-spin w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full" />
+                  <span className={getContrastClass("text-gray-600", "text-yellow-400")}>
+                    Processing with KreativLoops AI...
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Generated Minutes Modal */}
       {showMinutesModal && (
@@ -657,11 +872,11 @@ Make it professional, organized, and suitable for official PTA records. Focus on
                   "text-lg font-medium text-gray-900",
                   "text-lg font-medium text-yellow-400"
                 )}>
-                  Generated Meeting Minutes
+                  {aiResultType === 'summary' ? 'Generated Summary' : 'Generated Meeting Minutes'}
                 </h3>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => copyToClipboard(generatedMinutes)}
+                    onClick={() => copyToClipboard(aiResult || generatedMinutes)}
                     className={getContrastClass(
                       "p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors",
                       "p-2 text-yellow-400 hover:bg-gray-700 rounded-lg transition-colors"
@@ -688,7 +903,7 @@ Make it professional, organized, and suitable for official PTA records. Focus on
                 "prose prose-sm max-w-none text-gray-900",
                 "prose prose-sm max-w-none text-yellow-100"
               )}>
-                <pre className="whitespace-pre-wrap font-sans">{generatedMinutes}</pre>
+                <pre className="whitespace-pre-wrap font-sans">{aiResult || generatedMinutes}</pre>
               </div>
             </div>
             
@@ -698,19 +913,40 @@ Make it professional, organized, and suitable for official PTA records. Focus on
             )}>
               <button
                 onClick={() => {
-                  if (selectedNote) {
-                    updateNote(selectedNote.id, { 
-                      content: selectedNote.content + '\n\n=== GENERATED MEETING MINUTES ===\n\n' + generatedMinutes 
-                    });
-                  }
+                  const result = aiResult || generatedMinutes;
+                  const resultType = aiResultType === 'summary' ? 'SUMMARY' : 'MEETING MINUTES';
+                  
+                  // Create a new note with the AI result
+                  const newNote: Note = {
+                    id: `note_${Date.now()}`,
+                    title: `AI ${resultType} - ${new Date().toLocaleDateString()}`,
+                    content: result,
+                    type: aiResultType === 'minutes' ? 'meeting' : 'text',
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                    tags: [`AI ${resultType}`],
+                    color: NOTE_COLORS[0],
+                    ...(aiResultType === 'minutes' && { 
+                      meetingDate: new Date(), 
+                      attendees: [] 
+                    })
+                  };
+                  
+                  const updatedNotes = [newNote, ...notes];
+                  setNotes(updatedNotes);
+                  saveNotes(updatedNotes);
+                  
                   setShowMinutesModal(false);
+                  
+                  // Clear the current input after saving
+                  setCurrentInput('');
                 }}
                 className={getContrastClass(
                   "px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors",
                   "px-4 py-2 bg-yellow-400 text-black rounded-lg hover:bg-yellow-300 transition-colors"
                 )}
               >
-                Add to Note
+                Save as New Note
               </button>
               <button
                 onClick={() => setShowMinutesModal(false)}

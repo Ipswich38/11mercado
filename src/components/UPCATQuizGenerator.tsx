@@ -163,6 +163,12 @@ SUBJECTS TO COVER:
 Make questions challenging but fair, requiring analytical thinking and comprehensive understanding.`;
 
     try {
+      // Debug logging
+      console.log('Groq configured:', isGroqConfigured);
+      console.log('Groq client exists:', !!groq);
+      console.log('API Key present:', !!import.meta.env.VITE_GROQ_API_KEY);
+      console.log('API Key preview:', import.meta.env.VITE_GROQ_API_KEY?.substring(0, 10) + '...');
+      
       if (!groq || !isGroqConfigured) {
         throw new Error('AI service not configured. Please check environment variables.');
       }
@@ -212,7 +218,24 @@ Make questions challenging but fair, requiring analytical thinking and comprehen
     } catch (error) {
       console.error('Error generating quiz:', error);
       setQuiz(prev => ({ ...prev, isGenerating: false }));
-      alert('Error generating quiz. Please try again.');
+      
+      // Provide more specific error messages
+      let errorMessage = 'Error generating quiz. ';
+      if (error.message.includes('not configured')) {
+        errorMessage += 'AI service not configured. Please check environment variables.';
+      } else if (error.message.includes('Invalid response format')) {
+        errorMessage += 'AI returned invalid response format. Please try again.';
+      } else if (error.message.includes('401')) {
+        errorMessage += 'API key invalid or expired.';
+      } else if (error.message.includes('429')) {
+        errorMessage += 'API rate limit exceeded. Please wait and try again.';
+      } else if (error.message.includes('quota')) {
+        errorMessage += 'API quota exceeded. Please check your API key limits.';
+      } else {
+        errorMessage += `Please try again. Error: ${error.message}`;
+      }
+      
+      alert(errorMessage);
     }
   };
 

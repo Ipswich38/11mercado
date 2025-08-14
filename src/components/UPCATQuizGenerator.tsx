@@ -492,7 +492,7 @@ Keep it encouraging and educational.`;
                 "text-2xl font-bold text-gray-900 mb-2",
                 "text-2xl font-bold text-yellow-400 mb-2"
               )}>
-                AI-Powered UPCAT Practice
+                KreativLoops AI UPCAT Practice
               </h2>
               <p className={getContrastClass(
                 "text-gray-600 mb-4",
@@ -573,7 +573,7 @@ Keep it encouraging and educational.`;
             {[
               { icon: Target, title: "20 Questions", desc: "Comprehensive coverage of UPCAT topics" },
               { icon: Timer, title: "5-Min Timer", desc: "5 minutes per question, advance early when answered" },
-              { icon: Lightbulb, title: "AI Analysis", desc: "Instant explanations when you select an answer" },
+              { icon: Lightbulb, title: "Smart Analysis", desc: "Instant explanations when you select an answer" },
               { icon: Award, title: "High Standards", desc: "Singapore-level question quality" }
             ].map((feature, index) => (
               <div
@@ -653,7 +653,7 @@ Keep it encouraging and educational.`;
             className="w-full bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-4 px-6 rounded-xl transition-all transform hover:scale-105 active:scale-95 disabled:cursor-not-allowed flex items-center justify-center gap-3"
           >
             <Brain size={24} />
-            Generate AI Quiz
+            Generate Quiz
           </button>
         </div>
       </div>
@@ -679,7 +679,7 @@ Keep it encouraging and educational.`;
             "text-gray-600",
             "text-yellow-200"
           )}>
-            AI is creating 20 high-quality questions...
+            KreativLoops AI is creating 20 high-quality questions...
           </p>
         </div>
       </div>
@@ -1032,7 +1032,7 @@ Keep it encouraging and educational.`;
                   </span>
                 </div>
 
-                {/* AI Analysis */}
+                {/* Smart Analysis */}
                 {analysisResult[quiz.currentQuestion] && (
                   <div className={getContrastClass(
                     "bg-gray-50 p-4 rounded-xl",
@@ -1044,7 +1044,7 @@ Keep it encouraging and educational.`;
                         "font-semibold text-gray-900",
                         "font-semibold text-yellow-400"
                       )}>
-                        AI Analysis
+                        Smart Analysis
                       </span>
                     </div>
                     <p className={getContrastClass(

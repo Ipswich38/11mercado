@@ -220,14 +220,14 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
             "text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded-full",
             "text-xs bg-gray-800 text-blue-400 px-3 py-1 rounded-full border border-blue-400"
           )}>
-            Groq AI
+            KreativLoops AI
           </div>
         </div>
         <p className={getContrastClass(
           "text-gray-600 text-sm",
           "text-yellow-200 text-sm"
         )}>
-          Powered by Groq AI (LLaMA 3) • STEM subjects and research methodology
+          Powered by KreativLoops AI • STEM subjects and research methodology
         </p>
       </div>
 
@@ -371,11 +371,11 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
           <div className="flex items-center gap-2 mb-2">
             <div className="text-blue-600">🤖</div>
             <h4 className={getContrastClass("font-medium text-blue-900", "font-medium text-blue-400")}>
-              Powered by Groq AI
+              Powered by KreativLoops AI
             </h4>
           </div>
           <p className={getContrastClass("text-blue-800 text-sm", "text-blue-200 text-sm")}>
-            High-performance LLaMA 3 model for STEM education and research methodology guidance. Fast, accurate responses for students and researchers.
+            Advanced AI technology for STEM education and research methodology guidance. Fast, accurate responses for students and researchers.
           </p>
         </div>
       </div>

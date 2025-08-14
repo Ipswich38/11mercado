@@ -12,7 +12,10 @@ import {
   BookOpen,
   Award,
   Timer,
-  Lightbulb
+  Lightbulb,
+  Pause,
+  Play,
+  X
 } from 'lucide-react';
 import groq, { isGroqConfigured } from '../utils/groqClient';
 
@@ -40,6 +43,8 @@ interface QuizState {
   questionStartTime: Date | null;
   questionTimeSpent: number;
   showQuestionTimer: boolean;
+  isPaused: boolean;
+  pausedAt: Date | null;
 }
 
 interface UPCATQuizGeneratorProps {
@@ -60,11 +65,14 @@ export default function UPCATQuizGenerator({ getContrastClass, onClose }: UPCATQ
     selectedSubjects: ['Mathematics', 'Science', 'Language Proficiency', 'Reading Comprehension'],
     questionStartTime: null,
     questionTimeSpent: 0,
-    showQuestionTimer: false
+    showQuestionTimer: false,
+    isPaused: false,
+    pausedAt: null
   });
 
   const [showExplanation, setShowExplanation] = useState<{ [key: number]: boolean }>({});
   const [analysisResult, setAnalysisResult] = useState<{ [key: number]: string }>({});
+  const [savedQuiz, setSavedQuiz] = useState<any>(null);
 
   const subjects = [
     'Mathematics',
@@ -74,6 +82,20 @@ export default function UPCATQuizGenerator({ getContrastClass, onClose }: UPCATQ
     'Abstract Reasoning',
     'General Information'
   ];
+
+  // Check for saved quiz on component mount
+  useEffect(() => {
+    const savedData = localStorage.getItem('upcat_quiz_save');
+    if (savedData) {
+      try {
+        const parsed = JSON.parse(savedData);
+        setSavedQuiz(parsed);
+      } catch (error) {
+        console.error('Error loading saved quiz:', error);
+        localStorage.removeItem('upcat_quiz_save');
+      }
+    }
+  }, []);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -339,14 +361,82 @@ Keep it encouraging and educational.`;
       selectedSubjects: ['Mathematics', 'Science', 'Language Proficiency', 'Reading Comprehension'],
       questionStartTime: null,
       questionTimeSpent: 0,
-      showQuestionTimer: false
+      showQuestionTimer: false,
+      isPaused: false,
+      pausedAt: null
     });
     setShowExplanation({});
     setAnalysisResult({});
+    // Clear saved quiz from localStorage
+    localStorage.removeItem('upcat_quiz_save');
   };
 
   const finishQuiz = () => {
     setQuiz(prev => ({ ...prev, showResults: true }));
+    // Clear saved quiz when finished
+    localStorage.removeItem('upcat_quiz_save');
+  };
+
+  const pauseQuiz = () => {
+    const pausedAt = new Date();
+    const updatedQuiz = { ...quiz, isPaused: true, pausedAt };
+    setQuiz(updatedQuiz);
+    
+    // Save quiz state to localStorage
+    const saveData = {
+      ...updatedQuiz,
+      startTime: quiz.startTime?.toISOString(),
+      questionStartTime: quiz.questionStartTime?.toISOString(),
+      pausedAt: pausedAt.toISOString(),
+      showExplanation,
+      analysisResult
+    };
+    localStorage.setItem('upcat_quiz_save', JSON.stringify(saveData));
+  };
+
+  const resumeQuiz = () => {
+    const now = new Date();
+    const pauseTime = quiz.pausedAt ? now.getTime() - quiz.pausedAt.getTime() : 0;
+    
+    setQuiz(prev => ({
+      ...prev,
+      isPaused: false,
+      pausedAt: null,
+      startTime: prev.startTime ? new Date(prev.startTime.getTime() + pauseTime) : prev.startTime,
+      questionStartTime: prev.questionStartTime ? new Date(prev.questionStartTime.getTime() + pauseTime) : prev.questionStartTime
+    }));
+  };
+
+  const exitQuiz = () => {
+    if (quiz.questions.length > 0 && !quiz.showResults) {
+      const shouldSave = window.confirm('Do you want to save your progress and continue later?');
+      if (shouldSave) {
+        pauseQuiz();
+      } else {
+        localStorage.removeItem('upcat_quiz_save');
+      }
+    }
+    onClose();
+  };
+
+  const loadSavedQuiz = (savedData: any) => {
+    const restoredQuiz = {
+      ...savedData,
+      startTime: savedData.startTime ? new Date(savedData.startTime) : null,
+      questionStartTime: savedData.questionStartTime ? new Date(savedData.questionStartTime) : null,
+      pausedAt: savedData.pausedAt ? new Date(savedData.pausedAt) : null,
+      isPaused: false // Resume the quiz
+    };
+    
+    setQuiz(restoredQuiz);
+    setShowExplanation(savedData.showExplanation || {});
+    setAnalysisResult(savedData.analysisResult || {});
+    setSavedQuiz(null);
+  };
+
+  const discardSavedQuiz = () => {
+    localStorage.removeItem('upcat_quiz_save');
+    setSavedQuiz(null);
   };
 
   // Quiz Setup Screen
@@ -412,6 +502,71 @@ Keep it encouraging and educational.`;
               </p>
             </div>
           </div>
+
+          {/* Saved Quiz Notification */}
+          {savedQuiz && (
+            <div className={getContrastClass(
+              "bg-blue-50/80 backdrop-blur-md rounded-3xl p-6 shadow-xl border border-blue-200/50",
+              "bg-gray-800 rounded-3xl p-6 shadow-xl border-2 border-blue-400"
+            )}>
+              <div className="flex items-center gap-3 mb-4">
+                <Play size={24} className={getContrastClass("text-blue-600", "text-blue-400")} />
+                <div>
+                  <h3 className={getContrastClass(
+                    "text-lg font-bold text-blue-900",
+                    "text-lg font-bold text-blue-400"
+                  )}>
+                    Continue Your Quiz
+                  </h3>
+                  <p className={getContrastClass(
+                    "text-sm text-blue-700",
+                    "text-sm text-blue-200"
+                  )}>
+                    You have a saved quiz in progress. Continue where you left off!
+                  </p>
+                </div>
+              </div>
+              
+              <div className={getContrastClass(
+                "bg-blue-100 p-3 rounded-xl mb-4",
+                "bg-gray-700 p-3 rounded-xl mb-4"
+              )}>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className={getContrastClass("text-blue-700", "text-blue-300")}>Progress:</span>
+                    <div className={getContrastClass("font-semibold text-blue-900", "font-semibold text-blue-100")}>
+                      Question {savedQuiz.currentQuestion + 1} of 20
+                    </div>
+                  </div>
+                  <div>
+                    <span className={getContrastClass("text-blue-700", "text-blue-300")}>Answered:</span>
+                    <div className={getContrastClass("font-semibold text-blue-900", "font-semibold text-blue-100")}>
+                      {savedQuiz.userAnswers?.filter((a: any) => a !== null).length || 0}/20
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => loadSavedQuiz(savedQuiz)}
+                  className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold py-3 px-4 rounded-xl transition-colors flex items-center justify-center gap-2"
+                >
+                  <Play size={18} />
+                  Continue Quiz
+                </button>
+                <button
+                  onClick={discardSavedQuiz}
+                  className={getContrastClass(
+                    "px-4 py-3 bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold rounded-xl transition-colors",
+                    "px-4 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 border border-gray-500 font-semibold rounded-xl transition-colors"
+                  )}
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Features */}
           <div className="grid grid-cols-1 gap-4">
@@ -692,6 +847,30 @@ Keep it encouraging and educational.`;
                 {currentQ?.subject} • {currentQ?.difficulty}
               </div>
             </div>
+          </div>
+
+          {/* Control Buttons */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={pauseQuiz}
+              className={getContrastClass(
+                "p-2 rounded-lg hover:bg-white/20 transition-colors",
+                "p-2 rounded-lg hover:bg-gray-700 transition-colors"
+              )}
+              title="Pause Quiz"
+            >
+              <Pause size={20} className={getContrastClass("text-white", "text-yellow-400")} />
+            </button>
+            <button
+              onClick={exitQuiz}
+              className={getContrastClass(
+                "p-2 rounded-lg hover:bg-white/20 transition-colors",
+                "p-2 rounded-lg hover:bg-gray-700 transition-colors"
+              )}
+              title="Exit Quiz"
+            >
+              <X size={20} className={getContrastClass("text-white", "text-yellow-400")} />
+            </button>
           </div>
           
           <div className="text-right">

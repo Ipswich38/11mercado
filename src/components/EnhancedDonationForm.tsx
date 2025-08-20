@@ -182,6 +182,21 @@ export default function EnhancedDonationForm({ getContrastClass, onClose }) {
   };
 
   const handleAllocationChange = (field: keyof DonationAllocation, value: number) => {
+    const totalAmount = parseFloat(formData.amount || '0');
+    const currentAllocation = formData.allocation || { generalSPTA: 0, mercadoPTA: 0 };
+    const otherField = field === 'generalSPTA' ? 'mercadoPTA' : 'generalSPTA';
+    const otherValue = currentAllocation[otherField];
+    
+    // Prevent entering more than total amount
+    if (value + otherValue > totalAmount && totalAmount > 0) {
+      // Calculate maximum allowed value
+      const maxAllowed = totalAmount - otherValue;
+      value = Math.max(0, maxAllowed);
+    }
+    
+    // Ensure non-negative values
+    value = Math.max(0, value);
+    
     setFormData(prev => ({
       ...prev,
       allocation: {
@@ -189,6 +204,23 @@ export default function EnhancedDonationForm({ getContrastClass, onClose }) {
         [field]: value
       }
     }));
+  };
+
+  // Helper functions for allocation display
+  const getTotalAmount = () => parseFloat(formData.amount || '0');
+  const getAllocationTotal = () => (formData.allocation?.generalSPTA || 0) + (formData.allocation?.mercadoPTA || 0);
+  const getRemainingAmount = () => getTotalAmount() - getAllocationTotal();
+  const isAllocationValid = () => Math.abs(getTotalAmount() - getAllocationTotal()) < 0.01;
+  const isAllocationExceeding = () => getAllocationTotal() > getTotalAmount();
+  
+  const getInputBorderClass = (field: keyof DonationAllocation) => {
+    const totalAmount = getTotalAmount();
+    const allocationTotal = getAllocationTotal();
+    
+    if (totalAmount === 0) return getContrastClass('border-gray-300', 'border-gray-600');
+    if (allocationTotal > totalAmount) return 'border-red-500';
+    if (isAllocationValid()) return 'border-green-500';
+    return getContrastClass('border-yellow-400', 'border-yellow-500');
   };
 
   const submitToGoogleSheets = async (data: AcknowledgementData): Promise<boolean> => {
@@ -680,8 +712,55 @@ For any inquiries, please contact us at 11mercado.pta@gmail.com
                 "block text-sm font-medium text-gray-700 mb-3",
                 "block text-sm font-medium text-yellow-400 mb-3"
               )}>
-                Manual Donation Allocation * (Must equal donation amount: ₱{formData.amount || '0'} | Current total: ₱{((formData.allocation?.generalSPTA || 0) + (formData.allocation?.mercadoPTA || 0)).toFixed(2)})
+                Manual Donation Allocation *
               </label>
+
+              {/* Calculator-style Formula Display */}
+              <div className={`mb-4 p-4 rounded-xl border-2 ${
+                isAllocationExceeding() 
+                  ? 'border-red-500 bg-red-50' 
+                  : isAllocationValid() 
+                    ? 'border-green-500 bg-green-50' 
+                    : 'border-yellow-400 bg-yellow-50'
+              } ${getContrastClass('', 'bg-opacity-20')}`}>
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-2 text-lg font-mono font-bold">
+                    <span className={getContrastClass('text-gray-700', 'text-yellow-200')}>
+                      ₱{(formData.allocation?.generalSPTA || 0).toFixed(2)}
+                    </span>
+                    <span className={getContrastClass('text-gray-500', 'text-yellow-300')}>+</span>
+                    <span className={getContrastClass('text-gray-700', 'text-yellow-200')}>
+                      ₱{(formData.allocation?.mercadoPTA || 0).toFixed(2)}
+                    </span>
+                    <span className={getContrastClass('text-gray-500', 'text-yellow-300')}>=</span>
+                    <span className={`font-bold text-lg ${
+                      isAllocationExceeding() 
+                        ? 'text-red-600' 
+                        : isAllocationValid() 
+                          ? 'text-green-600' 
+                          : 'text-yellow-600'
+                    }`}>
+                      ₱{getAllocationTotal().toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="mt-2 text-sm">
+                    <span className={getContrastClass('text-gray-600', 'text-yellow-300')}>
+                      Target: ₱{getTotalAmount().toFixed(2)} | 
+                      Remaining: ₱{getRemainingAmount().toFixed(2)}
+                    </span>
+                  </div>
+                  {isAllocationExceeding() && (
+                    <div className="mt-2 text-red-600 text-sm font-medium">
+                      ⚠️ Allocation exceeds donation amount by ₱{(getAllocationTotal() - getTotalAmount()).toFixed(2)}
+                    </div>
+                  )}
+                  {isAllocationValid() && getTotalAmount() > 0 && (
+                    <div className="mt-2 text-green-600 text-sm font-medium">
+                      ✅ Allocation matches donation amount perfectly!
+                    </div>
+                  )}
+                </div>
+              </div>
               <div className="space-y-3">
                 <div className={getContrastClass(
                   "bg-gray-50 rounded-lg p-4",
@@ -698,9 +777,11 @@ For any inquiries, please contact us at 11mercado.pta@gmail.com
                     <input
                       type="number"
                       step="0.01"
+                      min="0"
+                      max={getTotalAmount()}
                       value={formData.allocation?.generalSPTA || 0}
                       onChange={(e) => handleAllocationChange('generalSPTA', parseFloat(e.target.value) || 0)}
-                      className={`w-full pl-8 p-3 rounded-xl border ${getContrastClass('border-gray-300', 'border-gray-600')} ${getContrastClass('bg-white text-gray-900', 'bg-gray-900 text-yellow-200')} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                      className={`w-full pl-8 p-3 rounded-xl border-2 ${getInputBorderClass('generalSPTA')} ${getContrastClass('bg-white text-gray-900', 'bg-gray-900 text-yellow-200')} focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors`}
                       placeholder="0.00"
                     />
                   </div>
@@ -721,9 +802,11 @@ For any inquiries, please contact us at 11mercado.pta@gmail.com
                     <input
                       type="number"
                       step="0.01"
+                      min="0"
+                      max={getTotalAmount()}
                       value={formData.allocation?.mercadoPTA || 0}
                       onChange={(e) => handleAllocationChange('mercadoPTA', parseFloat(e.target.value) || 0)}
-                      className={`w-full pl-8 p-3 rounded-xl border ${getContrastClass('border-gray-300', 'border-gray-600')} ${getContrastClass('bg-white text-gray-900', 'bg-gray-900 text-yellow-200')} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                      className={`w-full pl-8 p-3 rounded-xl border-2 ${getInputBorderClass('mercadoPTA')} ${getContrastClass('bg-white text-gray-900', 'bg-gray-900 text-yellow-200')} focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors`}
                       placeholder="0.00"
                     />
                   </div>

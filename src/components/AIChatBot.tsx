@@ -2,12 +2,14 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, X, Loader, ArrowLeft } from 'lucide-react';
 import groq, { isGroqConfigured } from '../utils/groqClient';
 import { depedOmnibusKnowledge, miniAppsKnowledge, searchKnowledge, getAllKnowledge } from '../utils/knowledgeBase';
+import { ptaRAG, type Answer } from '../utils/ptaRagSystem';
 
 interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
+  citations?: string[];
 }
 
 interface AIChatBotProps {
@@ -59,32 +61,9 @@ export default function AIChatBot({ getContrastClass, onClose }: AIChatBotProps)
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const handleSendMessage = async () => {
-    if (!input.trim() || isLoading) return;
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: input,
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
-    setIsLoading(true);
-
-    try {
-      // Search relevant knowledge sections
-      const relevantSections = searchKnowledge(input);
-      const context = relevantSections.map(section => 
-        `${section.title}: ${section.content}`
-      ).join('\n\n');
-
-      const systemPrompt = `You are an expert assistant for the 11Mercado PTA hub. You help parents, teachers, and school administrators with two main areas:
+  // Helper function for regular AI responses
+  const generateRegularResponse = async (userInput: string, context: string): Promise<Message> => {
+    const systemPrompt = `You are an expert assistant for the 11Mercado PTA hub. You help parents, teachers, and school administrators with two main areas:
 
 1. DepEd Omnibus Code for Parent-Teacher Associations (PTA): Guidelines, procedures, and best practices
 2. 11Mercado Mini Apps: Complete usage instructions for all 9 apps in the hub
@@ -115,31 +94,93 @@ AVAILABLE MINI APPS IN 11MERCADO:
 
 Answer the user's question based on this knowledge.`;
 
-      if (!groq || !isGroqConfigured) {
-        throw new Error('AI service not configured');
-      }
-      
-      const response = await groq.chat.completions.create({
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: input }
-        ],
-        model: 'llama3-8b-8192',
-        temperature: 0.3,
-        max_tokens: 1000,
-        top_p: 1,
-        stream: false
-      });
+    if (!groq || !isGroqConfigured) {
+      throw new Error('AI service not configured');
+    }
+    
+    const response = await groq.chat.completions.create({
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userInput }
+      ],
+      model: 'llama3-8b-8192',
+      temperature: 0.3,
+      max_tokens: 1000,
+      top_p: 1,
+      stream: false
+    });
 
-      const rawContent = response.choices[0]?.message?.content || 'I apologize, but I couldn\'t generate a response. Please try again.';
-      const formattedContent = formatAIResponse(rawContent);
+    const rawContent = response.choices[0]?.message?.content || 'I apologize, but I couldn\'t generate a response. Please try again.';
+    const formattedContent = formatAIResponse(rawContent);
+    
+    return {
+      id: (Date.now() + 1).toString(),
+      role: 'assistant',
+      content: formattedContent,
+      timestamp: new Date()
+    };
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const handleSendMessage = async () => {
+    if (!input.trim() || isLoading) return;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: input,
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInput('');
+    setIsLoading(true);
+
+    try {
+      let assistantMessage: Message;
       
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: formattedContent,
-        timestamp: new Date()
-      };
+      // Check if query is PTA-related for enhanced RAG response
+      if (ptaRAG.isPTARelated(input)) {
+        // Use RAG system for PTA-specific queries
+        const ragResult: Answer = ptaRAG.ask(input, 5);
+        
+        if (ragResult.hits.length > 0) {
+          // Enhanced response with citations
+          let enhancedContent = ragResult.answer;
+          
+          // Add citation information
+          if (ragResult.citations.length > 0) {
+            enhancedContent += `\n\nSources: ${ragResult.citations.join(', ')}`;
+          }
+          
+          assistantMessage = {
+            id: (Date.now() + 1).toString(),
+            role: 'assistant',
+            content: formatAIResponse(enhancedContent),
+            timestamp: new Date(),
+            citations: ragResult.citations
+          };
+        } else {
+          // Fallback to regular knowledge base search
+          const relevantSections = searchKnowledge(input);
+          const context = relevantSections.map(section => 
+            `${section.title}: ${section.content}`
+          ).join('\n\n');
+          
+          assistantMessage = await generateRegularResponse(input, context);
+        }
+      } else {
+        // Use existing knowledge base for non-PTA queries
+        const relevantSections = searchKnowledge(input);
+        const context = relevantSections.map(section => 
+          `${section.title}: ${section.content}`
+        ).join('\n\n');
+        
+        assistantMessage = await generateRegularResponse(input, context);
+      }
 
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
@@ -230,6 +271,21 @@ Answer the user's question based on this knowledge.`;
               }`}
             >
               <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
+              {message.citations && message.citations.length > 0 && (
+                <div className={`mt-3 p-2 rounded-lg text-xs ${
+                  getContrastClass(
+                    'bg-blue-50 border-l-4 border-blue-400',
+                    'bg-gray-700 border-l-4 border-yellow-400'
+                  )
+                }`}>
+                  <strong className={getContrastClass('text-blue-700', 'text-yellow-300')}>
+                    📚 Sources:
+                  </strong>
+                  <span className={getContrastClass('text-blue-600 ml-2', 'text-yellow-200 ml-2')}>
+                    {message.citations.join(' • ')}
+                  </span>
+                </div>
+              )}
               <p className={`text-xs mt-2 ${
                 message.role === 'user' 
                   ? getContrastClass('text-white/70', 'text-black/70')

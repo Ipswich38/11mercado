@@ -93,8 +93,11 @@ export default function EnhancedDonationForm({ getContrastClass, onClose }) {
       // Allocation validation for monetary donations
       const totalAmount = parseFloat(formData.amount || '0');
       const allocatedTotal = (formData.allocation?.generalSPTA || 0) + (formData.allocation?.mercadoPTA || 0);
-      if (Math.abs(totalAmount - allocatedTotal) > 0.01) {
-        newErrors.allocation = 'Allocation must equal the total donation amount';
+      if (totalAmount > 0 && Math.abs(totalAmount - allocatedTotal) > 0.01) {
+        newErrors.allocation = 'Allocation total must equal the donation amount';
+      }
+      if (totalAmount > 0 && allocatedTotal > totalAmount) {
+        newErrors.allocation = 'Allocation total cannot exceed the donation amount';
       }
     }
 
@@ -108,14 +111,18 @@ export default function EnhancedDonationForm({ getContrastClass, onClose }) {
       if (!formData.handedTo) {
         newErrors.handedTo = 'Person who received the cash must be specified';
       }
-      if (!formData.photo) {
-        newErrors.photo = 'Photo is required for cash donations as proof';
+      // Photo is optional, but e-signature required if no photo
+      if (!formData.photo && !formData.eSignature.trim()) {
+        newErrors.eSignature = 'E-signature is required when no photo proof is provided';
       }
       // Allocation validation for cash donations
       const totalAmount = parseFloat(formData.amount || '0');
       const allocatedTotal = (formData.allocation?.generalSPTA || 0) + (formData.allocation?.mercadoPTA || 0);
-      if (Math.abs(totalAmount - allocatedTotal) > 0.01) {
-        newErrors.allocation = 'Allocation must equal the total donation amount';
+      if (totalAmount > 0 && Math.abs(totalAmount - allocatedTotal) > 0.01) {
+        newErrors.allocation = 'Allocation total must equal the donation amount';
+      }
+      if (totalAmount > 0 && allocatedTotal > totalAmount) {
+        newErrors.allocation = 'Allocation total cannot exceed the donation amount';
       }
     }
 
@@ -123,9 +130,30 @@ export default function EnhancedDonationForm({ getContrastClass, onClose }) {
       if (!formData.items) {
         newErrors.items = 'Items description is required for in-kind donations';
       }
-      if (!formData.photo) {
-        newErrors.photo = 'Photo is required for in-kind donations as proof';
+      // Photo is optional, but e-signature required if no photo
+      if (!formData.photo && !formData.eSignature.trim()) {
+        newErrors.eSignature = 'E-signature is required when no photo proof is provided';
       }
+    }
+
+    // General validation - e-signature and agreement always required
+    if (!formData.eSignature.trim()) {
+      newErrors.eSignature = 'E-signature is required for all donations';
+    } else {
+      // Validate e-signature format: should contain both parent and student names
+      const signature = formData.eSignature.toLowerCase();
+      const parent = formData.parentName.toLowerCase();
+      const student = formData.studentName.toLowerCase();
+      
+      if (parent && student) {
+        if (!signature.includes(parent.split(' ')[0]) || !signature.includes(student.split(' ')[0])) {
+          newErrors.eSignature = 'E-signature should include both parent/guardian and student names';
+        }
+      }
+    }
+
+    if (!formData.agreementAccepted) {
+      newErrors.agreement = 'You must accept the donation agreement';
     }
 
     setErrors(newErrors);
@@ -147,14 +175,9 @@ export default function EnhancedDonationForm({ getContrastClass, onClose }) {
   };
 
   const handleAmountChange = (amount: string) => {
-    const numAmount = parseFloat(amount) || 0;
     setFormData(prev => ({
       ...prev,
-      amount,
-      allocation: {
-        generalSPTA: numAmount / 2,
-        mercadoPTA: numAmount / 2
-      }
+      amount
     }));
   };
 
@@ -657,7 +680,7 @@ For any inquiries, please contact us at 11mercado.pta@gmail.com
                 "block text-sm font-medium text-gray-700 mb-3",
                 "block text-sm font-medium text-yellow-400 mb-3"
               )}>
-                Donation Allocation * (Total: ₱{((formData.allocation?.generalSPTA || 0) + (formData.allocation?.mercadoPTA || 0)).toFixed(2)})
+                Manual Donation Allocation * (Must equal donation amount: ₱{formData.amount || '0'} | Current total: ₱{((formData.allocation?.generalSPTA || 0) + (formData.allocation?.mercadoPTA || 0)).toFixed(2)})
               </label>
               <div className="space-y-3">
                 <div className={getContrastClass(
@@ -821,7 +844,7 @@ For any inquiries, please contact us at 11mercado.pta@gmail.com
                 "block text-sm font-medium text-gray-700 mb-2",
                 "block text-sm font-medium text-yellow-400 mb-2"
               )}>
-                Upload Photo (Required for Cash Donations) *
+                Upload Photo (Optional - E-signature required if no photo)
               </label>
               <button
                 type="button"
@@ -885,7 +908,7 @@ For any inquiries, please contact us at 11mercado.pta@gmail.com
                 "block text-sm font-medium text-gray-700 mb-2",
                 "block text-sm font-medium text-yellow-400 mb-2"
               )}>
-                Upload Photo (Required for In-kind Donations) *
+                Upload Photo (Optional - E-signature required if no photo)
               </label>
               <button
                 type="button"

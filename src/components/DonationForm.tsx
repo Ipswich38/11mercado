@@ -19,6 +19,12 @@ interface AcknowledgementData extends DonationFormData {
   referenceNumber: string;
   submissionDate: string;
   submissionTime: string;
+  hasReceipt: boolean;
+  hasPhoto: boolean;
+  fileNames: {
+    receipt: string | null;
+    photo: string | null;
+  };
 }
 
 export default function DonationForm({ getContrastClass, onClose }) {
@@ -107,18 +113,65 @@ export default function DonationForm({ getContrastClass, onClose }) {
     }
   };
 
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  };
+
   const submitToGoogleSheets = async (data: AcknowledgementData): Promise<boolean> => {
     try {
       // This would integrate with Google Sheets API
       // For now, we'll simulate the API call
       console.log('Submitting to Google Sheets:', data);
       
+      // Convert files to base64 for storage
+      let processedData = { ...data };
+      
+      // Store files as base64 strings with metadata
+      const fileStorage = JSON.parse(localStorage.getItem('donationFiles') || '{}');
+      
+      if (formData.receipt) {
+        const receiptBase64 = await fileToBase64(formData.receipt);
+        fileStorage[`${data.referenceNumber}_receipt`] = {
+          data: receiptBase64,
+          name: formData.receipt.name,
+          type: formData.receipt.type,
+          size: formData.receipt.size
+        };
+        processedData.hasReceipt = true;
+        processedData.fileNames = { 
+          ...processedData.fileNames, 
+          receipt: formData.receipt.name 
+        };
+      }
+      
+      if (formData.photo) {
+        const photoBase64 = await fileToBase64(formData.photo);
+        fileStorage[`${data.referenceNumber}_photo`] = {
+          data: photoBase64,
+          name: formData.photo.name,
+          type: formData.photo.type,
+          size: formData.photo.size
+        };
+        processedData.hasPhoto = true;
+        processedData.fileNames = { 
+          ...processedData.fileNames, 
+          photo: formData.photo.name 
+        };
+      }
+      
+      localStorage.setItem('donationFiles', JSON.stringify(fileStorage));
+      
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Store in localStorage as a fallback
       const existingEntries = JSON.parse(localStorage.getItem('donationEntries') || '[]');
-      existingEntries.push(data);
+      existingEntries.push(processedData);
       localStorage.setItem('donationEntries', JSON.stringify(existingEntries));
       
       return true;
@@ -144,7 +197,13 @@ export default function DonationForm({ getContrastClass, onClose }) {
         ...formData,
         referenceNumber,
         submissionDate,
-        submissionTime
+        submissionTime,
+        hasReceipt: !!formData.receipt,
+        hasPhoto: !!formData.photo,
+        fileNames: {
+          receipt: formData.receipt?.name || null,
+          photo: formData.photo?.name || null
+        }
       };
 
       const success = await submitToGoogleSheets(acknowledgement);

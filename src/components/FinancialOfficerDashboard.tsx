@@ -17,7 +17,16 @@ import {
   AlertCircle,
   BarChart3,
   RefreshCw,
-  LogOut
+  LogOut,
+  Image,
+  X,
+  ZoomIn,
+  Edit3,
+  Trash2,
+  Save,
+  UserCheck,
+  Shield,
+  History
 } from 'lucide-react';
 
 interface DonationEntry {
@@ -59,6 +68,13 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [selectedView, setSelectedView] = useState<'overview' | 'details'>('overview');
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
+  const [viewingImage, setViewingImage] = useState<{ src: string; name: string; type: 'receipt' | 'photo' } | null>(null);
+  const [editingDonation, setEditingDonation] = useState<DonationEntry | null>(null);
+  const [showAuditModal, setShowAuditModal] = useState(false);
+  const [auditAction, setAuditAction] = useState<'edit' | 'delete'>('edit');
+  const [auditReason, setAuditReason] = useState('');
+  const [auditSignature, setAuditSignature] = useState('');
+  const [pendingAction, setPendingAction] = useState<{ action: 'edit' | 'delete'; donation: DonationEntry } | null>(null);
 
   useEffect(() => {
     loadDonations();
@@ -70,9 +86,30 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
     filterAndSortDonations();
   }, [donations, searchTerm, filterMode, sortBy, sortOrder, dateRange]);
 
+  useEffect(() => {
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        if (viewingImage) setViewingImage(null);
+        else if (selectedDonation) setSelectedDonation(null);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscKey);
+    return () => document.removeEventListener('keydown', handleEscKey);
+  }, [viewingImage, selectedDonation]);
+
   const loadDonations = () => {
     const savedDonations = JSON.parse(localStorage.getItem('donationEntries') || '[]');
     setDonations(savedDonations);
+  };
+
+  const clearDatabase = () => {
+    if (window.confirm('Are you sure you want to clear all donation records? This action cannot be undone.')) {
+      localStorage.removeItem('donationEntries');
+      localStorage.removeItem('donationFiles');
+      setDonations([]);
+      alert('Database cleared successfully!');
+    }
   };
 
   const filterAndSortDonations = () => {
@@ -199,7 +236,8 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
       'Photo Filename',
       'Electronic Signature',
       'Agreement Timestamp',
-      'IP Address'
+      'Receipt Image Link',
+      'Photo Image Link'
     ];
 
     const csvContent = [
@@ -224,7 +262,8 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
         `"${donation.fileNames.photo || 'N/A'}"`,
         `"${donation.eSignature}"`,
         donation.agreementAcceptanceTimestamp,
-        donation.ipAddress
+        donation.fileNames.receipt ? `View Receipt for ${donation.referenceNumber}` : 'N/A',
+        donation.fileNames.photo ? `View Photo for ${donation.referenceNumber}` : 'N/A'
       ].join(','))
     ].join('\n');
 
@@ -233,6 +272,146 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
     link.setAttribute('download', `financial_report_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportToExcel = () => {
+    // Create Excel-compatible XML
+    const headers = [
+      'Reference Number',
+      'Submission Date',
+      'Submission Time', 
+      'Parent/Guardian Name',
+      'Student Name',
+      'Donation Mode',
+      'Amount',
+      'General SPTA Allocation',
+      '11Mercado PTA Allocation',
+      'Transaction Date',
+      'Transaction Time',
+      'Handed To',
+      'Items Description',
+      'Has Receipt',
+      'Has Photo',
+      'Receipt Filename',
+      'Photo Filename',
+      'Electronic Signature',
+      'Agreement Timestamp',
+      'Receipt Image Link',
+      'Photo Image Link'
+    ];
+
+    let excelContent = `<?xml version="1.0"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+<DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+<Author>11Mercado PTA Financial System</Author>
+<LastAuthor>11Mercado PTA Financial System</LastAuthor>
+<Created>${new Date().toISOString()}</Created>
+<Version>1.0</Version>
+</DocumentProperties>
+<ExcelWorkbook xmlns="urn:schemas-microsoft-com:office:excel">
+<WindowHeight>8180</WindowHeight>
+<WindowWidth>14440</WindowWidth>
+<WindowTopX>120</WindowTopX>
+<WindowTopY>120</WindowTopY>
+<ProtectStructure>False</ProtectStructure>
+<ProtectWindows>False</ProtectWindows>
+</ExcelWorkbook>
+<Styles>
+<Style ss:ID="Default" ss:Name="Normal">
+<Alignment ss:Vertical="Bottom"/>
+<Borders/>
+<Font ss:FontName="Arial"/>
+<Interior/>
+<NumberFormat/>
+<Protection/>
+</Style>
+<Style ss:ID="Header">
+<Font ss:FontName="Arial" ss:Size="11" ss:Bold="1"/>
+<Interior ss:Color="#4F81BD" ss:Pattern="Solid"/>
+<Font ss:Color="#FFFFFF"/>
+</Style>
+<Style ss:ID="Currency">
+<NumberFormat ss:Format="₱#,##0.00"/>
+</Style>
+<Style ss:ID="Hyperlink">
+<Font ss:FontName="Arial" ss:Size="11" ss:Color="#0000FF" ss:Underline="Single"/>
+</Style>
+</Styles>
+<Worksheet ss:Name="Financial Report">
+<Table>
+<Row>`;
+
+    headers.forEach(header => {
+      excelContent += `<Cell ss:StyleID="Header"><Data ss:Type="String">${header}</Data></Cell>`;
+    });
+    excelContent += '</Row>';
+
+    filteredDonations.forEach(donation => {
+      excelContent += '<Row>';
+      
+      const rowData = [
+        donation.referenceNumber,
+        donation.submissionDate,
+        donation.submissionTime,
+        donation.parentName,
+        donation.studentName,
+        donation.donationMode.toUpperCase(),
+        donation.amount || 'N/A',
+        donation.allocation?.generalSPTA || 0,
+        donation.allocation?.mercadoPTA || 0,
+        donation.date,
+        donation.time || 'N/A',
+        donation.handedTo || 'N/A',
+        donation.items || 'N/A',
+        donation.hasReceipt ? 'Yes' : 'No',
+        donation.hasPhoto ? 'Yes' : 'No',
+        donation.fileNames.receipt || 'N/A',
+        donation.fileNames.photo || 'N/A',
+        donation.eSignature,
+        donation.agreementAcceptanceTimestamp
+      ];
+
+      rowData.forEach((cell, index) => {
+        if (index === 6 || index === 7 || index === 8) { // Amount columns
+          excelContent += `<Cell ss:StyleID="Currency"><Data ss:Type="Number">${parseFloat(cell.toString()) || 0}</Data></Cell>`;
+        } else {
+          excelContent += `<Cell><Data ss:Type="String">${cell.toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</Data></Cell>`;
+        }
+      });
+
+      // Add image links with hyperlinks
+      if (donation.fileNames.receipt) {
+        excelContent += `<Cell ss:StyleID="Hyperlink"><Data ss:Type="String">View Receipt: ${donation.fileNames.receipt}</Data></Cell>`;
+      } else {
+        excelContent += `<Cell><Data ss:Type="String">N/A</Data></Cell>`;
+      }
+
+      if (donation.fileNames.photo) {
+        excelContent += `<Cell ss:StyleID="Hyperlink"><Data ss:Type="String">View Photo: ${donation.fileNames.photo}</Data></Cell>`;
+      } else {
+        excelContent += `<Cell><Data ss:Type="String">N/A</Data></Cell>`;
+      }
+
+      excelContent += '</Row>';
+    });
+
+    excelContent += `</Table>
+</Worksheet>
+</Workbook>`;
+
+    const blob = new Blob([excelContent], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `financial_report_${new Date().toISOString().split('T')[0]}.xls`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -277,7 +456,7 @@ COMPLIANCE NOTES:
 - All entries include electronic signatures
 - All monetary donations require transaction receipts
 - All cash and in-kind donations require photographic evidence
-- Complete audit trail maintained with IP address logging
+- Complete audit trail maintained with electronic signatures
 
 This report covers ${totals.totalEntries} donation entries.
 For detailed records, export the complete CSV file.
@@ -294,6 +473,110 @@ Generated by 11Mercado Financial Tracking System
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const getStoredImage = (referenceNumber: string, type: 'receipt' | 'photo'): string | null => {
+    try {
+      const fileStorage = JSON.parse(localStorage.getItem('donationFiles') || '{}');
+      const fileKey = `${referenceNumber}_${type}`;
+      return fileStorage[fileKey]?.data || null;
+    } catch (error) {
+      console.error('Error retrieving stored image:', error);
+      return null;
+    }
+  };
+
+  const viewImage = (referenceNumber: string, fileName: string, type: 'receipt' | 'photo') => {
+    const imageData = getStoredImage(referenceNumber, type);
+    if (imageData) {
+      setViewingImage({
+        src: imageData,
+        name: fileName,
+        type
+      });
+    } else {
+      alert('Image file not found. This may occur if the donation was submitted before the image storage feature was implemented.');
+    }
+  };
+
+  const requestAction = (action: 'edit' | 'delete', donation: DonationEntry) => {
+    setPendingAction({ action, donation });
+    setAuditAction(action);
+    setAuditReason('');
+    setAuditSignature('');
+    setShowAuditModal(true);
+  };
+
+  const executeAction = () => {
+    if (!pendingAction || !auditReason.trim() || !auditSignature.trim()) {
+      alert('Please provide both reason and e-signature to proceed.');
+      return;
+    }
+
+    const auditEntry = {
+      timestamp: new Date().toISOString(),
+      action: auditAction,
+      reason: auditReason,
+      signature: auditSignature,
+      officerName: userInfo?.firstName,
+      officerType: userInfo?.userType,
+      referenceNumber: pendingAction.donation.referenceNumber
+    };
+
+    // Save audit trail
+    const existingAudits = JSON.parse(localStorage.getItem('auditTrail') || '[]');
+    existingAudits.push(auditEntry);
+    localStorage.setItem('auditTrail', JSON.stringify(existingAudits));
+
+    if (auditAction === 'delete') {
+      // Remove from donations
+      const updatedDonations = donations.filter(d => d.referenceNumber !== pendingAction.donation.referenceNumber);
+      setDonations(updatedDonations);
+      localStorage.setItem('donationEntries', JSON.stringify(updatedDonations));
+      
+      // Remove associated files
+      const fileStorage = JSON.parse(localStorage.getItem('donationFiles') || '{}');
+      delete fileStorage[`${pendingAction.donation.referenceNumber}_receipt`];
+      delete fileStorage[`${pendingAction.donation.referenceNumber}_photo`];
+      localStorage.setItem('donationFiles', JSON.stringify(fileStorage));
+      
+      alert('Record deleted successfully with audit trail.');
+    } else if (auditAction === 'edit') {
+      setEditingDonation(pendingAction.donation);
+      alert('You can now edit this record. Changes will be tracked in the audit trail.');
+    }
+
+    // Reset states
+    setShowAuditModal(false);
+    setPendingAction(null);
+    setAuditReason('');
+    setAuditSignature('');
+  };
+
+  const saveEditedDonation = (editedDonation: DonationEntry) => {
+    const updatedDonations = donations.map(d => 
+      d.referenceNumber === editedDonation.referenceNumber ? editedDonation : d
+    );
+    setDonations(updatedDonations);
+    localStorage.setItem('donationEntries', JSON.stringify(updatedDonations));
+    
+    // Log the edit in audit trail
+    const auditEntry = {
+      timestamp: new Date().toISOString(),
+      action: 'edit_completed',
+      reason: 'Record updated',
+      signature: auditSignature,
+      officerName: userInfo?.firstName,
+      officerType: userInfo?.userType,
+      referenceNumber: editedDonation.referenceNumber
+    };
+
+    const existingAudits = JSON.parse(localStorage.getItem('auditTrail') || '[]');
+    existingAudits.push(auditEntry);
+    localStorage.setItem('auditTrail', JSON.stringify(existingAudits));
+    
+    setEditingDonation(null);
+    alert('Record updated successfully with audit trail.');
   };
 
   const totals = calculateTotals();
@@ -336,6 +619,17 @@ Generated by 11Mercado Financial Tracking System
               >
                 <RefreshCw size={16} />
                 <span className="text-xs font-medium">Refresh</span>
+              </button>
+              <button
+                onClick={clearDatabase}
+                className={getContrastClass(
+                  "flex items-center gap-2 px-3 py-2 rounded-xl text-slate-600 hover:bg-orange-50 hover:text-orange-600 backdrop-blur-sm transition-all duration-300 hover:shadow-lg",
+                  "flex items-center gap-2 px-3 py-2 rounded-xl text-yellow-400 hover:bg-orange-900/20 hover:text-orange-400 backdrop-blur-sm transition-all duration-300 hover:shadow-lg"
+                )}
+                title="Clear Database"
+              >
+                <AlertCircle size={16} />
+                <span className="text-xs font-medium">Clear DB</span>
               </button>
               <button
                 onClick={onLogout}
@@ -517,18 +811,26 @@ Generated by 11Mercado Financial Tracking System
 
               <button
                 onClick={exportToCSV}
-                className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl flex items-center gap-2 transition-colors"
+                className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-xl flex items-center gap-2 transition-colors text-sm"
               >
-                <Download size={20} />
-                Export CSV
+                <Download size={16} />
+                CSV
+              </button>
+
+              <button
+                onClick={exportToExcel}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-xl flex items-center gap-2 transition-colors text-sm"
+              >
+                <FileSpreadsheet size={16} />
+                Excel
               </button>
 
               <button
                 onClick={generateFinancialSummaryReport}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl flex items-center gap-2 transition-colors"
+                className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-xl flex items-center gap-2 transition-colors text-sm"
               >
-                <FileText size={20} />
-                Summary Report
+                <FileText size={16} />
+                Report
               </button>
             </div>
           </div>
@@ -585,10 +887,22 @@ Generated by 11Mercado Financial Tracking System
                             {donation.donationMode.replace('ewallet', 'E-wallet').replace('inkind', 'In-kind')}
                           </span>
                           {donation.hasReceipt && (
-                            <Receipt size={16} className="text-green-500" />
+                            <button
+                              onClick={() => viewImage(donation.referenceNumber, donation.fileNames.receipt!, 'receipt')}
+                              className="p-1 rounded hover:bg-green-100 hover:bg-opacity-20"
+                              title="View receipt image"
+                            >
+                              <Receipt size={16} className="text-green-500" />
+                            </button>
                           )}
                           {donation.hasPhoto && (
-                            <Camera size={16} className="text-blue-500" />
+                            <button
+                              onClick={() => viewImage(donation.referenceNumber, donation.fileNames.photo!, 'photo')}
+                              className="p-1 rounded hover:bg-blue-100 hover:bg-opacity-20"
+                              title="View photo evidence"
+                            >
+                              <Camera size={16} className="text-blue-500" />
+                            </button>
                           )}
                         </div>
                         
@@ -659,22 +973,65 @@ Generated by 11Mercado Financial Tracking System
                           <span>Handed to: {donation.handedTo}</span>
                         )}
                         {donation.fileNames.receipt && (
-                          <span className="ml-2">📄 {donation.fileNames.receipt}</span>
+                          <button
+                            onClick={() => viewImage(donation.referenceNumber, donation.fileNames.receipt!, 'receipt')}
+                            className={getContrastClass(
+                              "ml-2 text-blue-600 hover:text-blue-800 underline text-xs",
+                              "ml-2 text-yellow-400 hover:text-yellow-300 underline text-xs"
+                            )}
+                            title="View receipt image"
+                          >
+                            📄 {donation.fileNames.receipt}
+                          </button>
                         )}
                         {donation.fileNames.photo && (
-                          <span className="ml-2">📷 {donation.fileNames.photo}</span>
+                          <button
+                            onClick={() => viewImage(donation.referenceNumber, donation.fileNames.photo!, 'photo')}
+                            className={getContrastClass(
+                              "ml-2 text-green-600 hover:text-green-800 underline text-xs",
+                              "ml-2 text-green-400 hover:text-green-300 underline text-xs"
+                            )}
+                            title="View photo evidence"
+                          >
+                            📷 {donation.fileNames.photo}
+                          </button>
                         )}
                       </div>
-                      <button
-                        onClick={() => setSelectedDonation(donation)}
-                        className={getContrastClass(
-                          "text-blue-600 hover:text-blue-800 flex items-center gap-1",
-                          "text-yellow-400 hover:text-yellow-300 flex items-center gap-1"
-                        )}
-                      >
-                        <Eye size={14} />
-                        View Details
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setSelectedDonation(donation)}
+                          className={getContrastClass(
+                            "text-blue-600 hover:text-blue-800 flex items-center gap-1 px-2 py-1 rounded",
+                            "text-yellow-400 hover:text-yellow-300 flex items-center gap-1 px-2 py-1 rounded"
+                          )}
+                          title="View full details"
+                        >
+                          <Eye size={14} />
+                          <span className="text-xs">View</span>
+                        </button>
+                        <button
+                          onClick={() => requestAction('edit', donation)}
+                          className={getContrastClass(
+                            "text-green-600 hover:text-green-800 flex items-center gap-1 px-2 py-1 rounded hover:bg-green-50",
+                            "text-green-400 hover:text-green-300 flex items-center gap-1 px-2 py-1 rounded hover:bg-green-900/20"
+                          )}
+                          title="Edit record with audit trail"
+                        >
+                          <Edit3 size={14} />
+                          <span className="text-xs">Edit</span>
+                        </button>
+                        <button
+                          onClick={() => requestAction('delete', donation)}
+                          className={getContrastClass(
+                            "text-red-600 hover:text-red-800 flex items-center gap-1 px-2 py-1 rounded hover:bg-red-50",
+                            "text-red-400 hover:text-red-300 flex items-center gap-1 px-2 py-1 rounded hover:bg-red-900/20"
+                          )}
+                          title="Delete record with audit trail"
+                        >
+                          <Trash2 size={14} />
+                          <span className="text-xs">Delete</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -845,9 +1202,16 @@ Generated by 11Mercado Financial Tracking System
                         )}
                       </div>
                       {selectedDonation.fileNames.receipt && (
-                        <div className={getContrastClass("text-xs text-gray-500 mt-1", "text-xs text-yellow-300 mt-1")}>
-                          File: {selectedDonation.fileNames.receipt}
-                        </div>
+                        <button
+                          onClick={() => viewImage(selectedDonation.referenceNumber, selectedDonation.fileNames.receipt!, 'receipt')}
+                          className={getContrastClass(
+                            "text-xs text-blue-600 hover:text-blue-800 underline mt-1 flex items-center gap-1",
+                            "text-xs text-yellow-400 hover:text-yellow-300 underline mt-1 flex items-center gap-1"
+                          )}
+                        >
+                          <Image size={12} />
+                          View: {selectedDonation.fileNames.receipt}
+                        </button>
                       )}
                     </div>
                     <div>
@@ -865,9 +1229,16 @@ Generated by 11Mercado Financial Tracking System
                         )}
                       </div>
                       {selectedDonation.fileNames.photo && (
-                        <div className={getContrastClass("text-xs text-gray-500 mt-1", "text-xs text-yellow-300 mt-1")}>
-                          File: {selectedDonation.fileNames.photo}
-                        </div>
+                        <button
+                          onClick={() => viewImage(selectedDonation.referenceNumber, selectedDonation.fileNames.photo!, 'photo')}
+                          className={getContrastClass(
+                            "text-xs text-green-600 hover:text-green-800 underline mt-1 flex items-center gap-1",
+                            "text-xs text-green-400 hover:text-green-300 underline mt-1 flex items-center gap-1"
+                          )}
+                        >
+                          <Image size={12} />
+                          View: {selectedDonation.fileNames.photo}
+                        </button>
                       )}
                     </div>
                   </div>
@@ -928,7 +1299,404 @@ Generated by 11Mercado Financial Tracking System
             </div>
           </div>
         )}
+
+        {/* Image Viewing Modal */}
+        {viewingImage && (
+          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-70 p-4">
+            <div className={getContrastClass(
+              "bg-white rounded-xl max-w-6xl max-h-[95vh] overflow-auto relative",
+              "bg-gray-900 border border-yellow-400 rounded-xl max-w-6xl max-h-[95vh] overflow-auto relative"
+            )}>
+              <div className={getContrastClass(
+                "bg-gray-50 border-b p-4 flex items-center justify-between sticky top-0 z-10",
+                "bg-gray-800 border-b border-gray-700 p-4 flex items-center justify-between sticky top-0 z-10"
+              )}>
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-lg ${
+                    viewingImage.type === 'receipt' 
+                      ? getContrastClass('bg-blue-100 text-blue-600', 'bg-gray-700 text-blue-400')
+                      : getContrastClass('bg-green-100 text-green-600', 'bg-gray-700 text-green-400')
+                  }`}>
+                    {viewingImage.type === 'receipt' ? <Receipt size={20} /> : <Camera size={20} />}
+                  </div>
+                  <div>
+                    <h2 className={getContrastClass("text-lg font-semibold text-gray-900", "text-lg font-semibold text-yellow-400")}>
+                      {viewingImage.type === 'receipt' ? 'Transaction Receipt' : 'Photo Evidence'}
+                    </h2>
+                    <p className={getContrastClass("text-sm text-gray-600", "text-sm text-yellow-200")}>
+                      {viewingImage.name}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setViewingImage(null)}
+                  className={getContrastClass(
+                    "text-gray-500 hover:text-gray-700 p-2 rounded-lg hover:bg-gray-100",
+                    "text-yellow-400 hover:text-yellow-300 p-2 rounded-lg hover:bg-gray-700"
+                  )}
+                  title="Close image viewer"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+              
+              <div className="p-6">
+                <div className="flex items-center justify-center">
+                  <img
+                    src={viewingImage.src}
+                    alt={viewingImage.name}
+                    className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-lg"
+                    style={{ imageRendering: 'auto' }}
+                  />
+                </div>
+                <div className={getContrastClass(
+                  "mt-4 text-center text-sm text-gray-500",
+                  "mt-4 text-center text-sm text-yellow-300"
+                )}>
+                  Click the X button above or press ESC to close this image viewer.
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Audit Modal for Edit/Delete Authorization */}
+        {showAuditModal && (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-80 p-4">
+            <div className={getContrastClass(
+              "bg-white rounded-xl max-w-md w-full",
+              "bg-gray-900 border border-yellow-400 rounded-xl max-w-md w-full"
+            )}>
+              <div className={getContrastClass(
+                "bg-orange-50 border-b p-4",
+                "bg-gray-800 border-b border-gray-700 p-4"
+              )}>
+                <div className="flex items-center gap-3">
+                  <Shield className={getContrastClass("text-orange-600", "text-orange-400")} size={24} />
+                  <h2 className={getContrastClass("text-lg font-semibold text-gray-900", "text-lg font-semibold text-yellow-400")}>
+                    Authorization Required
+                  </h2>
+                </div>
+                <p className={getContrastClass("text-sm text-gray-600 mt-2", "text-sm text-yellow-200 mt-2")}>
+                  You are about to {auditAction} record: {pendingAction?.donation.referenceNumber}
+                </p>
+              </div>
+              
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className={getContrastClass("block text-sm font-medium text-gray-700 mb-2", "block text-sm font-medium text-yellow-200 mb-2")}>
+                    Reason for {auditAction} *
+                  </label>
+                  <textarea
+                    value={auditReason}
+                    onChange={(e) => setAuditReason(e.target.value)}
+                    className={getContrastClass(
+                      "w-full p-3 border border-gray-300 rounded-lg text-gray-900",
+                      "w-full p-3 border border-gray-600 bg-gray-800 rounded-lg text-yellow-200"
+                    )}
+                    rows={3}
+                    placeholder={`Please explain why you need to ${auditAction} this record...`}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className={getContrastClass("block text-sm font-medium text-gray-700 mb-2", "block text-sm font-medium text-yellow-200 mb-2")}>
+                    Your E-Signature *
+                  </label>
+                  <input
+                    type="text"
+                    value={auditSignature}
+                    onChange={(e) => setAuditSignature(e.target.value)}
+                    className={getContrastClass(
+                      "w-full p-3 border border-gray-300 rounded-lg text-gray-900",
+                      "w-full p-3 border border-gray-600 bg-gray-800 rounded-lg text-yellow-200"
+                    )}
+                    placeholder="Type your full name as electronic signature"
+                    required
+                  />
+                </div>
+
+                <div className={getContrastClass(
+                  "bg-yellow-50 border border-yellow-200 rounded-lg p-3",
+                  "bg-gray-800 border border-yellow-400 rounded-lg p-3"
+                )}>
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className={getContrastClass("text-yellow-600", "text-yellow-400")} size={16} />
+                    <div>
+                      <p className={getContrastClass("text-sm font-medium text-yellow-800", "text-sm font-medium text-yellow-200")}>
+                        Audit Trail Notice
+                      </p>
+                      <p className={getContrastClass("text-xs text-yellow-700", "text-xs text-yellow-300")}>
+                        This action will be permanently logged with your credentials, reason, and timestamp.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 border-t flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowAuditModal(false);
+                    setPendingAction(null);
+                    setAuditReason('');
+                    setAuditSignature('');
+                  }}
+                  className={getContrastClass(
+                    "flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-lg transition-colors",
+                    "flex-1 bg-gray-700 border border-yellow-400 hover:bg-gray-600 text-yellow-400 py-2 px-4 rounded-lg transition-colors"
+                  )}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={executeAction}
+                  disabled={!auditReason.trim() || !auditSignature.trim()}
+                  className={`flex-1 py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 ${
+                    auditAction === 'delete' 
+                      ? 'bg-red-600 hover:bg-red-700 disabled:bg-gray-400'
+                      : 'bg-green-600 hover:bg-green-700 disabled:bg-gray-400'
+                  } text-white disabled:cursor-not-allowed`}
+                >
+                  <UserCheck size={16} />
+                  Authorize {auditAction.charAt(0).toUpperCase() + auditAction.slice(1)}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Modal */}
+        {editingDonation && (
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-80 p-4 overflow-y-auto">
+            <div className={getContrastClass(
+              "bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-auto",
+              "bg-gray-900 border border-yellow-400 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-auto"
+            )}>
+              <div className={getContrastClass(
+                "bg-green-50 border-b p-4 sticky top-0",
+                "bg-gray-800 border-b border-gray-700 p-4 sticky top-0"
+              )}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Edit3 className={getContrastClass("text-green-600", "text-green-400")} size={24} />
+                    <div>
+                      <h2 className={getContrastClass("text-lg font-semibold text-gray-900", "text-lg font-semibold text-yellow-400")}>
+                        Edit Donation Record
+                      </h2>
+                      <p className={getContrastClass("text-sm text-gray-600", "text-sm text-yellow-200")}>
+                        {editingDonation.referenceNumber} - Changes will be audited
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setEditingDonation(null)}
+                    className={getContrastClass(
+                      "text-gray-500 hover:text-gray-700 p-2 rounded-lg hover:bg-gray-100",
+                      "text-yellow-400 hover:text-yellow-300 p-2 rounded-lg hover:bg-gray-700"
+                    )}
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+              </div>
+              
+              <div className="p-6">
+                <EditDonationForm 
+                  donation={editingDonation}
+                  onSave={saveEditedDonation}
+                  onCancel={() => setEditingDonation(null)}
+                  getContrastClass={getContrastClass}
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </main>
+    </div>
+  );
+}
+
+// Edit Donation Form Component
+function EditDonationForm({ donation, onSave, onCancel, getContrastClass }) {
+  const [editedDonation, setEditedDonation] = useState({ ...donation });
+
+  const handleChange = (field: string, value: any) => {
+    setEditedDonation(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSave = () => {
+    if (!editedDonation.parentName.trim() || !editedDonation.studentName.trim()) {
+      alert('Parent/Guardian name and Student name are required.');
+      return;
+    }
+    onSave(editedDonation);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className={getContrastClass("block text-sm font-medium text-gray-700 mb-2", "block text-sm font-medium text-yellow-200 mb-2")}>
+            Parent/Guardian Name *
+          </label>
+          <input
+            type="text"
+            value={editedDonation.parentName}
+            onChange={(e) => handleChange('parentName', e.target.value)}
+            className={getContrastClass(
+              "w-full p-3 border border-gray-300 rounded-lg text-gray-900",
+              "w-full p-3 border border-gray-600 bg-gray-800 rounded-lg text-yellow-200"
+            )}
+            required
+          />
+        </div>
+
+        <div>
+          <label className={getContrastClass("block text-sm font-medium text-gray-700 mb-2", "block text-sm font-medium text-yellow-200 mb-2")}>
+            Student Name *
+          </label>
+          <input
+            type="text"
+            value={editedDonation.studentName}
+            onChange={(e) => handleChange('studentName', e.target.value)}
+            className={getContrastClass(
+              "w-full p-3 border border-gray-300 rounded-lg text-gray-900",
+              "w-full p-3 border border-gray-600 bg-gray-800 rounded-lg text-yellow-200"
+            )}
+            required
+          />
+        </div>
+
+        <div>
+          <label className={getContrastClass("block text-sm font-medium text-gray-700 mb-2", "block text-sm font-medium text-yellow-200 mb-2")}>
+            Donation Mode
+          </label>
+          <select
+            value={editedDonation.donationMode}
+            onChange={(e) => handleChange('donationMode', e.target.value)}
+            className={getContrastClass(
+              "w-full p-3 border border-gray-300 rounded-lg text-gray-900",
+              "w-full p-3 border border-gray-600 bg-gray-800 rounded-lg text-yellow-200"
+            )}
+          >
+            <option value="ewallet">E-wallet</option>
+            <option value="bank">Bank Transfer</option>
+            <option value="cash">Cash</option>
+            <option value="inkind">In-kind</option>
+          </select>
+        </div>
+
+        <div>
+          <label className={getContrastClass("block text-sm font-medium text-gray-700 mb-2", "block text-sm font-medium text-yellow-200 mb-2")}>
+            Amount {editedDonation.donationMode !== 'inkind' ? '*' : ''}
+          </label>
+          <input
+            type="number"
+            value={editedDonation.amount || ''}
+            onChange={(e) => handleChange('amount', e.target.value)}
+            className={getContrastClass(
+              "w-full p-3 border border-gray-300 rounded-lg text-gray-900",
+              "w-full p-3 border border-gray-600 bg-gray-800 rounded-lg text-yellow-200"
+            )}
+            disabled={editedDonation.donationMode === 'inkind'}
+          />
+        </div>
+
+        <div>
+          <label className={getContrastClass("block text-sm font-medium text-gray-700 mb-2", "block text-sm font-medium text-yellow-200 mb-2")}>
+            Transaction Date
+          </label>
+          <input
+            type="date"
+            value={editedDonation.date}
+            onChange={(e) => handleChange('date', e.target.value)}
+            className={getContrastClass(
+              "w-full p-3 border border-gray-300 rounded-lg text-gray-900",
+              "w-full p-3 border border-gray-600 bg-gray-800 rounded-lg text-yellow-200"
+            )}
+          />
+        </div>
+
+        <div>
+          <label className={getContrastClass("block text-sm font-medium text-gray-700 mb-2", "block text-sm font-medium text-yellow-200 mb-2")}>
+            Transaction Time
+          </label>
+          <input
+            type="time"
+            value={editedDonation.time || ''}
+            onChange={(e) => handleChange('time', e.target.value)}
+            className={getContrastClass(
+              "w-full p-3 border border-gray-300 rounded-lg text-gray-900",
+              "w-full p-3 border border-gray-600 bg-gray-800 rounded-lg text-yellow-200"
+            )}
+          />
+        </div>
+
+        {editedDonation.donationMode === 'cash' && (
+          <div>
+            <label className={getContrastClass("block text-sm font-medium text-gray-700 mb-2", "block text-sm font-medium text-yellow-200 mb-2")}>
+              Handed To
+            </label>
+            <input
+              type="text"
+              value={editedDonation.handedTo || ''}
+              onChange={(e) => handleChange('handedTo', e.target.value)}
+              className={getContrastClass(
+                "w-full p-3 border border-gray-300 rounded-lg text-gray-900",
+                "w-full p-3 border border-gray-600 bg-gray-800 rounded-lg text-yellow-200"
+              )}
+            />
+          </div>
+        )}
+
+        {editedDonation.donationMode === 'inkind' && (
+          <div className="md:col-span-2">
+            <label className={getContrastClass("block text-sm font-medium text-gray-700 mb-2", "block text-sm font-medium text-yellow-200 mb-2")}>
+              Items Description
+            </label>
+            <textarea
+              value={editedDonation.items || ''}
+              onChange={(e) => handleChange('items', e.target.value)}
+              className={getContrastClass(
+                "w-full p-3 border border-gray-300 rounded-lg text-gray-900",
+                "w-full p-3 border border-gray-600 bg-gray-800 rounded-lg text-yellow-200"
+              )}
+              rows={3}
+            />
+          </div>
+        )}
+      </div>
+
+      <div className={getContrastClass(
+        "bg-blue-50 border border-blue-200 rounded-lg p-3",
+        "bg-gray-800 border border-yellow-400 rounded-lg p-3"
+      )}>
+        <p className={getContrastClass("text-sm text-blue-800", "text-sm text-yellow-200")}>
+          <strong>Note:</strong> File uploads (receipts/photos) cannot be edited through this interface. 
+          Original files remain attached to this record.
+        </p>
+      </div>
+
+      <div className="flex gap-3 pt-4">
+        <button
+          onClick={onCancel}
+          className={getContrastClass(
+            "flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 px-4 rounded-lg transition-colors",
+            "flex-1 bg-gray-700 border border-yellow-400 hover:bg-gray-600 text-yellow-400 py-3 px-4 rounded-lg transition-colors"
+          )}
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleSave}
+          className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+        >
+          <Save size={16} />
+          Save Changes
+        </button>
+      </div>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 // Email service utility for sending messages to 11mercado.pta@gmail.com
-// This simulates email sending and provides structure for actual implementation
+import emailjs from '@emailjs/browser';
+import { EMAIL_CONFIG } from '../config/emailConfig';
 
 export interface EmailData {
   to: string;
@@ -10,9 +11,9 @@ export interface EmailData {
   type: 'contact' | 'project-proposal' | 'donation-receipt';
 }
 
-const PTA_EMAIL = '11mercado.pta@gmail.com';
+const PTA_EMAIL = EMAIL_CONFIG.PTA.EMAIL;
 
-// Simulate email sending (in production, this would use a real email service)
+// Real email sending using EmailJS
 export const sendEmailToPTA = async (data: Partial<EmailData>): Promise<boolean> => {
   try {
     const emailData: EmailData = {
@@ -24,20 +25,108 @@ export const sendEmailToPTA = async (data: Partial<EmailData>): Promise<boolean>
       type: data.type || 'contact'
     };
 
-    // Log the email that would be sent
-    console.log('📧 Email to be sent to PTA:', emailData);
+    console.log('📧 Sending email to PTA:', emailData);
+
+    // Check if EmailJS is enabled and configured
+    if (EMAIL_CONFIG.EMAILJS.ENABLED && EMAIL_CONFIG.EMAILJS.PUBLIC_KEY !== 'YOUR_EMAILJS_PUBLIC_KEY') {
+      // Attempt to send via EmailJS
+      try {
+        const result = await emailjs.send(
+          EMAIL_CONFIG.EMAILJS.SERVICE_ID,
+          EMAIL_CONFIG.EMAILJS.TEMPLATE_ID,
+          {
+            to_email: PTA_EMAIL,
+            from_name: emailData.from,
+            from_email: emailData.from,
+            subject: emailData.subject,
+            message: emailData.content,
+            timestamp: emailData.timestamp
+          },
+          EMAIL_CONFIG.EMAILJS.PUBLIC_KEY
+        );
+
+        if (result.status === 200) {
+          console.log('✅ Email sent successfully via EmailJS');
+          
+          // Store successful send in localStorage for tracking
+          const sentEmails = JSON.parse(localStorage.getItem('sentEmails') || '[]');
+          sentEmails.push({ ...emailData, status: 'sent', service: 'emailjs' });
+          localStorage.setItem('sentEmails', JSON.stringify(sentEmails));
+          
+          return true;
+        } else {
+          throw new Error(`EmailJS returned status: ${result.status}`);
+        }
+      } catch (emailjsError) {
+        console.warn('⚠️ EmailJS failed, trying fallback method:', emailjsError);
+        throw emailjsError;
+      }
+    }
     
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // EmailJS not configured or disabled - use fallback method
+    console.log('📧 EmailJS not configured, using fallback method');
     
-    // Store in localStorage for demonstration
-    const sentEmails = JSON.parse(localStorage.getItem('sentEmails') || '[]');
-    sentEmails.push(emailData);
-    localStorage.setItem('sentEmails', JSON.stringify(sentEmails));
+    if (EMAIL_CONFIG.FALLBACK.USE_MAILTO) {
+      const success = await sendViaMailtoFallback(emailData);
+      if (success) {
+        // Store as fallback send
+        const sentEmails = JSON.parse(localStorage.getItem('sentEmails') || '[]');
+        sentEmails.push({ ...emailData, status: 'sent_via_mailto', service: 'mailto' });
+        localStorage.setItem('sentEmails', JSON.stringify(sentEmails));
+        return true;
+      }
+    }
+    
+    throw new Error('No email service configured and fallback failed');
+  } catch (error) {
+    console.error('❌ Error sending email:', error);
+    
+    // Store failed attempt for admin review if enabled
+    if (EMAIL_CONFIG.FALLBACK.STORE_FAILED_ATTEMPTS) {
+      const failedEmails = JSON.parse(localStorage.getItem('failedEmails') || '[]');
+      failedEmails.push({
+        ...data,
+        error: error.message,
+        timestamp: new Date().toISOString()
+      });
+      localStorage.setItem('failedEmails', JSON.stringify(failedEmails));
+    }
+    
+    return false;
+  }
+};
+
+// Fallback method using mailto
+const sendViaMailtoFallback = async (emailData: EmailData): Promise<boolean> => {
+  try {
+    // Prepare mailto URL with proper encoding
+    const subject = encodeURIComponent(emailData.subject);
+    const body = encodeURIComponent(emailData.content);
+    const mailtoUrl = `mailto:${PTA_EMAIL}?subject=${subject}&body=${body}`;
+    
+    // Try to open user's email client
+    const opened = window.open(mailtoUrl, '_self');
+    
+    // Small delay to allow the email client to open
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // If we can't open the email client, provide copy-paste instructions
+    if (!opened || opened.closed) {
+      const copyText = `To: ${PTA_EMAIL}\nSubject: ${emailData.subject}\n\nMessage:\n${emailData.content}`;
+      
+      // Try to copy to clipboard
+      try {
+        await navigator.clipboard.writeText(copyText);
+        alert(`📧 Email details copied to clipboard!\n\nPaste into your email application and send to:\n${PTA_EMAIL}`);
+      } catch (clipboardError) {
+        // Fallback: show email details to copy manually
+        alert(`📧 Please copy this information and send via your email:\n\n${copyText}`);
+      }
+    }
     
     return true;
   } catch (error) {
-    console.error('Error sending email:', error);
+    console.error('Mailto fallback failed:', error);
     return false;
   }
 };

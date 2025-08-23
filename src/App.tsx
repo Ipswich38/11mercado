@@ -152,7 +152,35 @@ export default function MobileApp() {
     }
   ]);
 
-  const [donationDrives, setDonationDrives] = useState([]);
+  // Initialize donation drives with localStorage persistence
+  const [donationDrives, setDonationDrives] = useState(() => {
+    const savedDrives = localStorage.getItem('donationDrives');
+    if (savedDrives) {
+      try {
+        return JSON.parse(savedDrives);
+      } catch (error) {
+        console.warn('Failed to parse saved donation drives');
+      }
+    }
+    
+    // Default donation drives if none saved
+    return [
+      {
+        id: 'general-fund',
+        title: 'General SPTA Fund',
+        targetAmount: 500000,
+        currentAmount: 0,
+        receipts: []
+      },
+      {
+        id: 'mercado-projects',
+        title: '11Mercado PTA Projects Fund',
+        targetAmount: 300000,
+        currentAmount: 0,
+        receipts: []
+      }
+    ];
+  });
 
   const [messages, setMessages] = useState([]);
 
@@ -244,6 +272,11 @@ export default function MobileApp() {
       return () => clearInterval(activityInterval);
     }
   }, [currentSessionId, isLoggedIn, updateActivity]);
+
+  // Save donation drives to localStorage whenever they change
+  React.useEffect(() => {
+    localStorage.setItem('donationDrives', JSON.stringify(donationDrives));
+  }, [donationDrives]);
 
   const [weather, setWeather] = useState({
     location: "San Jose del Monte, Bulacan",
@@ -348,6 +381,63 @@ export default function MobileApp() {
     }
   };
 
+  const handleDonationSuccess = (donationData) => {
+    const { amount, allocation, donorName, studentName, referenceNumber, submissionDate, donationMode } = donationData;
+    
+    // Create receipt entries for the donation progress tracking
+    const newReceipt = {
+      id: Date.now(),
+      amount: amount,
+      date: submissionDate,
+      description: `${donationMode.toUpperCase()} donation from ${donorName} (Student: ${studentName})`,
+      uploadedBy: donorName,
+      referenceNumber: referenceNumber
+    };
+
+    // Update donation drives based on allocation
+    if (allocation) {
+      setDonationDrives(prev => prev.map(drive => {
+        if (drive.id === 'general-fund' && allocation.generalSPTA > 0) {
+          return {
+            ...drive,
+            currentAmount: drive.currentAmount + allocation.generalSPTA,
+            receipts: [...drive.receipts, {
+              ...newReceipt,
+              id: Date.now() + 1,
+              amount: allocation.generalSPTA,
+              description: `${newReceipt.description} - General SPTA allocation`
+            }]
+          };
+        } else if (drive.id === 'mercado-projects' && allocation.mercadoPTA > 0) {
+          return {
+            ...drive,
+            currentAmount: drive.currentAmount + allocation.mercadoPTA,
+            receipts: [...drive.receipts, {
+              ...newReceipt,
+              id: Date.now() + 2,
+              amount: allocation.mercadoPTA,
+              description: `${newReceipt.description} - 11Mercado PTA Projects allocation`
+            }]
+          };
+        }
+        return drive;
+      }));
+    } else {
+      // If no allocation specified, add to general fund by default
+      setDonationDrives(prev => prev.map(drive => 
+        drive.id === 'general-fund'
+          ? {
+              ...drive,
+              currentAmount: drive.currentAmount + amount,
+              receipts: [...drive.receipts, newReceipt]
+            }
+          : drive
+      ));
+    }
+
+    showNotificationMessage(`Donation of ₱${amount.toLocaleString()} successfully synced to donation progress!`, 'success');
+  };
+
   const renderContent = () => {
     switch (activeApp) {
       case 'home':
@@ -374,6 +464,7 @@ export default function MobileApp() {
         return <EnhancedDonationForm 
           getContrastClass={getContrastClass}
           onClose={() => setActiveApp('home')}
+          onDonationSuccess={handleDonationSuccess}
         />;
       case 'community':
         return <CommunityApp 

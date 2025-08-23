@@ -29,7 +29,7 @@ interface AcknowledgementData extends DonationFormData {
   submissionTime: string;
 }
 
-export default function EnhancedDonationForm({ getContrastClass, onClose }) {
+export default function EnhancedDonationForm({ getContrastClass, onClose, onDonationSuccess }) {
   const [formData, setFormData] = useState<DonationFormData>({
     parentName: '',
     studentName: '',
@@ -275,6 +275,22 @@ export default function EnhancedDonationForm({ getContrastClass, onClose }) {
       if (success) {
         setAcknowledgementData(acknowledgement);
         setShowAcknowledgement(true);
+        
+        // Auto-sync successful donation to donation progress
+        if (onDonationSuccess && formData.amount) {
+          const donationAmount = parseFloat(formData.amount);
+          if (donationAmount > 0) {
+            onDonationSuccess({
+              amount: donationAmount,
+              allocation: formData.allocation,
+              donorName: formData.parentName,
+              studentName: formData.studentName,
+              referenceNumber: acknowledgement.referenceNumber,
+              submissionDate: acknowledgement.submissionDate,
+              donationMode: formData.donationMode
+            });
+          }
+        }
       } else {
         alert('There was an error submitting your donation. Please try again.');
       }

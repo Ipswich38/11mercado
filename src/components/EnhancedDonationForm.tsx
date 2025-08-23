@@ -139,17 +139,6 @@ export default function EnhancedDonationForm({ getContrastClass, onClose }) {
     // General validation - e-signature and agreement always required
     if (!formData.eSignature.trim()) {
       newErrors.eSignature = 'E-signature is required for all donations';
-    } else {
-      // Validate e-signature format: should contain both parent and student names
-      const signature = formData.eSignature.toLowerCase();
-      const parent = formData.parentName.toLowerCase();
-      const student = formData.studentName.toLowerCase();
-      
-      if (parent && student) {
-        if (!signature.includes(parent.split(' ')[0]) || !signature.includes(student.split(' ')[0])) {
-          newErrors.eSignature = 'E-signature should include both parent/guardian and student names';
-        }
-      }
     }
 
     if (!formData.agreementAccepted) {
@@ -187,10 +176,13 @@ export default function EnhancedDonationForm({ getContrastClass, onClose }) {
     const otherField = field === 'generalSPTA' ? 'mercadoPTA' : 'generalSPTA';
     const otherValue = currentAllocation[otherField];
     
+    // Round to 2 decimal places to avoid floating-point precision issues
+    value = Math.round(value * 100) / 100;
+    
     // Prevent entering more than total amount
     if (value + otherValue > totalAmount && totalAmount > 0) {
-      // Calculate maximum allowed value
-      const maxAllowed = totalAmount - otherValue;
+      // Calculate maximum allowed value and round to 2 decimal places
+      const maxAllowed = Math.round((totalAmount - otherValue) * 100) / 100;
       value = Math.max(0, maxAllowed);
     }
     

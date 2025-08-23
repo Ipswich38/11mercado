@@ -54,87 +54,25 @@ export default function DonationTiles({ donationDrives, getContrastClass }) {
         </div>
       </div>
 
-      <div className="space-y-4">
-        {donationDrives.length === 0 ? (
-          <div className={getContrastClass(
-            "bg-white/60 backdrop-blur-md rounded-3xl p-8 shadow-xl border border-white/20 text-center",
-            "bg-gray-900 rounded-3xl p-8 shadow-xl border-2 border-yellow-400 text-center"
-          )}>
-            <div className="text-6xl mb-4">🎯</div>
-            <h3 className={getContrastClass(
-              "text-lg font-semibold text-slate-900 mb-2",
-              "text-lg font-semibold text-yellow-400 mb-2"
-            )}>
-              No Active Campaigns
-            </h3>
-            <p className={getContrastClass(
-              "text-slate-600",
-              "text-yellow-200"
-            )}>
-              The donation period has not started yet. Check back later for upcoming fundraising campaigns.
-            </p>
+      {totalRaised > 0 && (
+        <div className={getContrastClass(
+          "bg-white/60 backdrop-blur-md rounded-3xl p-6 text-center shadow-xl border border-white/20",
+          "bg-gray-900 rounded-3xl p-6 text-center shadow-xl border-2 border-yellow-400"
+        )}>
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <Users size={20} className={getContrastClass("text-slate-500", "text-yellow-400")} />
+            <span className={getContrastClass("text-sm text-slate-600", "text-sm text-yellow-200")}>
+              {donationDrives.reduce((sum, drive) => sum + (drive.receipts?.length || 0), 0)} total contributors
+            </span>
           </div>
-        ) : (
-          donationDrives.map((drive) => {
-            
-            return (
-              <div
-                key={drive.id}
-                className={getContrastClass(
-                  "bg-white/60 backdrop-blur-md rounded-3xl p-6 shadow-xl border border-white/20",
-                  "bg-gray-900 rounded-3xl p-6 shadow-xl border-2 border-yellow-400"
-                )}
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <Target className={getContrastClass("text-blue-600", "text-yellow-400")} size={24} />
-                  <h3 className={getContrastClass(
-                    "text-lg font-semibold text-slate-900",
-                    "text-lg font-semibold text-yellow-400"
-                  )}>
-                    {drive.title}
-                  </h3>
-                </div>
-                
-                <div className="mb-4">
-                  <div className={getContrastClass(
-                    "text-3xl font-bold text-green-600 text-center",
-                    "text-3xl font-bold text-yellow-400 text-center"
-                  )}>
-                    ₱{drive.currentAmount.toLocaleString()}
-                  </div>
-                  <div className={getContrastClass(
-                    "text-sm text-slate-600 text-center mt-2",
-                    "text-sm text-yellow-200 text-center mt-2"
-                  )}>
-                    Total Raised
-                  </div>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Users size={16} className={getContrastClass("text-slate-500", "text-yellow-400")} />
-                    <span className={getContrastClass(
-                      "text-sm text-slate-600",
-                      "text-sm text-yellow-200"
-                    )}>
-                      {drive.receipts.length} contributors
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Calendar size={16} className={getContrastClass("text-slate-500", "text-yellow-400")} />
-                    <span className={getContrastClass(
-                      "text-sm text-slate-600",
-                      "text-sm text-yellow-200"
-                    )}>
-                      Active
-                    </span>
-                  </div>
-                </div>
-              </div>
-            );
-          })
-        )}
-      </div>
+          <div className={getContrastClass(
+            "text-sm text-slate-600",
+            "text-sm text-yellow-200"
+          )}>
+            Thank you to all our generous donors who are supporting 11Mercado SPTA initiatives
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -187,6 +187,51 @@ Proposal ID: PROP-${Date.now()}
   };
 };
 
+// Format donation notification email
+export const formatDonationNotificationEmail = (donationData: any): Partial<EmailData> => {
+  const { amount, allocation, donorName, studentName, referenceNumber, submissionDate, donationMode } = donationData;
+  
+  return {
+    subject: `New Donation Received - ${referenceNumber}`,
+    content: `
+🎉 NEW DONATION NOTIFICATION
+============================
+
+A new donation has been successfully submitted through the 11Mercado App:
+
+DONATION DETAILS:
+📋 Reference Number: ${referenceNumber}
+💰 Amount: ${amount ? '₱' + parseFloat(amount).toLocaleString() : 'In-kind donation'}
+💳 Payment Mode: ${donationMode.toUpperCase()}
+📅 Submission Date: ${submissionDate}
+
+DONOR INFORMATION:
+👤 Parent/Guardian: ${donorName}
+🎓 Student: ${studentName}
+
+${allocation ? `
+FUND ALLOCATION:
+📊 General SPTA: ₱${allocation.generalSPTA.toLocaleString()}
+📊 11Mercado PTA: ₱${allocation.mercadoPTA.toLocaleString()}
+` : ''}
+
+NEXT STEPS:
+✅ Verify the donation in the Finance Dashboard
+✅ Process acknowledgment if required
+✅ Update financial records
+
+This is an automated notification from the 11Mercado PTA system.
+Access the Finance Dashboard for complete details and documentation.
+
+---
+🤖 Automated notification from 11Mercado PTA System
+⏰ Generated: ${new Date().toLocaleString()}
+    `,
+    from: 'donations@11mercado.app',
+    type: 'donation-receipt'
+  };
+};
+
 // Get all sent emails (for demo purposes)
 export const getSentEmails = (): EmailData[] => {
   return JSON.parse(localStorage.getItem('sentEmails') || '[]');

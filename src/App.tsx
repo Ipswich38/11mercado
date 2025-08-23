@@ -379,7 +379,7 @@ export default function MobileApp() {
     }
   };
 
-  const handleDonationSuccess = (donationData) => {
+  const handleDonationSuccess = async (donationData) => {
     const { amount, allocation, donorName, studentName, referenceNumber, submissionDate, donationMode } = donationData;
     
     // Create receipt entries for the donation progress tracking
@@ -433,6 +433,20 @@ export default function MobileApp() {
       ));
     }
 
+    // Send email notification to PTA
+    try {
+      const { sendEmailToPTA, formatDonationNotificationEmail } = await import('./utils/emailService');
+      const emailData = formatDonationNotificationEmail({
+        amount, allocation, donorName, studentName, referenceNumber, submissionDate, donationMode
+      });
+      
+      // Attempt to send notification email
+      const emailSent = await sendEmailToPTA(emailData);
+      console.log(emailSent ? '✅ Donation notification email sent' : '⚠️ Email notification failed, using fallback');
+    } catch (emailError) {
+      console.warn('Email notification error:', emailError);
+    }
+    
     // Dispatch a custom event to notify other components of the update
     window.dispatchEvent(new CustomEvent('donationUpdated', { 
       detail: { amount, allocation, donorName, studentName, referenceNumber, submissionDate, donationMode }

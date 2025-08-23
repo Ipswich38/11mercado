@@ -8,6 +8,8 @@ import {
   Shield, 
   MapPin, 
   Monitor,
+  Receipt,
+  Search,
   RefreshCw,
   MessageCircle,
   X,
@@ -222,7 +224,8 @@ What would you like to know about?`;
     { id: 'users', name: 'Active Users', icon: Users },
     { id: 'errors', name: 'Error Logs', icon: AlertTriangle },
     { id: 'activities', name: 'Activities', icon: Activity },
-    { id: 'donations', name: 'Donation Tracking', icon: FileSpreadsheet }
+    { id: 'donations', name: 'Donation Tracking', icon: FileSpreadsheet },
+    { id: 'receipts', name: 'Receipt Recovery', icon: Receipt }
   ];
 
   return (
@@ -731,6 +734,10 @@ What would you like to know about?`;
                   </div>
                 </div>
               )}
+
+              {selectedTab === 'receipts' && (
+                <ReceiptRecoveryTab getContrastClass={getContrastClass} />
+              )}
             </div>
 
             {/* AI Chat Panel */}
@@ -973,6 +980,225 @@ What would you like to know about?`;
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// Receipt Recovery Component
+function ReceiptRecoveryTab({ getContrastClass }) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  const searchForReceipt = () => {
+    setIsSearching(true);
+    
+    try {
+      const donations = JSON.parse(localStorage.getItem('donationEntries') || '[]');
+      const regeneratedReceipts = JSON.parse(localStorage.getItem('regeneratedAcknowledgements') || '[]');
+      
+      const allRecords = [...donations, ...regeneratedReceipts];
+      
+      const results = allRecords.filter(record => 
+        record.referenceNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        record.parentName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        record.studentName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        record.eSignature?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      
+      setSearchResults(results);
+    } catch (error) {
+      console.error('Error searching for receipts:', error);
+      setSearchResults([]);
+    }
+    
+    setTimeout(() => setIsSearching(false), 500);
+  };
+
+  const generateReceipt = (record) => {
+    try {
+      // Create a new acknowledgement receipt
+      const receiptData = {
+        referenceNumber: record.referenceNumber || `ADMIN-${Date.now()}`,
+        submissionDate: record.submissionDate || new Date().toISOString().split('T')[0],
+        submissionTime: record.submissionTime || new Date().toLocaleTimeString(),
+        parentName: record.parentName,
+        studentName: record.studentName,
+        donationMode: record.donationMode || 'unknown',
+        amount: record.amount,
+        allocation: record.allocation,
+        regeneratedBy: 'Admin',
+        regeneratedAt: new Date().toISOString(),
+        isAdminGenerated: true
+      };
+
+      // Store the regenerated receipt
+      const existing = JSON.parse(localStorage.getItem('regeneratedAcknowledgements') || '[]');
+      existing.push(receiptData);
+      localStorage.setItem('regeneratedAcknowledgements', JSON.stringify(existing));
+
+      // Show success message
+      alert(`Acknowledgement receipt generated for ${record.referenceNumber || 'donation record'}`);
+      
+    } catch (error) {
+      console.error('Error generating receipt:', error);
+      alert('Failed to generate receipt. Please try again.');
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className={getContrastClass("text-xl font-semibold text-gray-900", "text-xl font-semibold text-yellow-400")}>
+          Receipt Recovery System
+        </h2>
+      </div>
+      
+      <div className={getContrastClass(
+        "bg-white/70 backdrop-blur-md rounded-2xl p-6 border border-white/30",
+        "bg-gray-800/70 backdrop-blur-md rounded-2xl p-6 border border-yellow-400/30"
+      )}>
+        <h3 className={getContrastClass("text-lg font-semibold text-gray-900 mb-4", "text-lg font-semibold text-yellow-400 mb-4")}>
+          Search for Donation Records
+        </h3>
+        <p className={getContrastClass("text-sm text-gray-600 mb-4", "text-sm text-yellow-200 mb-4")}>
+          Search by reference number, parent name, student name, or signature to recover acknowledgement receipts.
+        </p>
+        
+        <div className="flex gap-3 mb-6">
+          <div className="relative flex-1">
+            <Search size={20} className={getContrastClass(
+              "absolute left-3 top-3 text-gray-400",
+              "absolute left-3 top-3 text-yellow-400"
+            )} />
+            <input
+              type="text"
+              placeholder="Enter reference number, parent name, student name, or signature..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className={`w-full pl-10 p-3 rounded-xl border ${getContrastClass(
+                'border-gray-300 bg-white text-gray-900',
+                'border-gray-600 bg-gray-800 text-yellow-200'
+              )} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              onKeyPress={(e) => e.key === 'Enter' && searchForReceipt()}
+            />
+          </div>
+          <button
+            onClick={searchForReceipt}
+            disabled={!searchTerm.trim() || isSearching}
+            className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white px-6 py-3 rounded-xl flex items-center gap-2 transition-colors"
+          >
+            {isSearching ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Searching...
+              </>
+            ) : (
+              <>
+                <Search size={16} />
+                Search
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Search Results */}
+        {searchResults.length > 0 && (
+          <div className="space-y-3">
+            <h4 className={getContrastClass("font-semibold text-gray-900", "font-semibold text-yellow-400")}>
+              Search Results ({searchResults.length})
+            </h4>
+            {searchResults.map((record, index) => (
+              <div
+                key={index}
+                className={getContrastClass(
+                  "bg-white rounded-xl p-4 border border-gray-200 hover:shadow-md transition-shadow",
+                  "bg-gray-900 rounded-xl p-4 border border-gray-700 hover:border-yellow-400 transition-colors"
+                )}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className={getContrastClass(
+                        "bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full font-medium",
+                        "bg-gray-800 text-yellow-400 text-xs px-2 py-1 rounded-full font-medium border border-yellow-400"
+                      )}>
+                        {record.referenceNumber || 'No Reference'}
+                      </span>
+                      {record.isAdminGenerated && (
+                        <span className={getContrastClass(
+                          "bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full",
+                          "bg-green-900 text-green-400 text-xs px-2 py-1 rounded-full border border-green-400"
+                        )}>
+                          Admin Generated
+                        </span>
+                      )}
+                    </div>
+                    
+                    <h5 className={getContrastClass("font-semibold text-gray-900", "font-semibold text-yellow-400")}>
+                      {record.parentName || 'Unknown Parent'}
+                    </h5>
+                    <p className={getContrastClass("text-gray-600 text-sm", "text-yellow-200 text-sm")}>
+                      Student: {record.studentName || 'Unknown'} • Mode: {record.donationMode?.toUpperCase() || 'Unknown'}
+                    </p>
+                    <p className={getContrastClass("text-gray-500 text-xs", "text-yellow-300 text-xs")}>
+                      {record.submissionDate} • Signature: {record.eSignature || 'None'}
+                    </p>
+                  </div>
+
+                  <div className="text-right">
+                    {record.amount && (
+                      <div className={getContrastClass("text-lg font-bold text-gray-900", "text-lg font-bold text-yellow-400")}>
+                        ₱{parseFloat(record.amount).toLocaleString()}
+                      </div>
+                    )}
+                    <button
+                      onClick={() => generateReceipt(record)}
+                      className={getContrastClass(
+                        "text-green-600 hover:text-green-800 flex items-center gap-1 px-3 py-1 rounded hover:bg-green-50 text-sm mt-2",
+                        "text-green-400 hover:text-green-300 flex items-center gap-1 px-3 py-1 rounded hover:bg-green-900/20 text-sm mt-2"
+                      )}
+                    >
+                      <Receipt size={14} />
+                      Generate Receipt
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {searchTerm && searchResults.length === 0 && !isSearching && (
+          <div className={getContrastClass(
+            "text-center py-8 bg-gray-50 rounded-xl",
+            "text-center py-8 bg-gray-800 rounded-xl"
+          )}>
+            <Receipt size={48} className={getContrastClass("mx-auto mb-4 text-gray-400", "mx-auto mb-4 text-yellow-400")} />
+            <h4 className={getContrastClass("font-semibold text-gray-900 mb-2", "font-semibold text-yellow-400 mb-2")}>
+              No Records Found
+            </h4>
+            <p className={getContrastClass("text-gray-600", "text-yellow-200")}>
+              No donation records match your search criteria. Try different search terms.
+            </p>
+          </div>
+        )}
+      </div>
+
+      <div className={getContrastClass(
+        "bg-blue-50 border border-blue-200 rounded-xl p-4",
+        "bg-gray-800 border border-yellow-400 rounded-xl p-4"
+      )}>
+        <h4 className={getContrastClass("font-semibold text-blue-800 mb-2", "font-semibold text-yellow-400 mb-2")}>
+          How Receipt Recovery Works
+        </h4>
+        <ul className={getContrastClass("text-sm text-blue-700 space-y-1", "text-sm text-yellow-200 space-y-1")}>
+          <li>• Search by any detail you remember from the donation</li>
+          <li>• Review found records to identify the correct donation</li>
+          <li>• Generate a new acknowledgement receipt if the original is missing</li>
+          <li>• All regenerated receipts are tracked with admin audit trail</li>
+        </ul>
+      </div>
     </div>
   );
 }

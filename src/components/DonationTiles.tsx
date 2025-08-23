@@ -3,8 +3,6 @@ import { TrendingUp, Target, Users, Calendar } from 'lucide-react';
 
 export default function DonationTiles({ donationDrives, getContrastClass }) {
   const totalRaised = donationDrives.reduce((sum, drive) => sum + drive.currentAmount, 0);
-  const totalTarget = donationDrives.reduce((sum, drive) => sum + drive.targetAmount, 0);
-  const overallProgress = totalTarget > 0 ? (totalRaised / totalTarget) * 100 : 0;
 
   return (
     <div className="p-4 space-y-4">
@@ -51,24 +49,8 @@ export default function DonationTiles({ donationDrives, getContrastClass }) {
             "text-white/90",
             "text-yellow-200"
           )}>
-            of ₱{totalTarget.toLocaleString()} target
+            Total Raised
           </div>
-        </div>
-        
-        <div className={getContrastClass(
-          "bg-white/20 rounded-full h-4 mb-2",
-          "bg-gray-700 rounded-full h-4 mb-2"
-        )}>
-          <div
-            className="bg-white h-4 rounded-full transition-all"
-            style={{ width: `${Math.min(overallProgress, 100)}%` }}
-          />
-        </div>
-        <div className={getContrastClass(
-          "text-center text-white/90 text-sm",
-          "text-center text-yellow-200 text-sm"
-        )}>
-          {overallProgress.toFixed(1)}% completed
         </div>
       </div>
 
@@ -94,7 +76,6 @@ export default function DonationTiles({ donationDrives, getContrastClass }) {
           </div>
         ) : (
           donationDrives.map((drive) => {
-            const progress = (drive.currentAmount / drive.targetAmount) * 100;
             
             return (
               <div
@@ -114,53 +95,19 @@ export default function DonationTiles({ donationDrives, getContrastClass }) {
                   </h3>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <div className={getContrastClass(
-                      "text-2xl font-bold text-green-600",
-                      "text-2xl font-bold text-yellow-400"
-                    )}>
-                      ₱{drive.currentAmount.toLocaleString()}
-                    </div>
-                    <div className={getContrastClass(
-                      "text-sm text-slate-600",
-                      "text-sm text-yellow-200"
-                    )}>
-                      Raised
-                    </div>
-                  </div>
-                  <div>
-                    <div className={getContrastClass(
-                      "text-2xl font-bold text-slate-900",
-                      "text-2xl font-bold text-yellow-400"
-                    )}>
-                      ₱{drive.targetAmount.toLocaleString()}
-                    </div>
-                    <div className={getContrastClass(
-                      "text-sm text-slate-600",
-                      "text-sm text-yellow-200"
-                    )}>
-                      Target
-                    </div>
-                  </div>
-                </div>
-                
                 <div className="mb-4">
                   <div className={getContrastClass(
-                    "bg-slate-200 rounded-full h-3",
-                    "bg-gray-700 rounded-full h-3"
+                    "text-3xl font-bold text-green-600 text-center",
+                    "text-3xl font-bold text-yellow-400 text-center"
                   )}>
-                    <div
-                      className="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full transition-all"
-                      style={{ width: `${Math.min(progress, 100)}%` }}
-                    />
+                    ₱{drive.currentAmount.toLocaleString()}
                   </div>
-                  <p className={getContrastClass(
-                    "text-xs text-slate-500 mt-1",
-                    "text-xs text-yellow-300 mt-1"
+                  <div className={getContrastClass(
+                    "text-sm text-slate-600 text-center mt-2",
+                    "text-sm text-yellow-200 text-center mt-2"
                   )}>
-                    {progress.toFixed(1)}% completed
-                  </p>
+                    Total Raised
+                  </div>
                 </div>
                 
                 <div className="flex items-center justify-between">

@@ -168,14 +168,12 @@ export default function MobileApp() {
       {
         id: 'general-fund',
         title: 'General SPTA Fund',
-        targetAmount: 500000,
         currentAmount: 0,
         receipts: []
       },
       {
         id: 'mercado-projects',
         title: '11Mercado PTA Projects Fund',
-        targetAmount: 300000,
         currentAmount: 0,
         receipts: []
       }
@@ -435,6 +433,11 @@ export default function MobileApp() {
       ));
     }
 
+    // Dispatch a custom event to notify other components of the update
+    window.dispatchEvent(new CustomEvent('donationUpdated', { 
+      detail: { amount, allocation, donorName, studentName, referenceNumber, submissionDate, donationMode }
+    }));
+    
     showNotificationMessage(`Donation of ₱${amount.toLocaleString()} successfully synced to donation progress!`, 'success');
   };
 

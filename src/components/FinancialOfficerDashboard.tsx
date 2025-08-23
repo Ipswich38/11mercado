@@ -78,8 +78,37 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
 
   useEffect(() => {
     loadDonations();
-    const interval = setInterval(loadDonations, 30000); // Refresh every 30 seconds
-    return () => clearInterval(interval);
+    
+    // Refresh every 30 seconds
+    const interval = setInterval(loadDonations, 30000);
+    
+    // Listen for localStorage changes (for real-time updates)
+    const handleStorageChange = (event) => {
+      if (event.key === 'donationEntries' || event.key === null) {
+        loadDonations();
+      }
+    };
+    
+    // Listen for focus events (when user comes back to tab)
+    const handleFocus = () => {
+      loadDonations();
+    };
+    
+    // Listen for custom donation update events
+    const handleDonationUpdate = () => {
+      loadDonations();
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('donationUpdated', handleDonationUpdate);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('donationUpdated', handleDonationUpdate);
+    };
   }, []);
 
   useEffect(() => {

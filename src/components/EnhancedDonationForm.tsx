@@ -215,6 +215,15 @@ export default function EnhancedDonationForm({ getContrastClass, onClose, onDona
     return getContrastClass('border-yellow-400', 'border-yellow-500');
   };
 
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
   const submitToGoogleSheets = async (data: AcknowledgementData): Promise<boolean> => {
     try {
       // Enhanced data structure for admin tracking
@@ -235,6 +244,39 @@ export default function EnhancedDonationForm({ getContrastClass, onClose, onDona
       };
       
       console.log('Submitting enhanced donation data:', enhancedData);
+      
+      // Store files for Financial Dashboard access
+      if (data.receipt || data.photo) {
+        const fileStorage = JSON.parse(localStorage.getItem('donationFiles') || '{}');
+        
+        // Store receipt file as base64
+        if (data.receipt) {
+          const receiptData = await fileToBase64(data.receipt);
+          fileStorage[`${data.referenceNumber}_receipt`] = {
+            data: receiptData,
+            name: data.receipt.name,
+            type: data.receipt.type,
+            size: data.receipt.size,
+            timestamp: new Date().toISOString()
+          };
+          console.log(`Stored receipt file for ${data.referenceNumber}: ${data.receipt.name}`);
+        }
+        
+        // Store photo file as base64
+        if (data.photo) {
+          const photoData = await fileToBase64(data.photo);
+          fileStorage[`${data.referenceNumber}_photo`] = {
+            data: photoData,
+            name: data.photo.name,
+            type: data.photo.type,
+            size: data.photo.size,
+            timestamp: new Date().toISOString()
+          };
+          console.log(`Stored photo file for ${data.referenceNumber}: ${data.photo.name}`);
+        }
+        
+        localStorage.setItem('donationFiles', JSON.stringify(fileStorage));
+      }
       
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1500));

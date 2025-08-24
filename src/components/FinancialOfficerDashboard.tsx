@@ -369,11 +369,15 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
   };
 
   const filterAndSortDonations = () => {
+    console.log('🔍 Starting filter with donations:', donations);
     let filtered = [...donations];
+
+    console.log('🔍 Initial filtered count:', filtered.length);
 
     // Apply search filter
     if (searchTerm) {
       const search = searchTerm.toLowerCase();
+      console.log('🔍 Applying search filter for:', search);
       filtered = filtered.filter(donation => 
         (donation.parentName || donation.parent_name || '').toLowerCase().includes(search) ||
         (donation.studentName || donation.student_name || '').toLowerCase().includes(search) ||
@@ -381,26 +385,36 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
         (donation.eSignature || donation.e_signature || '').toLowerCase().includes(search) ||
         (donation.amount && donation.amount.toString().includes(search))
       );
+      console.log('🔍 After search filter count:', filtered.length);
     }
 
     // Apply mode filter
     if (filterMode !== 'all') {
-      filtered = filtered.filter(donation => 
-        (donation.donationMode || donation.donation_mode) === filterMode ||
-        (filterMode === 'ewallet' && (donation.donationMode || donation.donation_mode) === 'e-wallet')
-      );
+      console.log('🔍 Applying mode filter for:', filterMode);
+      const beforeModeFilter = filtered.length;
+      filtered = filtered.filter(donation => {
+        const donationMode = donation.donationMode || donation.donation_mode;
+        console.log('🔍 Checking donation mode:', donationMode, 'against filter:', filterMode);
+        return donationMode === filterMode ||
+               (filterMode === 'ewallet' && donationMode === 'e-wallet');
+      });
+      console.log('🔍 After mode filter count:', filtered.length, '(was:', beforeModeFilter, ')');
     }
 
     // Apply date range filter
     if (dateRange.start) {
+      console.log('🔍 Applying start date filter:', dateRange.start);
       filtered = filtered.filter(donation => 
         new Date(donation.submissionDate || donation.submission_date) >= new Date(dateRange.start)
       );
+      console.log('🔍 After start date filter count:', filtered.length);
     }
     if (dateRange.end) {
+      console.log('🔍 Applying end date filter:', dateRange.end);
       filtered = filtered.filter(donation => 
         new Date(donation.submissionDate || donation.submission_date) <= new Date(dateRange.end)
       );
+      console.log('🔍 After end date filter count:', filtered.length);
     }
 
     // Sort donations
@@ -427,6 +441,7 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
       return sortOrder === 'asc' ? compareValue : -compareValue;
     });
 
+    console.log('🔍 Final filtered donations:', filtered);
     setFilteredDonations(filtered);
   };
 

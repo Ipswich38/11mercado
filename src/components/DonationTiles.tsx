@@ -1,8 +1,30 @@
-import React from 'react';
-import { TrendingUp, Target, Users, Calendar } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { TrendingUp, Target, Users, Calendar, RefreshCw } from 'lucide-react';
+import { getAllDonationsFromCentralDB } from '../utils/centralizedDatabase';
 
 export default function DonationTiles({ donationDrives, getContrastClass }) {
-  const totalRaised = donationDrives.reduce((sum, drive) => sum + drive.currentAmount, 0);
+  const [centralizedTotal, setCentralizedTotal] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const loadCentralizedData = async () => {
+    setIsLoading(true);
+    try {
+      const donations = await getAllDonationsFromCentralDB();
+      const total = donations.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
+      setCentralizedTotal(total);
+      console.log(`💰 DonationTiles loaded ₱${total} from ${donations.length} donations`);
+    } catch (error) {
+      console.error('Error loading centralized data in DonationTiles:', error);
+    }
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    loadCentralizedData();
+  }, []);
+
+  // Use centralized total if available, otherwise fall back to drives total
+  const totalRaised = centralizedTotal || donationDrives.reduce((sum, drive) => sum + drive.currentAmount, 0);
 
   return (
     <div className="p-4 space-y-4">
@@ -28,14 +50,27 @@ export default function DonationTiles({ donationDrives, getContrastClass }) {
         "bg-gradient-to-br from-green-500 to-emerald-600 p-6 rounded-3xl shadow-xl text-white",
         "bg-gray-900 p-6 rounded-3xl shadow-xl border-2 border-yellow-400"
       )}>
-        <div className="flex items-center gap-3 mb-4">
-          <TrendingUp size={28} className={getContrastClass("text-white", "text-yellow-400")} />
-          <h3 className={getContrastClass(
-            "text-xl font-semibold text-white",
-            "text-xl font-semibold text-yellow-400"
-          )}>
-            Overall Progress
-          </h3>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <TrendingUp size={28} className={getContrastClass("text-white", "text-yellow-400")} />
+            <h3 className={getContrastClass(
+              "text-xl font-semibold text-white",
+              "text-xl font-semibold text-yellow-400"
+            )}>
+              Overall Progress
+            </h3>
+          </div>
+          <button
+            onClick={loadCentralizedData}
+            disabled={isLoading}
+            className={getContrastClass(
+              "p-2 rounded-lg bg-white/20 hover:bg-white/30 text-white",
+              "p-2 rounded-lg bg-yellow-400/20 hover:bg-yellow-400/30 text-yellow-400"
+            )}
+            title="Refresh donation data"
+          >
+            <RefreshCw size={20} className={isLoading ? 'animate-spin' : ''} />
+          </button>
         </div>
         
         <div className="text-center mb-6">

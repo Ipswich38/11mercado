@@ -131,17 +131,29 @@ class CentralizedDatabase {
           .select();
 
         if (error) {
-          console.error('Supabase submission error:', error);
-          console.error('Error details:', {
-            code: error.code,
-            message: error.message,
-            details: error.details,
-            hint: error.hint
-          });
-          console.error('Data being submitted:', donation);
+          console.error('🚨 SUPABASE ERROR DETAILS:');
+          console.error('Raw error object:', error);
+          console.error('Error code:', error.code);
+          console.error('Error message:', error.message);
+          console.error('Error details:', error.details);
+          console.error('Error hint:', error.hint);
+          console.error('Full error JSON:', JSON.stringify(error, null, 2));
+          console.error('📊 Data being submitted:', JSON.stringify(donation, null, 2));
+          
+          // Check for specific common errors
+          if (error.message?.includes('column') && error.message?.includes('does not exist')) {
+            console.error('❌ COLUMN ERROR: Database schema mismatch detected');
+          }
+          if (error.message?.includes('timeout') || error.message?.includes('network')) {
+            console.error('🌐 NETWORK ERROR: Connection or timeout issue');
+          }
+          if (error.message?.includes('payload') || error.message?.includes('size')) {
+            console.error('📦 SIZE ERROR: Data payload too large');
+          }
+          
           // Store for later sync if database fails
           this.addToPendingSync('donation', donation);
-          return { success: false, error: error.message };
+          return { success: false, error: error.message, errorCode: error.code };
         }
 
         console.log('Donation submitted to centralized database:', data);

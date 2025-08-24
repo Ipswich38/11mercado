@@ -68,7 +68,9 @@ export default function EnhancedDonationForm({ getContrastClass, onClose, onDona
         submissionDate: new Date().toISOString().split('T')[0],
         submissionTime: new Date().toLocaleTimeString(),
         submissionTimestamp: new Date().toISOString(),
-        allocation: { generalSPTA: 40, mercadoPTA: 10 }
+        allocation: { generalSPTA: 40, mercadoPTA: 10 },
+        attachmentFile: null, // No file attachment for test
+        attachmentFilename: null
       };
       
       console.log('🚀 Attempting to submit test data:', testData);

@@ -36,7 +36,7 @@ import MiniTutorial from './components/MiniTutorial';
 import SimpleLogin from './components/SimpleLogin';
 import AdminDashboard from './components/AdminDashboard';
 import FinancialOfficerDashboard from './components/FinancialOfficerDashboard';
-import { initDataSync } from './utils/dataSync';
+// import { initDataSync } from './utils/dataSync'; // Disabled - using centralized database instead
 
 export default function MobileApp() {
   // Check for admin monitor access via URL parameter
@@ -277,9 +277,9 @@ export default function MobileApp() {
     localStorage.setItem('donationDrives', JSON.stringify(donationDrives));
   }, [donationDrives]);
 
-  // Initialize data synchronization system
+  // Initialize centralized database system
   React.useEffect(() => {
-    initDataSync();
+    console.log('Centralized database system initialized');
     
     // Listen for sync events to update UI
     const handleDataSync = (event) => {

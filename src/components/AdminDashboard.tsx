@@ -57,22 +57,57 @@ export default function AdminDashboard({ getContrastClass, onClose, onShowTutori
   }, []);
 
   const loadData = async () => {
-    setStats(getAdminStats());
-    setSessions(getAllSessions());
-    setErrors(getAllErrors());
-    
-    // Load centralized donation data
     try {
+      setStats(getAdminStats());
+      setSessions(getAllSessions());
+      setErrors(getAllErrors());
+    } catch (error) {
+      console.error('Error loading admin data:', error);
+    }
+    
+    // Load centralized donation data with extensive error handling
+    try {
+      console.log('Loading centralized donation data...');
       const donations = await getAllDonationsFromCentralDB();
       const stats = await getDonationStatsFromCentralDB();
-      setCentralizedDonations(donations);
-      setDonationStats(stats);
-      console.log(`Loaded ${donations.length} donations from centralized database`);
+      
+      // Ensure donations is always an array
+      const safeDonations = Array.isArray(donations) ? donations : [];
+      const safeStats = stats || {
+        totalDonations: 0,
+        totalAmount: 0,
+        totalGeneralSPTA: 0,
+        totalMercadoPTA: 0
+      };
+      
+      setCentralizedDonations(safeDonations);
+      setDonationStats(safeStats);
+      console.log(`✅ Loaded ${safeDonations.length} donations from centralized database`);
     } catch (error) {
-      console.error('Error loading centralized donation data:', error);
-      // Fallback to localStorage
-      const localDonations = JSON.parse(localStorage.getItem('donationEntries') || '[]');
-      setCentralizedDonations(localDonations);
+      console.warn('⚠️ Centralized database connection failed, using localStorage fallback:', error);
+      
+      // Safe fallback to localStorage
+      try {
+        const localDonations = JSON.parse(localStorage.getItem('donationEntries') || '[]');
+        const safeDonations = Array.isArray(localDonations) ? localDonations : [];
+        setCentralizedDonations(safeDonations);
+        setDonationStats({
+          totalDonations: safeDonations.length,
+          totalAmount: safeDonations.reduce((sum, d) => sum + (parseFloat(d?.amount) || 0), 0),
+          totalGeneralSPTA: safeDonations.reduce((sum, d) => sum + (d?.allocation?.generalSPTA || 0), 0),
+          totalMercadoPTA: safeDonations.reduce((sum, d) => sum + (d?.allocation?.mercadoPTA || 0), 0)
+        });
+        console.log(`📦 Using localStorage fallback: ${safeDonations.length} donations`);
+      } catch (fallbackError) {
+        console.error('❌ Fallback also failed:', fallbackError);
+        setCentralizedDonations([]);
+        setDonationStats({
+          totalDonations: 0,
+          totalAmount: 0,
+          totalGeneralSPTA: 0,
+          totalMercadoPTA: 0
+        });
+      }
     }
   };
 

@@ -20,8 +20,8 @@ export function setupCounter(element: HTMLElement) {
   document.getElementById('decreaseByOne')?.addEventListener('click', () => setCounter(counter - 1));
   document.getElementById('increaseByTwo')?.addEventListener('click', () => setCounter(counter + 2));
 
-  //TIP In the app running in the browser, you’ll find that clicking <b>-2</b> doesn't work. To fix that, rewrite it using the code from lines 19 - 21 as examples of the logic.
-  document.getElementById('decreaseByTwo')
+  //TIP In the app running in the browser, you'll find that clicking <b>-2</b> doesn't work. To fix that, rewrite it using the code from lines 19 - 21 as examples of the logic.
+  document.getElementById('decreaseByTwo')?.addEventListener('click', () => setCounter(counter - 2));
 
   //TIP Let’s see how to review and commit your changes. Press <shortcut actionId="GotoAction"/> and look for <b>commit</b>. Try checking the diff for a file – double-click main.ts to do that.
   setCounter(0);
@@ -31,4 +31,3 @@ export function setupCounter(element: HTMLElement) {
 setupCounter(document.getElementById('counter-value') as HTMLElement);
 
 //TIP There's much more in WebStorm to help you be more productive. Press <shortcut actionId="Shift"/> <shortcut actionId="Shift"/> and search for <b>Learn WebStorm</b> to open our learning hub with more things for you to try.
-s

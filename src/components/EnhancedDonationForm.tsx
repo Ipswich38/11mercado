@@ -338,7 +338,7 @@ export default function EnhancedDonationForm({ getContrastClass, onClose, onDona
       // Submit to centralized database (Supabase) with timeout
       console.log('🔍 Enhanced data being submitted:', JSON.stringify(enhancedData, null, 2));
       
-      const submitWithTimeout = new Promise((resolve, reject) => {
+      const submitWithTimeout = new Promise<any>((resolve, reject) => {
         const timeout = setTimeout(() => {
           reject(new Error('Supabase submission timeout after 30 seconds'));
         }, 30000);
@@ -354,7 +354,7 @@ export default function EnhancedDonationForm({ getContrastClass, onClose, onDona
           });
       });
       
-      const result = await submitWithTimeout;
+      const result: any = await submitWithTimeout;
       
       console.log('📋 Submission result:', result);
       console.log('📋 Result success status:', result?.success);

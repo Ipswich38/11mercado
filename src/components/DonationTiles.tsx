@@ -62,7 +62,7 @@ export default function DonationTiles({ donationDrives, getContrastClass }) {
           <div className="flex items-center justify-center gap-2 mb-3">
             <Users size={20} className={getContrastClass("text-slate-500", "text-yellow-400")} />
             <span className={getContrastClass("text-sm text-slate-600", "text-sm text-yellow-200")}>
-              {donationDrives.reduce((sum, drive) => sum + (drive.receipts?.length || 0), 0)} total contributors
+              {donationDrives.reduce((sum, drive) => sum + ((drive?.receipts || []).length), 0)} total contributors
             </span>
           </div>
           <div className={getContrastClass(

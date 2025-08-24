@@ -80,7 +80,7 @@ export default function DonationUpload({ donationDrives, handleReceiptUpload, ge
                   Recent Receipts
                 </h4>
                 <div className="space-y-2">
-                  {drive.receipts.slice(-3).map((receipt) => (
+                  {(drive.receipts || []).slice(-3).map((receipt) => (
                     <div key={receipt.id} className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
                       <FileText size={16} className="text-slate-500" />
                       <div className="flex-1">

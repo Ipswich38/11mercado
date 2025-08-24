@@ -389,7 +389,7 @@ export default function MobileApp() {
               ? { 
                   ...drive, 
                   currentAmount: drive.currentAmount + amount,
-                  receipts: [...drive.receipts, newReceipt]
+                  receipts: [...(drive.receipts || []), newReceipt]
                 }
               : drive
           ));
@@ -420,7 +420,7 @@ export default function MobileApp() {
           return {
             ...drive,
             currentAmount: drive.currentAmount + allocation.generalSPTA,
-            receipts: [...drive.receipts, {
+            receipts: [...(drive.receipts || []), {
               ...newReceipt,
               id: Date.now() + 1,
               amount: allocation.generalSPTA,
@@ -431,7 +431,7 @@ export default function MobileApp() {
           return {
             ...drive,
             currentAmount: drive.currentAmount + allocation.mercadoPTA,
-            receipts: [...drive.receipts, {
+            receipts: [...(drive.receipts || []), {
               ...newReceipt,
               id: Date.now() + 2,
               amount: allocation.mercadoPTA,

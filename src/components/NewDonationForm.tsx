@@ -243,8 +243,9 @@ export default function NewDonationForm({ getContrastClass, onClose, onDonationS
         <div className="flex items-center gap-3">
           {isMobile && <Smartphone size={20} className="text-white" />}
           <h1 className={getContrastClass("text-xl font-bold text-white", "text-xl font-bold text-yellow-400")}>
-            New Donation Form
+            New Donation Form v2.0
           </h1>
+          {isMobile && <span className="text-xs text-yellow-300 bg-green-600 px-2 py-1 rounded">Mobile</span>}
         </div>
         <button onClick={onClose} className="text-white p-1">
           <X size={24} />

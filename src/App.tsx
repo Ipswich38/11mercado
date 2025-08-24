@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   Bell, 
   Settings, 
@@ -36,6 +36,7 @@ import MiniTutorial from './components/MiniTutorial';
 import SimpleLogin from './components/SimpleLogin';
 import AdminDashboard from './components/AdminDashboard';
 import FinancialOfficerDashboard from './components/FinancialOfficerDashboard';
+import { initDataSync } from './utils/dataSync';
 
 export default function MobileApp() {
   // Check for admin monitor access via URL parameter
@@ -275,6 +276,26 @@ export default function MobileApp() {
   React.useEffect(() => {
     localStorage.setItem('donationDrives', JSON.stringify(donationDrives));
   }, [donationDrives]);
+
+  // Initialize data synchronization system
+  React.useEffect(() => {
+    initDataSync();
+    
+    // Listen for sync events to update UI
+    const handleDataSync = (event) => {
+      const syncedData = event.detail;
+      if (syncedData.donationDrives && syncedData.donationDrives.length > 0) {
+        setDonationDrives(syncedData.donationDrives);
+      }
+      showNotificationMessage('Data synchronized across devices!', 'success');
+    };
+    
+    window.addEventListener('dataSync', handleDataSync);
+    
+    return () => {
+      window.removeEventListener('dataSync', handleDataSync);
+    };
+  }, []);
 
   const [weather, setWeather] = useState({
     location: "San Jose del Monte, Bulacan",

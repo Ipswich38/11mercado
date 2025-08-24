@@ -19,9 +19,13 @@ import {
   Eye,
   Filter,
   FileSpreadsheet,
-  DollarSign
+  DollarSign,
+  Database,
+  Sync,
+  Download
 } from 'lucide-react';
 import { useAdminSession } from '../utils/adminSessionManager';
+import { consolidateAllData, exportDataForDebug } from '../utils/dataSync';
 
 export default function AdminDashboard({ getContrastClass, onClose, onShowTutorial, onNavigate }) {
   const [stats, setStats] = useState(null);
@@ -225,7 +229,8 @@ What would you like to know about?`;
     { id: 'errors', name: 'Error Logs', icon: AlertTriangle },
     { id: 'activities', name: 'Activities', icon: Activity },
     { id: 'donations', name: 'Donation Tracking', icon: FileSpreadsheet },
-    { id: 'receipts', name: 'Receipt Recovery', icon: Receipt }
+    { id: 'receipts', name: 'Receipt Recovery', icon: Receipt },
+    { id: 'datasync', name: 'Data Sync & Consolidation', icon: Database }
   ];
 
   return (
@@ -738,6 +743,10 @@ What would you like to know about?`;
               {selectedTab === 'receipts' && (
                 <ReceiptRecoveryTab getContrastClass={getContrastClass} />
               )}
+
+              {selectedTab === 'datasync' && (
+                <DataSyncTab getContrastClass={getContrastClass} />
+              )}
             </div>
 
             {/* AI Chat Panel */}
@@ -1197,6 +1206,401 @@ function ReceiptRecoveryTab({ getContrastClass }) {
           <li>• Review found records to identify the correct donation</li>
           <li>• Generate a new acknowledgement receipt if the original is missing</li>
           <li>• All regenerated receipts are tracked with admin audit trail</li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+// Data Sync & Consolidation Component
+function DataSyncTab({ getContrastClass }) {
+  const [syncStatus, setSyncStatus] = useState('idle');
+  const [consolidatedData, setConsolidatedData] = useState(null);
+  const [syncLog, setSyncLog] = useState([]);
+  const [autoSyncEnabled, setAutoSyncEnabled] = useState(true);
+
+  useEffect(() => {
+    loadConsolidatedData();
+  }, []);
+
+  const addToLog = (message, type = 'info') => {
+    setSyncLog(prev => [...prev, {
+      timestamp: new Date().toISOString(),
+      message,
+      type
+    }].slice(-20)); // Keep last 20 log entries
+  };
+
+  const loadConsolidatedData = async () => {
+    try {
+      setSyncStatus('loading');
+      addToLog('Loading consolidated data from all sources...', 'info');
+      
+      const data = consolidateAllData();
+      setConsolidatedData(data);
+      
+      addToLog(`Consolidated ${data.donationEntries.length} donation entries, ${data.donationDrives.length} drives, ${Object.keys(data.donationFiles).length} files, ${data.sessions.length} sessions`, 'success');
+      setSyncStatus('completed');
+    } catch (error) {
+      console.error('Error loading consolidated data:', error);
+      addToLog(`Error loading data: ${error.message}`, 'error');
+      setSyncStatus('error');
+    }
+  };
+
+  const handleManualSync = async () => {
+    try {
+      setSyncStatus('syncing');
+      addToLog('Starting manual data synchronization...', 'info');
+      
+      // Import syncData from dataSync utility
+      const { syncData } = await import('../utils/dataSync');
+      const success = await syncData();
+      
+      if (success) {
+        addToLog('Manual sync completed successfully', 'success');
+        loadConsolidatedData();
+      } else {
+        addToLog('Manual sync completed with fallbacks', 'warning');
+        loadConsolidatedData();
+      }
+      
+      setSyncStatus('completed');
+    } catch (error) {
+      console.error('Manual sync error:', error);
+      addToLog(`Manual sync failed: ${error.message}`, 'error');
+      setSyncStatus('error');
+    }
+  };
+
+  const handleExportData = () => {
+    try {
+      addToLog('Exporting consolidated data for debug...', 'info');
+      exportDataForDebug();
+      addToLog('Data export completed successfully', 'success');
+    } catch (error) {
+      console.error('Export error:', error);
+      addToLog(`Export failed: ${error.message}`, 'error');
+    }
+  };
+
+  const handleClearLocalData = () => {
+    if (window.confirm('Are you sure you want to clear all local data? This action cannot be undone.')) {
+      try {
+        localStorage.removeItem('donationEntries');
+        localStorage.removeItem('donationDrives');
+        localStorage.removeItem('donationFiles');
+        localStorage.removeItem('activeSessions');
+        localStorage.removeItem('syncBackup');
+        addToLog('Local data cleared successfully', 'warning');
+        setConsolidatedData(null);
+        loadConsolidatedData();
+      } catch (error) {
+        addToLog(`Error clearing data: ${error.message}`, 'error');
+      }
+    }
+  };
+
+  const getStatusIcon = () => {
+    switch (syncStatus) {
+      case 'loading':
+      case 'syncing':
+        return <RefreshCw size={16} className="animate-spin" />;
+      case 'completed':
+        return <CheckCircle size={16} className="text-green-500" />;
+      case 'error':
+        return <XCircle size={16} className="text-red-500" />;
+      default:
+        return <Sync size={16} />;
+    }
+  };
+
+  const formatFileSize = (bytes) => {
+    if (!bytes) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className={getContrastClass("text-xl font-semibold text-gray-900", "text-xl font-semibold text-yellow-400")}>
+          Data Sync & Consolidation
+        </h2>
+        <div className="flex items-center gap-2">
+          {getStatusIcon()}
+          <span className={getContrastClass("text-sm text-gray-600", "text-sm text-yellow-200")}>
+            Status: {syncStatus.charAt(0).toUpperCase() + syncStatus.slice(1)}
+          </span>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <button
+          onClick={handleManualSync}
+          disabled={syncStatus === 'syncing'}
+          className={getContrastClass(
+            "bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white p-4 rounded-xl flex items-center gap-3 transition-colors",
+            "bg-yellow-400 hover:bg-yellow-300 disabled:bg-gray-600 text-black p-4 rounded-xl flex items-center gap-3 transition-colors"
+          )}
+        >
+          <Sync size={20} />
+          <div className="text-left">
+            <div className="font-semibold">Manual Sync</div>
+            <div className="text-xs opacity-80">Force sync all data</div>
+          </div>
+        </button>
+
+        <button
+          onClick={loadConsolidatedData}
+          disabled={syncStatus === 'loading'}
+          className={getContrastClass(
+            "bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white p-4 rounded-xl flex items-center gap-3 transition-colors",
+            "bg-green-400 hover:bg-green-300 disabled:bg-gray-600 text-black p-4 rounded-xl flex items-center gap-3 transition-colors"
+          )}
+        >
+          <RefreshCw size={20} />
+          <div className="text-left">
+            <div className="font-semibold">Reload Data</div>
+            <div className="text-xs opacity-80">Refresh consolidated view</div>
+          </div>
+        </button>
+
+        <button
+          onClick={handleExportData}
+          className={getContrastClass(
+            "bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-xl flex items-center gap-3 transition-colors",
+            "bg-purple-400 hover:bg-purple-300 text-black p-4 rounded-xl flex items-center gap-3 transition-colors"
+          )}
+        >
+          <Download size={20} />
+          <div className="text-left">
+            <div className="font-semibold">Export Debug</div>
+            <div className="text-xs opacity-80">Download all data</div>
+          </div>
+        </button>
+
+        <button
+          onClick={handleClearLocalData}
+          className={getContrastClass(
+            "bg-red-600 hover:bg-red-700 text-white p-4 rounded-xl flex items-center gap-3 transition-colors",
+            "bg-red-400 hover:bg-red-300 text-black p-4 rounded-xl flex items-center gap-3 transition-colors"
+          )}
+        >
+          <XCircle size={20} />
+          <div className="text-left">
+            <div className="font-semibold">Clear Data</div>
+            <div className="text-xs opacity-80">Reset all local data</div>
+          </div>
+        </button>
+      </div>
+
+      {/* Data Overview */}
+      {consolidatedData && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className={getContrastClass(
+            "bg-white/70 backdrop-blur-md rounded-2xl p-6 border border-white/30",
+            "bg-gray-800/70 backdrop-blur-md rounded-2xl p-6 border border-yellow-400/30"
+          )}>
+            <div className="flex items-center gap-3 mb-2">
+              <DollarSign className="text-green-600" size={20} />
+              <span className={getContrastClass("text-sm font-medium text-gray-600", "text-sm font-medium text-yellow-200")}>
+                Donation Entries
+              </span>
+            </div>
+            <div className={getContrastClass("text-2xl font-bold text-gray-900", "text-2xl font-bold text-yellow-400")}>
+              {consolidatedData.donationEntries.length}
+            </div>
+            <div className={getContrastClass("text-xs text-gray-500", "text-xs text-yellow-300")}>
+              Total: ₱{consolidatedData.donationEntries.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0).toLocaleString()}
+            </div>
+          </div>
+
+          <div className={getContrastClass(
+            "bg-white/70 backdrop-blur-md rounded-2xl p-6 border border-white/30",
+            "bg-gray-800/70 backdrop-blur-md rounded-2xl p-6 border border-yellow-400/30"
+          )}>
+            <div className="flex items-center gap-3 mb-2">
+              <FileSpreadsheet className="text-blue-600" size={20} />
+              <span className={getContrastClass("text-sm font-medium text-gray-600", "text-sm font-medium text-yellow-200")}>
+                Donation Drives
+              </span>
+            </div>
+            <div className={getContrastClass("text-2xl font-bold text-gray-900", "text-2xl font-bold text-yellow-400")}>
+              {consolidatedData.donationDrives.length}
+            </div>
+            <div className={getContrastClass("text-xs text-gray-500", "text-xs text-yellow-300")}>
+              Active drives
+            </div>
+          </div>
+
+          <div className={getContrastClass(
+            "bg-white/70 backdrop-blur-md rounded-2xl p-6 border border-white/30",
+            "bg-gray-800/70 backdrop-blur-md rounded-2xl p-6 border border-yellow-400/30"
+          )}>
+            <div className="flex items-center gap-3 mb-2">
+              <Database className="text-purple-600" size={20} />
+              <span className={getContrastClass("text-sm font-medium text-gray-600", "text-sm font-medium text-yellow-200")}>
+                Stored Files
+              </span>
+            </div>
+            <div className={getContrastClass("text-2xl font-bold text-gray-900", "text-2xl font-bold text-yellow-400")}>
+              {Object.keys(consolidatedData.donationFiles).length}
+            </div>
+            <div className={getContrastClass("text-xs text-gray-500", "text-xs text-yellow-300")}>
+              {formatFileSize(JSON.stringify(consolidatedData.donationFiles).length)}
+            </div>
+          </div>
+
+          <div className={getContrastClass(
+            "bg-white/70 backdrop-blur-md rounded-2xl p-6 border border-white/30",
+            "bg-gray-800/70 backdrop-blur-md rounded-2xl p-6 border border-yellow-400/30"
+          )}>
+            <div className="flex items-center gap-3 mb-2">
+              <Users className="text-orange-600" size={20} />
+              <span className={getContrastClass("text-sm font-medium text-gray-600", "text-sm font-medium text-yellow-200")}>
+                Active Sessions
+              </span>
+            </div>
+            <div className={getContrastClass("text-2xl font-bold text-gray-900", "text-2xl font-bold text-yellow-400")}>
+              {consolidatedData.sessions.length}
+            </div>
+            <div className={getContrastClass("text-xs text-gray-500", "text-xs text-yellow-300")}>
+              Recent sessions
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sync Log */}
+      <div className={getContrastClass(
+        "bg-white/70 backdrop-blur-md rounded-2xl p-6 border border-white/30",
+        "bg-gray-800/70 backdrop-blur-md rounded-2xl p-6 border border-yellow-400/30"
+      )}>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className={getContrastClass("text-lg font-semibold text-gray-900", "text-lg font-semibold text-yellow-400")}>
+            Synchronization Log
+          </h3>
+          <div className="flex items-center gap-2">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={autoSyncEnabled}
+                onChange={(e) => setAutoSyncEnabled(e.target.checked)}
+                className="rounded"
+              />
+              <span className={getContrastClass("text-sm text-gray-600", "text-sm text-yellow-200")}>
+                Auto-sync enabled
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <div className="space-y-2 max-h-64 overflow-auto">
+          {syncLog.length === 0 ? (
+            <div className={getContrastClass("text-center py-8 text-gray-500", "text-center py-8 text-yellow-300")}>
+              No sync activity yet. Run a manual sync to see logs.
+            </div>
+          ) : (
+            syncLog.map((entry, index) => (
+              <div key={index} className="flex items-start justify-between py-2 border-b border-gray-200/30">
+                <div className="flex items-start gap-3">
+                  <div className={`w-2 h-2 rounded-full mt-2 ${
+                    entry.type === 'error' ? 'bg-red-500' :
+                    entry.type === 'warning' ? 'bg-yellow-500' :
+                    entry.type === 'success' ? 'bg-green-500' : 'bg-blue-500'
+                  }`} />
+                  <span className={getContrastClass("text-sm text-gray-700", "text-sm text-yellow-100")}>
+                    {entry.message}
+                  </span>
+                </div>
+                <span className={getContrastClass("text-xs text-gray-500", "text-xs text-yellow-300")}>
+                  {new Date(entry.timestamp).toLocaleTimeString()}
+                </span>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Data Sources Status */}
+      <div className={getContrastClass(
+        "bg-white/70 backdrop-blur-md rounded-2xl p-6 border border-white/30",
+        "bg-gray-800/70 backdrop-blur-md rounded-2xl p-6 border border-yellow-400/30"
+      )}>
+        <h3 className={getContrastClass("text-lg font-semibold text-gray-900 mb-4", "text-lg font-semibold text-yellow-400 mb-4")}>
+          Data Sources Status
+        </h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className={getContrastClass(
+            "bg-gray-50 rounded-lg p-4",
+            "bg-gray-800 rounded-lg p-4"
+          )}>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-3 h-3 rounded-full bg-green-500"></div>
+              <span className={getContrastClass("font-medium text-gray-900", "font-medium text-yellow-400")}>
+                LocalStorage
+              </span>
+            </div>
+            <div className={getContrastClass("text-sm text-gray-600", "text-sm text-yellow-200")}>
+              Primary data storage - Available
+            </div>
+          </div>
+
+          <div className={getContrastClass(
+            "bg-gray-50 rounded-lg p-4",
+            "bg-gray-800 rounded-lg p-4"
+          )}>
+            <div className="flex items-center gap-2 mb-2">
+              <div className={`w-3 h-3 rounded-full ${
+                'indexedDB' in window ? 'bg-green-500' : 'bg-red-500'
+              }`}></div>
+              <span className={getContrastClass("font-medium text-gray-900", "font-medium text-yellow-400")}>
+                IndexedDB
+              </span>
+            </div>
+            <div className={getContrastClass("text-sm text-gray-600", "text-sm text-yellow-200")}>
+              {('indexedDB' in window) ? 'Backup storage - Available' : 'Not supported'}
+            </div>
+          </div>
+
+          <div className={getContrastClass(
+            "bg-gray-50 rounded-lg p-4",
+            "bg-gray-800 rounded-lg p-4"
+          )}>
+            <div className="flex items-center gap-2 mb-2">
+              <div className={`w-3 h-3 rounded-full ${
+                'BroadcastChannel' in window ? 'bg-green-500' : 'bg-red-500'
+              }`}></div>
+              <span className={getContrastClass("font-medium text-gray-900", "font-medium text-yellow-400")}>
+                BroadcastChannel
+              </span>
+            </div>
+            <div className={getContrastClass("text-sm text-gray-600", "text-sm text-yellow-200")}>
+              {('BroadcastChannel' in window) ? 'Cross-tab sync - Available' : 'Not supported'}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Troubleshooting Tips */}
+      <div className={getContrastClass(
+        "bg-blue-50 border border-blue-200 rounded-xl p-4",
+        "bg-gray-800 border border-yellow-400 rounded-xl p-4"
+      )}>
+        <h4 className={getContrastClass("font-semibold text-blue-800 mb-2", "font-semibold text-yellow-400 mb-2")}>
+          Sync Troubleshooting Tips
+        </h4>
+        <ul className={getContrastClass("text-sm text-blue-700 space-y-1", "text-sm text-yellow-200 space-y-1")}>
+          <li>• <strong>Different data across devices:</strong> Run manual sync on all devices</li>
+          <li>• <strong>Missing donations:</strong> Use export debug to check all data sources</li>
+          <li>• <strong>Image issues:</strong> Files are stored locally per device, sync doesn't transfer images</li>
+          <li>• <strong>Performance issues:</strong> Clear old data if storage is full</li>
+          <li>• <strong>Cross-tab sync:</strong> Open multiple tabs and run sync to test BroadcastChannel</li>
         </ul>
       </div>
     </div>

@@ -4,6 +4,8 @@ import { getAllDonationsFromCentralDB } from '../utils/centralizedDatabase';
 
 export default function DonationTiles({ donationDrives, getContrastClass }) {
   const [centralizedTotal, setCentralizedTotal] = useState(0);
+  const [generalSPTA, setGeneralSPTA] = useState(0);
+  const [mercadoPTA, setMercadoPTA] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   
   const loadCentralizedData = async () => {
@@ -11,8 +13,15 @@ export default function DonationTiles({ donationDrives, getContrastClass }) {
     try {
       const donations = await getAllDonationsFromCentralDB();
       const total = donations.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
+      const generalTotal = donations.reduce((sum, d) => sum + ((d.allocation?.generalSPTA || d.allocation?.general_spta) || 0), 0);
+      const mercadoTotal = donations.reduce((sum, d) => sum + ((d.allocation?.mercadoPTA || d.allocation?.mercado_pta) || 0), 0);
+      
       setCentralizedTotal(total);
+      setGeneralSPTA(generalTotal);
+      setMercadoPTA(mercadoTotal);
+      
       console.log(`💰 DonationTiles loaded ₱${total} from ${donations.length} donations`);
+      console.log(`📊 Breakdown: General SPTA ₱${generalTotal}, 11Mercado PTA ₱${mercadoTotal}`);
     } catch (error) {
       console.error('Error loading centralized data in DonationTiles:', error);
     }
@@ -23,8 +32,8 @@ export default function DonationTiles({ donationDrives, getContrastClass }) {
     loadCentralizedData();
   }, []);
 
-  // Use centralized total if available, otherwise fall back to drives total
-  const totalRaised = centralizedTotal || donationDrives.reduce((sum, drive) => sum + drive.currentAmount, 0);
+  // Use centralized total from actual donations - this is the real donated amount
+  const totalRaised = centralizedTotal;
 
   return (
     <div className="p-4 space-y-4">

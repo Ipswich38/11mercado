@@ -21,7 +21,7 @@ import {
   FileSpreadsheet,
   DollarSign,
   Database,
-  Sync,
+  RotateCw,
   Download
 } from 'lucide-react';
 import { useAdminSession } from '../utils/adminSessionManager';
@@ -1311,7 +1311,7 @@ function DataSyncTab({ getContrastClass }) {
       case 'error':
         return <XCircle size={16} className="text-red-500" />;
       default:
-        return <Sync size={16} />;
+        return <RotateCw size={16} />;
     }
   };
 
@@ -1347,7 +1347,7 @@ function DataSyncTab({ getContrastClass }) {
             "bg-yellow-400 hover:bg-yellow-300 disabled:bg-gray-600 text-black p-4 rounded-xl flex items-center gap-3 transition-colors"
           )}
         >
-          <Sync size={20} />
+          <RotateCw size={20} />
           <div className="text-left">
             <div className="font-semibold">Manual Sync</div>
             <div className="text-xs opacity-80">Force sync all data</div>

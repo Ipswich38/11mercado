@@ -28,34 +28,32 @@ import {
   Shield,
   History
 } from 'lucide-react';
+import { getAllDonationsFromCentralDB } from '../utils/centralizedDatabase';
 
 interface DonationEntry {
-  referenceNumber: string;
-  submissionDate: string;
-  submissionTime: string;
-  submissionTimestamp: string;
-  parentName: string;
-  studentName: string;
-  donationMode: 'ewallet' | 'bank' | 'cash' | 'inkind';
-  amount?: string;
+  id?: string;
+  reference_number: string;
+  submission_date: string;
+  submission_time?: string;
+  submission_timestamp?: string;
+  parent_name: string;
+  student_name: string;
+  donation_mode: 'e-wallet' | 'bank-transfer' | 'cash' | 'in-kind';
+  amount?: number;
   allocation?: {
-    generalSPTA: number;
-    mercadoPTA: number;
+    generalSPTA?: number;
+    mercadoPTA?: number;
+    general_spta?: number;
+    mercado_pta?: number;
   };
-  date: string;
-  time?: string;
-  handedTo?: string;
+  handed_to?: string;
   items?: string;
-  hasReceipt: boolean;
-  hasPhoto: boolean;
-  fileNames: {
-    receipt: string | null;
-    photo: string | null;
-  };
-  eSignature: string;
-  agreementAcceptanceTimestamp: string;
-  ipAddress: string;
-  userAgent: string;
+  has_receipt: boolean;
+  has_photo: boolean;
+  attachment_filename?: string;
+  e_signature: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export default function FinancialOfficerDashboard({ getContrastClass, onLogout, userInfo }) {
@@ -127,9 +125,47 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
     return () => document.removeEventListener('keydown', handleEscKey);
   }, [viewingImage, selectedDonation]);
 
-  const loadDonations = () => {
-    const savedDonations = JSON.parse(localStorage.getItem('donationEntries') || '[]');
-    setDonations(savedDonations);
+  const loadDonations = async () => {
+    try {
+      console.log('🔄 Loading donations from centralized database...');
+      const centralizedDonations = await getAllDonationsFromCentralDB();
+      
+      // Transform the data to match our interface
+      const transformedDonations = centralizedDonations.map(donation => ({
+        ...donation,
+        referenceNumber: donation.reference_number,
+        submissionDate: donation.submission_date,
+        submissionTime: donation.submission_time || new Date(donation.created_at).toLocaleTimeString(),
+        submissionTimestamp: donation.created_at,
+        parentName: donation.parent_name,
+        studentName: donation.student_name,
+        donationMode: donation.donation_mode,
+        amount: donation.amount?.toString(),
+        hasReceipt: donation.has_receipt || false,
+        hasPhoto: donation.has_photo || false,
+        fileNames: {
+          receipt: donation.attachment_filename || null,
+          photo: donation.attachment_filename || null
+        },
+        eSignature: donation.e_signature,
+        agreementAcceptanceTimestamp: donation.created_at,
+        ipAddress: '127.0.0.1', // Default since not stored in centralized DB
+        userAgent: 'Centralized Database Entry',
+        date: donation.submission_date,
+        time: donation.submission_time,
+        handedTo: donation.handed_to,
+        items: donation.items
+      }));
+      
+      setDonations(transformedDonations);
+      console.log(`💰 Finance Dashboard loaded ${transformedDonations.length} donations from centralized DB`);
+    } catch (error) {
+      console.error('Error loading centralized donations:', error);
+      // Fallback to localStorage if centralized DB fails
+      const localDonations = JSON.parse(localStorage.getItem('donationEntries') || '[]');
+      setDonations(localDonations);
+      console.log(`📱 Fallback: loaded ${localDonations.length} donations from localStorage`);
+    }
   };
 
   const clearDatabase = () => {
@@ -148,28 +184,31 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
     if (searchTerm) {
       const search = searchTerm.toLowerCase();
       filtered = filtered.filter(donation => 
-        donation.parentName.toLowerCase().includes(search) ||
-        donation.studentName.toLowerCase().includes(search) ||
-        donation.referenceNumber.toLowerCase().includes(search) ||
-        donation.eSignature.toLowerCase().includes(search) ||
-        (donation.amount && donation.amount.includes(search))
+        (donation.parentName || donation.parent_name || '').toLowerCase().includes(search) ||
+        (donation.studentName || donation.student_name || '').toLowerCase().includes(search) ||
+        (donation.referenceNumber || donation.reference_number || '').toLowerCase().includes(search) ||
+        (donation.eSignature || donation.e_signature || '').toLowerCase().includes(search) ||
+        (donation.amount && donation.amount.toString().includes(search))
       );
     }
 
     // Apply mode filter
     if (filterMode !== 'all') {
-      filtered = filtered.filter(donation => donation.donationMode === filterMode);
+      filtered = filtered.filter(donation => 
+        (donation.donationMode || donation.donation_mode) === filterMode ||
+        (filterMode === 'ewallet' && (donation.donationMode || donation.donation_mode) === 'e-wallet')
+      );
     }
 
     // Apply date range filter
     if (dateRange.start) {
       filtered = filtered.filter(donation => 
-        new Date(donation.submissionDate) >= new Date(dateRange.start)
+        new Date(donation.submissionDate || donation.submission_date) >= new Date(dateRange.start)
       );
     }
     if (dateRange.end) {
       filtered = filtered.filter(donation => 
-        new Date(donation.submissionDate) <= new Date(dateRange.end)
+        new Date(donation.submissionDate || donation.submission_date) <= new Date(dateRange.end)
       );
     }
 
@@ -179,18 +218,18 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
       
       switch (sortBy) {
         case 'date':
-          compareValue = new Date(a.submissionTimestamp).getTime() - new Date(b.submissionTimestamp).getTime();
+          compareValue = new Date(a.submissionTimestamp || a.created_at).getTime() - new Date(b.submissionTimestamp || b.created_at).getTime();
           break;
         case 'amount':
-          const amountA = parseFloat(a.amount || '0');
-          const amountB = parseFloat(b.amount || '0');
+          const amountA = parseFloat((a.amount || 0).toString());
+          const amountB = parseFloat((b.amount || 0).toString());
           compareValue = amountA - amountB;
           break;
         case 'mode':
-          compareValue = a.donationMode.localeCompare(b.donationMode);
+          compareValue = (a.donationMode || a.donation_mode).localeCompare(b.donationMode || b.donation_mode);
           break;
         case 'reference':
-          compareValue = a.referenceNumber.localeCompare(b.referenceNumber);
+          compareValue = (a.referenceNumber || a.reference_number).localeCompare(b.referenceNumber || b.reference_number);
           break;
       }
 
@@ -221,20 +260,24 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
     const thisYear = new Date().getFullYear();
 
     filteredDonations.forEach(donation => {
-      const amount = parseFloat(donation.amount || '0');
+      const amount = parseFloat((donation.amount || 0).toString());
       totals.totalAmount += amount;
       
       if (donation.allocation) {
-        totals.generalSPTA += donation.allocation.generalSPTA;
-        totals.mercadoPTA += donation.allocation.mercadoPTA;
+        totals.generalSPTA += donation.allocation.generalSPTA || donation.allocation.general_spta || 0;
+        totals.mercadoPTA += donation.allocation.mercadoPTA || donation.allocation.mercado_pta || 0;
       }
 
-      totals[donation.donationMode]++;
+      // Handle donation mode counting (convert e-wallet to ewallet for counting)
+      const mode = (donation.donationMode || donation.donation_mode) === 'e-wallet' ? 'ewallet' : (donation.donationMode || donation.donation_mode);
+      if (totals[mode] !== undefined) {
+        totals[mode]++;
+      }
       
-      if (donation.hasReceipt) totals.withReceipts++;
-      if (donation.hasPhoto) totals.withPhotos++;
+      if (donation.hasReceipt || donation.has_receipt) totals.withReceipts++;
+      if (donation.hasPhoto || donation.has_photo) totals.withPhotos++;
 
-      const donationDate = new Date(donation.submissionDate);
+      const donationDate = new Date(donation.submissionDate || donation.submission_date);
       if (donationDate.toDateString() === today) totals.completedToday++;
       if (donationDate.getMonth() === thisMonth && donationDate.getFullYear() === thisYear) {
         totals.completedThisMonth++;
@@ -987,13 +1030,13 @@ Generated by 11Mercado Financial Tracking System
                             "bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full font-medium",
                             "bg-gray-800 text-yellow-400 text-xs px-2 py-1 rounded-full font-medium border border-yellow-400"
                           )}>
-                            {donation.referenceNumber}
+                            {donation.referenceNumber || donation.reference_number}
                           </span>
                           <span className={getContrastClass(
                             `bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full capitalize`,
                             `bg-gray-700 text-yellow-200 text-xs px-2 py-1 rounded-full capitalize`
                           )}>
-                            {donation.donationMode.replace('ewallet', 'E-wallet').replace('inkind', 'In-kind')}
+                            {(donation.donationMode || donation.donation_mode || '').replace('e-wallet', 'E-wallet').replace('ewallet', 'E-wallet').replace('inkind', 'In-kind').replace('in-kind', 'In-kind')}
                           </span>
                           {donation.hasReceipt && (
                             <button
@@ -1016,20 +1059,20 @@ Generated by 11Mercado Financial Tracking System
                         </div>
                         
                         <h3 className={getContrastClass("font-semibold text-gray-900", "font-semibold text-yellow-400")}>
-                          {donation.parentName}
+                          {donation.parentName || donation.parent_name}
                         </h3>
                         <p className={getContrastClass("text-gray-600 text-sm", "text-yellow-200 text-sm")}>
-                          Student: {donation.studentName}
+                          Student: {donation.studentName || donation.student_name}
                         </p>
                         <p className={getContrastClass("text-gray-500 text-xs", "text-yellow-300 text-xs")}>
-                          Signature: <em>{donation.eSignature}</em> • IP: {donation.ipAddress}
+                          Signature: <em>{donation.eSignature || donation.e_signature}</em> • IP: {donation.ipAddress || '127.0.0.1'}
                         </p>
                       </div>
 
                       <div className="text-right">
                         {donation.amount && (
                           <div className={getContrastClass("text-xl font-bold text-gray-900", "text-xl font-bold text-yellow-400")}>
-                            {parseFloat(donation.amount).toLocaleString('en-PH', { style: 'currency', currency: 'PHP' })}
+                            {parseFloat(donation.amount.toString()).toLocaleString('en-PH', { style: 'currency', currency: 'PHP' })}
                           </div>
                         )}
                         {!donation.amount && (
@@ -1038,10 +1081,10 @@ Generated by 11Mercado Financial Tracking System
                           </div>
                         )}
                         <div className={getContrastClass("text-sm text-gray-500", "text-sm text-yellow-300")}>
-                          {donation.submissionDate}
+                          {donation.submissionDate || donation.submission_date}
                         </div>
                         <div className={getContrastClass("text-xs text-gray-400", "text-xs text-yellow-400")}>
-                          {donation.submissionTime}
+                          {donation.submissionTime || donation.submission_time}
                         </div>
                       </div>
                     </div>
@@ -1056,7 +1099,7 @@ Generated by 11Mercado Financial Tracking System
                             General SPTA
                           </div>
                           <div className={getContrastClass("font-semibold text-gray-900", "font-semibold text-blue-400")}>
-                            {donation.allocation.generalSPTA.toLocaleString('en-PH', { style: 'currency', currency: 'PHP' })}
+                            {(donation.allocation.generalSPTA || donation.allocation.general_spta || 0).toLocaleString('en-PH', { style: 'currency', currency: 'PHP' })}
                           </div>
                         </div>
                         <div className={getContrastClass(
@@ -1067,7 +1110,7 @@ Generated by 11Mercado Financial Tracking System
                             11Mercado PTA
                           </div>
                           <div className={getContrastClass("font-semibold text-gray-900", "font-semibold text-purple-400")}>
-                            {donation.allocation.mercadoPTA.toLocaleString('en-PH', { style: 'currency', currency: 'PHP' })}
+                            {(donation.allocation.mercadoPTA || donation.allocation.mercado_pta || 0).toLocaleString('en-PH', { style: 'currency', currency: 'PHP' })}
                           </div>
                         </div>
                       </div>

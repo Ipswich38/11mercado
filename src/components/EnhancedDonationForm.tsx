@@ -88,6 +88,42 @@ export default function EnhancedDonationForm({ getContrastClass, onClose, onDona
     }
   };
 
+  const testWithFileAttachment = async () => {
+    console.log('🧪 Testing with simulated file attachment...');
+    try {
+      // Create a small test image as base64 (simulates mobile upload)
+      const testImageBase64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU77yAAAAABJRU5ErkJggg==";
+      
+      const testData = {
+        referenceNumber: 'FILE-TEST-' + Date.now(),
+        parentName: 'Test Parent With File',
+        studentName: 'Test Student With File',
+        donationMode: 'e-wallet',
+        amount: '100',
+        eSignature: 'Test Signature With File',
+        submissionDate: new Date().toISOString().split('T')[0],
+        submissionTime: new Date().toLocaleTimeString(),
+        submissionTimestamp: new Date().toISOString(),
+        allocation: { generalSPTA: 80, mercadoPTA: 20 },
+        attachmentFile: testImageBase64,
+        attachmentFilename: 'test-receipt.png'
+      };
+      
+      console.log('🚀 Attempting to submit test data with file:', testData);
+      const result = await centralizedDB.submitDonation(testData);
+      console.log('📋 File test result:', result);
+      
+      if (result && result.success) {
+        alert('✅ File attachment test successful!');
+      } else {
+        alert('❌ File attachment test failed: ' + (result?.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('❌ File test error:', error);
+      alert('❌ File test error: ' + error.message);
+    }
+  };
+
   const receiptInputRef = useRef<HTMLInputElement>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
 
@@ -768,6 +804,15 @@ For any inquiries, please contact us at 11mercado.pta@gmail.com
               )}
             >
               Test DB
+            </button>
+            <button
+              onClick={testWithFileAttachment}
+              className={getContrastClass(
+                "bg-orange-500 hover:bg-orange-600 px-3 py-1 rounded-lg text-sm transition-colors text-white",
+                "bg-orange-600 border border-orange-400 hover:bg-orange-700 px-3 py-1 rounded-lg text-sm transition-colors text-white"
+              )}
+            >
+              Test w/File
             </button>
             <button
               onClick={() => setShowEditForm(!showEditForm)}

@@ -108,14 +108,21 @@ class CentralizedDatabase {
         submission_time: donationData.submissionTime,
         submission_timestamp: donationData.submissionTimestamp,
         allocation: donationData.allocation || {},
-        attachment_file: donationData.attachmentFile || null, // Keep base64 as fallback
+        attachment_file: donationData.attachmentFile || null, // Base64 attachment data
         attachment_filename: donationData.attachmentFilename || null,
-        attachment_url: receiptImageUrl, // New: Supabase storage URL
-        attachment_path: receiptImagePath, // New: Supabase storage path
         has_receipt: !!(donationData.attachmentFile || receiptImageUrl),
         has_photo: false, // Can be expanded later
         created_at: new Date().toISOString()
       };
+      
+      // Note: attachment_url and attachment_path columns don't exist in current schema
+      // For now, we'll store attachments as base64 in attachment_file
+      if (receiptImageUrl) {
+        console.log(`📎 Image uploaded to Supabase storage: ${receiptImageUrl}`);
+        // Future: Add these columns to schema if needed
+        // donation.attachment_url = receiptImageUrl;
+        // donation.attachment_path = receiptImagePath;
+      }
 
       if (this.isOnline) {
         const { data, error } = await supabase
@@ -125,6 +132,13 @@ class CentralizedDatabase {
 
         if (error) {
           console.error('Supabase submission error:', error);
+          console.error('Error details:', {
+            code: error.code,
+            message: error.message,
+            details: error.details,
+            hint: error.hint
+          });
+          console.error('Data being submitted:', donation);
           // Store for later sync if database fails
           this.addToPendingSync('donation', donation);
           return { success: false, error: error.message };

@@ -36,6 +36,7 @@ import MiniTutorial from './components/MiniTutorial';
 import SimpleLogin from './components/SimpleLogin';
 import AdminDashboard from './components/AdminDashboard';
 import FinancialOfficerDashboard from './components/FinancialOfficerDashboard';
+import MaintenanceMode from './components/MaintenanceMode';
 // import { initDataSync } from './utils/dataSync'; // Disabled - using centralized database instead
 
 export default function MobileApp() {
@@ -508,11 +509,7 @@ export default function MobileApp() {
           getContrastClass={getContrastClass}
         />;
       case 'donation-upload':
-        return <EnhancedDonationForm 
-          getContrastClass={getContrastClass}
-          onClose={() => setActiveApp('home')}
-          onDonationSuccess={handleDonationSuccess}
-        />;
+        return <MaintenanceMode getContrastClass={getContrastClass} />;
       case 'community':
         return <CommunityApp 
           messages={messages}

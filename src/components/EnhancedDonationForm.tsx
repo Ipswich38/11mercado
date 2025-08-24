@@ -124,6 +124,71 @@ export default function EnhancedDonationForm({ getContrastClass, onClose, onDona
     }
   };
 
+  const testMobileCompatibility = async () => {
+    console.log('📱 Testing mobile-specific compatibility...');
+    try {
+      // Test file creation and processing like mobile would do
+      const testBlob = new Blob(['test file content'], { type: 'image/png' });
+      const testFile = new File([testBlob], 'mobile-test.png', { type: 'image/png' });
+      
+      console.log('📋 Created test file:', {
+        name: testFile.name,
+        size: testFile.size,
+        type: testFile.type,
+        lastModified: testFile.lastModified
+      });
+      
+      // Test base64 conversion
+      const base64Result = await fileToBase64(testFile);
+      console.log('📄 Base64 conversion:', base64Result.substring(0, 100) + '...');
+      
+      // Test with larger payload similar to mobile photos
+      const largeContent = 'x'.repeat(100000); // 100KB test
+      const largeBlob = new Blob([largeContent], { type: 'image/jpeg' });
+      const largeFile = new File([largeBlob], 'large-mobile-photo.jpg', { type: 'image/jpeg' });
+      
+      console.log('📸 Testing large file processing:', {
+        size: largeFile.size,
+        sizeInMB: (largeFile.size / 1024 / 1024).toFixed(2)
+      });
+      
+      const largeBase64 = await fileToBase64(largeFile);
+      console.log('📊 Large file base64 length:', largeBase64.length);
+      
+      // Test mobile-specific donation data structure
+      const mobileTestData = {
+        referenceNumber: 'MOBILE-TEST-' + Date.now(),
+        parentName: 'Mobile Test Parent',
+        studentName: 'Mobile Test Student',
+        donationMode: 'e-wallet',
+        amount: '250',
+        eSignature: 'Mobile Test Signature',
+        submissionDate: new Date().toISOString().split('T')[0],
+        submissionTime: new Date().toLocaleTimeString(),
+        submissionTimestamp: new Date().toISOString(),
+        allocation: { generalSPTA: 200, mercadoPTA: 50 },
+        attachmentFile: largeBase64,
+        attachmentFilename: largeFile.name,
+        userAgent: navigator.userAgent,
+        isMobile: /Mobi|Android/i.test(navigator.userAgent)
+      };
+      
+      console.log('🚀 Testing mobile data submission to Supabase...');
+      const result = await centralizedDB.submitDonation(mobileTestData);
+      
+      if (result && result.success) {
+        alert('✅ Mobile compatibility test passed! The issue might be form-specific.');
+      } else {
+        alert('❌ Mobile compatibility test failed: ' + (result?.error || 'Unknown error'));
+        console.error('📱 Mobile test failure details:', result);
+      }
+      
+    } catch (error) {
+      console.error('❌ Mobile compatibility test error:', error);
+      alert('❌ Mobile test error: ' + error.message);
+    }
+  };
+
   const receiptInputRef = useRef<HTMLInputElement>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
 
@@ -818,6 +883,15 @@ For any inquiries, please contact us at 11mercado.pta@gmail.com
               Test w/File
             </button>
             <button
+              onClick={() => setDebugMode(!debugMode)}
+              className={getContrastClass(
+                "bg-purple-500 hover:bg-purple-600 px-3 py-1 rounded-lg text-sm transition-colors text-white",
+                "bg-purple-600 border border-purple-400 hover:bg-purple-700 px-3 py-1 rounded-lg text-sm transition-colors text-white"
+              )}
+            >
+              {debugMode ? 'Hide Debug' : 'Schema Debug'}
+            </button>
+            <button
               onClick={() => setShowEditForm(!showEditForm)}
               className={getContrastClass(
                 "bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm transition-colors",
@@ -850,6 +924,53 @@ For any inquiries, please contact us at 11mercado.pta@gmail.com
                 className="bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 rounded font-medium transition-colors"
               >
                 Load
+              </button>
+            </div>
+          </div>
+        )}
+        
+        {/* Schema Debug Panel */}
+        {debugMode && (
+          <div className={getContrastClass(
+            "bg-gray-100 border border-gray-300 rounded-lg p-4 mt-4",
+            "bg-gray-800 border border-yellow-400 rounded-lg p-4 mt-4"
+          )}>
+            <h3 className={getContrastClass("text-gray-800 font-bold mb-2", "text-yellow-400 font-bold mb-2")}>
+              🔍 Mobile vs Desktop Debug Info
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className={getContrastClass("bg-white p-3 rounded", "bg-gray-900 p-3 rounded")}>
+                <h4 className={getContrastClass("font-medium text-gray-700", "font-medium text-yellow-300")}>
+                  Device Info
+                </h4>
+                <div className={getContrastClass("text-xs text-gray-600", "text-xs text-yellow-200")}>
+                  <p>📱 Mobile: {/Mobi|Android/i.test(navigator.userAgent) ? 'Yes' : 'No'}</p>
+                  <p>🌐 Online: {navigator.onLine ? 'Yes' : 'No'}</p>
+                  <p>🕐 Timezone: {Intl.DateTimeFormat().resolvedOptions().timeZone}</p>
+                  <p>💾 Storage: {typeof localStorage !== 'undefined' ? 'Available' : 'Not Available'}</p>
+                </div>
+              </div>
+              <div className={getContrastClass("bg-white p-3 rounded", "bg-gray-900 p-3 rounded")}>
+                <h4 className={getContrastClass("font-medium text-gray-700", "font-medium text-yellow-300")}>
+                  Browser Capabilities
+                </h4>
+                <div className={getContrastClass("text-xs text-gray-600", "text-xs text-yellow-200")}>
+                  <p>📄 FileReader: {typeof FileReader !== 'undefined' ? 'Yes' : 'No'}</p>
+                  <p>🎯 Fetch API: {typeof fetch !== 'undefined' ? 'Yes' : 'No'}</p>
+                  <p>🔗 WebSocket: {typeof WebSocket !== 'undefined' ? 'Yes' : 'No'}</p>
+                  <p>📊 JSON: {typeof JSON !== 'undefined' ? 'Yes' : 'No'}</p>
+                </div>
+              </div>
+            </div>
+            <div className="mt-4">
+              <button
+                onClick={testMobileCompatibility}
+                className={getContrastClass(
+                  "bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded text-white text-sm",
+                  "bg-blue-600 border border-blue-400 hover:bg-blue-700 px-4 py-2 rounded text-white text-sm"
+                )}
+              >
+                Test Mobile File Processing
               </button>
             </div>
           </div>

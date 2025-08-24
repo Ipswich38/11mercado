@@ -57,6 +57,12 @@ interface DonationEntry {
 }
 
 export default function FinancialOfficerDashboard({ getContrastClass, onLogout, userInfo }) {
+  // Error boundary state
+  const [hasError, setHasError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [safeMode, setSafeMode] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
   const [donations, setDonations] = useState<DonationEntry[]>([]);
   const [filteredDonations, setFilteredDonations] = useState<DonationEntry[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -74,55 +80,208 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
   const [auditSignature, setAuditSignature] = useState('');
   const [pendingAction, setPendingAction] = useState<{ action: 'edit' | 'delete'; donation: DonationEntry } | null>(null);
 
+  // Error boundary function
+  const handleError = (error: Error, errorInfo?: string) => {
+    console.error('Finance Dashboard Error:', error, errorInfo);
+    setHasError(true);
+    setErrorMessage(error.message);
+    setSafeMode(true);
+  };
+
+  // Enable safe mode if loading fails
+  const enableSafeMode = () => {
+    console.warn('Enabling Finance Dashboard Safe Mode');
+    setSafeMode(true);
+    setIsLoading(false);
+    setDonations([]);
+    setFilteredDonations([]);
+  };
+
+  // If there's an error, show fallback UI
+  if (hasError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center p-8 bg-white rounded-lg shadow-lg max-w-md">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Finance Dashboard Error</h2>
+          <p className="text-gray-600 mb-4">The Finance Dashboard encountered an error and cannot load properly.</p>
+          <p className="text-sm text-red-600 mb-6">{errorMessage}</p>
+          <div className="space-y-2">
+            <button 
+              onClick={() => {
+                setHasError(false);
+                setErrorMessage('');
+                window.location.reload();
+              }}
+              className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            >
+              Refresh Dashboard
+            </button>
+            <button 
+              onClick={onLogout}
+              className="w-full bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+            >
+              Back to Login
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading screen
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center p-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">Loading Finance Dashboard...</h2>
+          <p className="text-gray-600">Please wait while we load your donation data.</p>
+          <button 
+            onClick={enableSafeMode}
+            className="mt-4 text-sm text-blue-500 hover:text-blue-700 underline"
+          >
+            Having issues? Click here for safe mode
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Show safe mode notice
+  if (safeMode) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-yellow-100 border-l-4 border-yellow-500 p-4">
+          <div className="flex">
+            <div className="ml-3">
+              <p className="text-sm text-yellow-700">
+                <strong>Safe Mode:</strong> Finance Dashboard is running in safe mode due to data loading issues. Some features may be limited.
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="p-8 text-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Finance Dashboard - Safe Mode</h2>
+          <p className="text-gray-600 mb-6">Unable to load donation data. Please check your connection and try refreshing.</p>
+          <div className="space-y-2">
+            <button 
+              onClick={() => {
+                setIsLoading(true);
+                setSafeMode(false);
+                loadDonations();
+              }}
+              className="w-full max-w-xs bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            >
+              Try Loading Again
+            </button>
+            <button 
+              onClick={onLogout}
+              className="w-full max-w-xs bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+            >
+              Back to Login
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   useEffect(() => {
-    loadDonations();
-    
-    // Refresh every 30 seconds
-    const interval = setInterval(loadDonations, 30000);
-    
-    // Listen for localStorage changes (for real-time updates)
-    const handleStorageChange = (event) => {
-      if (event.key === 'donationEntries' || event.key === null) {
-        loadDonations();
+    try {
+      loadDonations();
+      
+      // Refresh every 30 seconds
+      const interval = setInterval(() => {
+        try {
+          loadDonations();
+        } catch (intervalError) {
+          console.error('Error in interval refresh:', intervalError);
+        }
+      }, 30000);
+      
+      // Listen for localStorage changes (for real-time updates)
+      const handleStorageChange = (event) => {
+        try {
+          if (event.key === 'donationEntries' || event.key === null) {
+            loadDonations();
+          }
+        } catch (storageError) {
+          console.error('Error handling storage change:', storageError);
+        }
+      };
+      
+      // Listen for focus events (when user comes back to tab)
+      const handleFocus = () => {
+        try {
+          loadDonations();
+        } catch (focusError) {
+          console.error('Error handling focus event:', focusError);
+        }
+      };
+      
+      // Listen for custom donation update events
+      const handleDonationUpdate = () => {
+        try {
+          loadDonations();
+        } catch (updateError) {
+          console.error('Error handling donation update:', updateError);
+        }
+      };
+      
+      if (typeof window !== 'undefined') {
+        window.addEventListener('storage', handleStorageChange);
+        window.addEventListener('focus', handleFocus);
+        window.addEventListener('donationUpdated', handleDonationUpdate);
       }
-    };
-    
-    // Listen for focus events (when user comes back to tab)
-    const handleFocus = () => {
-      loadDonations();
-    };
-    
-    // Listen for custom donation update events
-    const handleDonationUpdate = () => {
-      loadDonations();
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('focus', handleFocus);
-    window.addEventListener('donationUpdated', handleDonationUpdate);
-    
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('focus', handleFocus);
-      window.removeEventListener('donationUpdated', handleDonationUpdate);
-    };
+      
+      return () => {
+        try {
+          clearInterval(interval);
+          if (typeof window !== 'undefined') {
+            window.removeEventListener('storage', handleStorageChange);
+            window.removeEventListener('focus', handleFocus);
+            window.removeEventListener('donationUpdated', handleDonationUpdate);
+          }
+        } catch (cleanupError) {
+          console.error('Error in useEffect cleanup:', cleanupError);
+        }
+      };
+    } catch (effectError) {
+      console.error('Error in useEffect setup:', effectError);
+      handleError(effectError, 'Failed to initialize Finance Dashboard');
+    }
   }, []);
 
   useEffect(() => {
-    filterAndSortDonations();
+    try {
+      filterAndSortDonations();
+    } catch (filterError) {
+      console.error('Error filtering donations:', filterError);
+      handleError(filterError, 'Failed to filter donations');
+    }
   }, [donations, searchTerm, filterMode, sortBy, sortOrder, dateRange]);
 
   useEffect(() => {
-    const handleEscKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        if (viewingImage) setViewingImage(null);
-        else if (selectedDonation) setSelectedDonation(null);
-      }
-    };
+    try {
+      const handleEscKey = (event: KeyboardEvent) => {
+        try {
+          if (event.key === 'Escape') {
+            if (viewingImage) setViewingImage(null);
+            else if (selectedDonation) setSelectedDonation(null);
+          }
+        } catch (keyError) {
+          console.error('Error handling escape key:', keyError);
+        }
+      };
 
-    document.addEventListener('keydown', handleEscKey);
-    return () => document.removeEventListener('keydown', handleEscKey);
+      if (typeof document !== 'undefined') {
+        document.addEventListener('keydown', handleEscKey);
+        return () => document.removeEventListener('keydown', handleEscKey);
+      }
+    } catch (escError) {
+      console.error('Error setting up escape key handler:', escError);
+    }
   }, [viewingImage, selectedDonation]);
 
   const loadDonations = async () => {
@@ -179,6 +338,7 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
       
       setDonations(transformedDonations);
       console.log(`💰 Finance Dashboard loaded ${transformedDonations.length} donations from centralized DB`);
+      setIsLoading(false);
     } catch (error) {
       console.error('Error loading centralized donations:', error);
       // Fallback to localStorage if centralized DB fails
@@ -186,9 +346,11 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
         const localDonations = JSON.parse(localStorage.getItem('donationEntries') || '[]');
         setDonations(localDonations);
         console.log(`📱 Fallback: loaded ${localDonations.length} donations from localStorage`);
+        setIsLoading(false);
       } catch (localError) {
         console.error('Error loading from localStorage:', localError);
-        setDonations([]); // Set empty array as final fallback
+        console.warn('All data loading failed, enabling safe mode');
+        enableSafeMode();
       }
     }
   };
@@ -748,9 +910,17 @@ Generated by 11Mercado Financial Tracking System
     alert('Record updated successfully with audit trail.');
   };
 
-  const totals = calculateTotals();
+  let totals;
+  try {
+    totals = calculateTotals();
+  } catch (totalsError) {
+    console.error('Error calculating totals:', totalsError);
+    handleError(totalsError, 'Failed to calculate donation totals');
+    return null; // This will show the error UI
+  }
 
-  return (
+  try {
+    return (
     <div className={getContrastClass(
       "min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30",
       "min-h-screen bg-black"
@@ -1780,7 +1950,12 @@ Generated by 11Mercado Financial Tracking System
         )}
       </main>
     </div>
-  );
+    );
+  } catch (renderError) {
+    console.error('Error rendering Finance Dashboard:', renderError);
+    handleError(renderError, 'Failed to render Finance Dashboard');
+    return null; // This will show the error UI
+  }
 }
 
 // Edit Donation Form Component

@@ -386,20 +386,20 @@ export default function EnhancedDonationForm({ getContrastClass, onClose, onDona
             attachmentFile = receiptData;
             attachmentFilename = data.receipt.name;
             console.log('✅ Receipt conversion successful, size:', receiptData.length);
-          } catch (fileError) {
-            console.error('❌ Receipt file conversion failed:', fileError);
-            throw new Error('Failed to process receipt file: ' + fileError.message);
-          }
-          
-          // Local backup
-          fileStorage[`${data.referenceNumber}_receipt`] = {
-            data: receiptData,
+            
+            // Local backup
+            fileStorage[`${data.referenceNumber}_receipt`] = {
+              data: receiptData,
             name: data.receipt.name,
             type: data.receipt.type,
             size: data.receipt.size,
             timestamp: new Date().toISOString()
           };
           console.log(`Stored receipt file for ${data.referenceNumber}: ${data.receipt.name}`);
+          } catch (fileError) {
+            console.error('❌ Receipt file conversion failed:', fileError);
+            throw new Error('Failed to process receipt file: ' + fileError.message);
+          }
         } else if (data.photo) {
           const photoData = await fileToBase64(data.photo);
           attachmentFile = photoData;

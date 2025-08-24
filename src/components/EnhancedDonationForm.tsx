@@ -478,7 +478,7 @@ export default function EnhancedDonationForm({ getContrastClass, onClose, onDona
         
         console.log('📦 Emergency fallback to localStorage completed');
         console.warn('⚠️ Donation stored locally only due to database connection issues');
-        return false; // Return false to indicate Supabase sync failed
+        return false; // CRITICAL: Return false to prevent receipt generation
       } catch (fallbackError) {
         console.error('Emergency fallback failed:', fallbackError);
         alert('❌ Critical error: Unable to save donation data anywhere. Please try again.');
@@ -509,6 +509,7 @@ export default function EnhancedDonationForm({ getContrastClass, onClose, onDona
       const success = await submitToGoogleSheets(acknowledgement);
       
       if (success) {
+        // Only show acknowledgement if Supabase sync was successful
         setAcknowledgementData(acknowledgement);
         setShowAcknowledgement(true);
         
@@ -528,19 +529,14 @@ export default function EnhancedDonationForm({ getContrastClass, onClose, onDona
           }
         }
       } else {
-        console.error('❌ Form submission failed - checking if data stored locally');
+        // CRITICAL: If Supabase sync fails, DO NOT show success or generate receipt
+        console.error('❌ Donation submission failed - Supabase sync unsuccessful');
         
-        // Check if data was stored locally as fallback
-        const localEntries = JSON.parse(localStorage.getItem('donationEntries') || '[]');
-        const wasStoredLocally = localEntries.some(entry => entry.referenceNumber === acknowledgement.referenceNumber);
+        alert('❌ Donation Submission Failed\n\nYour donation could not be processed at this time. Please try again or contact admin for assistance.\n\nNote: No reference number has been generated to prevent confusion.');
         
-        if (wasStoredLocally) {
-          alert('⚠️ Warning: Your donation was saved locally but failed to sync to the main database. You will still receive your receipt, but please contact admin to ensure your donation is properly recorded in the central system.');
-          setAcknowledgementData(acknowledgement);
-          setShowAcknowledgement(true);
-        } else {
-          alert('❌ Critical error: Failed to save your donation. Please try again or contact admin for assistance.');
-        }
+        // Do NOT show acknowledgement receipt or reference number
+        // Do NOT call onDonationSuccess
+        // This prevents generating receipts for failed submissions
       }
     } catch (error) {
       console.error('Submission error:', error);

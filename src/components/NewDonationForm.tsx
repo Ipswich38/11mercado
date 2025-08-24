@@ -59,8 +59,12 @@ export default function NewDonationForm({ getContrastClass, onClose, onDonationS
       }
       const total = parseFloat(formData.amount || '0');
       const allocated = formData.allocation.generalSPTA + formData.allocation.mercadoPTA;
-      if (Math.abs(total - allocated) > 0.01) {
-        newErrors.allocation = 'Must equal total amount';
+      if (total > 0 && allocated === 0) {
+        newErrors.allocation = 'Please allocate the donation amount';
+      } else if (Math.abs(total - allocated) > 0.01) {
+        newErrors.allocation = `Total allocation (₱${allocated.toFixed(2)}) must equal donation amount (₱${total.toFixed(2)})`;
+      } else if (formData.allocation.generalSPTA < 0 || formData.allocation.mercadoPTA < 0) {
+        newErrors.allocation = 'Allocation amounts cannot be negative';
       }
     }
 
@@ -74,13 +78,16 @@ export default function NewDonationForm({ getContrastClass, onClose, onDonationS
 
   const handleAmountChange = (amount: string) => {
     setFormData(prev => ({ ...prev, amount }));
-    // Auto-allocate for simplicity
-    const total = parseFloat(amount || '0');
-    const generalSPTA = Math.round(total * 0.8 * 100) / 100;
-    const mercadoPTA = Math.round(total * 0.2 * 100) / 100;
-    setFormData(prev => ({ 
-      ...prev, 
-      allocation: { generalSPTA, mercadoPTA }
+  };
+
+  const handleAllocationChange = (field: 'generalSPTA' | 'mercadoPTA', value: string) => {
+    const numValue = parseFloat(value || '0');
+    setFormData(prev => ({
+      ...prev,
+      allocation: {
+        ...prev.allocation,
+        [field]: numValue
+      }
     }));
   };
 
@@ -339,12 +346,50 @@ export default function NewDonationForm({ getContrastClass, onClose, onDonationS
             </div>
             {errors.amount && <p className="text-red-500 text-xs mt-1">{errors.amount}</p>}
             
-            {/* Auto Allocation Display */}
+            {/* Manual Allocation */}
             {formData.amount && (
-              <div className={getContrastClass("mt-2 p-2 bg-gray-100 rounded text-xs", "mt-2 p-2 bg-gray-800 rounded text-xs")}>
-                <div className={getContrastClass("text-gray-600", "text-yellow-300")}>Auto-allocation (80/20):</div>
-                <div>General SPTA: ₱{formData.allocation.generalSPTA}</div>
-                <div>11Mercado PTA: ₱{formData.allocation.mercadoPTA}</div>
+              <div className={getContrastClass("mt-3 p-3 bg-gray-50 rounded-lg border", "mt-3 p-3 bg-gray-800 rounded-lg border border-gray-600")}>
+                <div className={getContrastClass("text-sm font-medium text-gray-700 mb-2", "text-sm font-medium text-yellow-400 mb-2")}>Allocation Distribution:</div>
+                
+                <div className="space-y-2">
+                  <div>
+                    <label className={getContrastClass("block text-xs text-gray-600", "block text-xs text-yellow-300")}>General SPTA:</label>
+                    <div className="relative">
+                      <span className={getContrastClass("absolute left-2 top-2 text-gray-500 text-sm", "absolute left-2 top-2 text-yellow-300 text-sm")}>₱</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={formData.allocation.generalSPTA}
+                        onChange={(e) => handleAllocationChange('generalSPTA', e.target.value)}
+                        className={`w-full pl-6 py-2 text-sm border rounded ${getContrastClass('bg-white border-gray-300', 'bg-gray-900 border-gray-600 text-yellow-200')}`}
+                        placeholder="0.00"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className={getContrastClass("block text-xs text-gray-600", "block text-xs text-yellow-300")}>11Mercado PTA:</label>
+                    <div className="relative">
+                      <span className={getContrastClass("absolute left-2 top-2 text-gray-500 text-sm", "absolute left-2 top-2 text-yellow-300 text-sm")}>₱</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={formData.allocation.mercadoPTA}
+                        onChange={(e) => handleAllocationChange('mercadoPTA', e.target.value)}
+                        className={`w-full pl-6 py-2 text-sm border rounded ${getContrastClass('bg-white border-gray-300', 'bg-gray-900 border-gray-600 text-yellow-200')}`}
+                        placeholder="0.00"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className={`text-xs pt-1 ${getContrastClass('text-gray-600', 'text-yellow-300')}`}>
+                    Total allocated: ₱{(formData.allocation.generalSPTA + formData.allocation.mercadoPTA).toFixed(2)} / ₱{formData.amount || '0.00'}
+                  </div>
+                </div>
+                
+                {errors.allocation && <p className="text-red-500 text-xs mt-2">{errors.allocation}</p>}
               </div>
             )}
           </div>

@@ -12,9 +12,38 @@ export default function DonationTiles({ donationDrives, getContrastClass }) {
     setIsLoading(true);
     try {
       const donations = await getAllDonationsFromCentralDB();
-      const total = donations.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
-      const generalTotal = donations.reduce((sum, d) => sum + ((d.allocation?.generalSPTA || d.allocation?.general_spta) || 0), 0);
-      const mercadoTotal = donations.reduce((sum, d) => sum + ((d.allocation?.mercadoPTA || d.allocation?.mercado_pta) || 0), 0);
+      
+      if (!donations || !Array.isArray(donations)) {
+        console.warn('No valid donations data received');
+        setCentralizedTotal(0);
+        setGeneralSPTA(0);
+        setMercadoPTA(0);
+        return;
+      }
+      
+      const total = donations.reduce((sum, d) => {
+        try {
+          return sum + (parseFloat(d?.amount) || 0);
+        } catch (e) {
+          return sum;
+        }
+      }, 0);
+      
+      const generalTotal = donations.reduce((sum, d) => {
+        try {
+          return sum + ((d?.allocation?.generalSPTA || d?.allocation?.general_spta) || 0);
+        } catch (e) {
+          return sum;
+        }
+      }, 0);
+      
+      const mercadoTotal = donations.reduce((sum, d) => {
+        try {
+          return sum + ((d?.allocation?.mercadoPTA || d?.allocation?.mercado_pta) || 0);
+        } catch (e) {
+          return sum;
+        }
+      }, 0);
       
       setCentralizedTotal(total);
       setGeneralSPTA(generalTotal);
@@ -24,6 +53,10 @@ export default function DonationTiles({ donationDrives, getContrastClass }) {
       console.log(`📊 Breakdown: General SPTA ₱${generalTotal}, 11Mercado PTA ₱${mercadoTotal}`);
     } catch (error) {
       console.error('Error loading centralized data in DonationTiles:', error);
+      // Set safe defaults on error
+      setCentralizedTotal(0);
+      setGeneralSPTA(0);
+      setMercadoPTA(0);
     }
     setIsLoading(false);
   };

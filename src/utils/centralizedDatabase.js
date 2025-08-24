@@ -5,18 +5,34 @@ import { supabase } from './supabaseClient';
 
 class CentralizedDatabase {
   constructor() {
-    this.isOnline = navigator.onLine;
-    this.pendingSync = JSON.parse(localStorage.getItem('pendingSyncData') || '[]');
-    
-    // Listen for online/offline status
-    window.addEventListener('online', () => {
-      this.isOnline = true;
-      this.syncPendingData();
-    });
-    
-    window.addEventListener('offline', () => {
-      this.isOnline = false;
-    });
+    try {
+      this.isOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
+      
+      try {
+        this.pendingSync = typeof localStorage !== 'undefined' 
+          ? JSON.parse(localStorage.getItem('pendingSyncData') || '[]')
+          : [];
+      } catch (e) {
+        console.warn('Error reading localStorage:', e);
+        this.pendingSync = [];
+      }
+      
+      // Listen for online/offline status (only in browser)
+      if (typeof window !== 'undefined') {
+        window.addEventListener('online', () => {
+          this.isOnline = true;
+          this.syncPendingData();
+        });
+        
+        window.addEventListener('offline', () => {
+          this.isOnline = false;
+        });
+      }
+    } catch (error) {
+      console.error('Error initializing CentralizedDatabase:', error);
+      this.isOnline = true; // Default to online
+      this.pendingSync = [];
+    }
   }
 
   // Submit donation to centralized database
@@ -84,19 +100,47 @@ class CentralizedDatabase {
         if (error) {
           console.error('Error fetching donations:', error);
           // Fallback to localStorage
-          return JSON.parse(localStorage.getItem('donationEntries') || '[]');
+          try {
+            return typeof localStorage !== 'undefined' 
+              ? JSON.parse(localStorage.getItem('donationEntries') || '[]')
+              : [];
+          } catch (e) {
+            console.error('Error reading localStorage fallback:', e);
+            return [];
+          }
         }
 
         // Update local cache
-        localStorage.setItem('donationEntries', JSON.stringify(data));
-        return data;
+        try {
+          if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('donationEntries', JSON.stringify(data || []));
+          }
+        } catch (e) {
+          console.warn('Cannot update localStorage cache:', e);
+        }
+        
+        return data || [];
       } else {
         // Return cached data when offline
-        return JSON.parse(localStorage.getItem('donationEntries') || '[]');
+        try {
+          return typeof localStorage !== 'undefined' 
+            ? JSON.parse(localStorage.getItem('donationEntries') || '[]')
+            : [];
+        } catch (e) {
+          console.error('Error reading offline cache:', e);
+          return [];
+        }
       }
     } catch (error) {
       console.error('Error getting donations:', error);
-      return JSON.parse(localStorage.getItem('donationEntries') || '[]');
+      try {
+        return typeof localStorage !== 'undefined' 
+          ? JSON.parse(localStorage.getItem('donationEntries') || '[]')
+          : [];
+      } catch (e) {
+        console.error('Error reading localStorage in catch:', e);
+        return [];
+      }
     }
   }
 

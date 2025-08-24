@@ -130,41 +130,66 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
       console.log('🔄 Loading donations from centralized database...');
       const centralizedDonations = await getAllDonationsFromCentralDB();
       
+      if (!centralizedDonations || !Array.isArray(centralizedDonations)) {
+        console.warn('No valid donations received, falling back to localStorage');
+        try {
+          const localDonations = JSON.parse(localStorage.getItem('donationEntries') || '[]');
+          setDonations(localDonations);
+          console.log(`📱 Fallback: loaded ${localDonations.length} donations from localStorage`);
+        } catch (e) {
+          console.error('Error reading localStorage fallback:', e);
+          setDonations([]);
+        }
+        return;
+      }
+      
       // Transform the data to match our interface
-      const transformedDonations = centralizedDonations.map(donation => ({
-        ...donation,
-        referenceNumber: donation.reference_number,
-        submissionDate: donation.submission_date,
-        submissionTime: donation.submission_time || new Date(donation.created_at).toLocaleTimeString(),
-        submissionTimestamp: donation.created_at,
-        parentName: donation.parent_name,
-        studentName: donation.student_name,
-        donationMode: donation.donation_mode,
-        amount: donation.amount?.toString(),
-        hasReceipt: donation.has_receipt || false,
-        hasPhoto: donation.has_photo || false,
-        fileNames: {
-          receipt: donation.attachment_filename || null,
-          photo: donation.attachment_filename || null
-        },
-        eSignature: donation.e_signature,
-        agreementAcceptanceTimestamp: donation.created_at,
-        ipAddress: '127.0.0.1', // Default since not stored in centralized DB
-        userAgent: 'Centralized Database Entry',
-        date: donation.submission_date,
-        time: donation.submission_time,
-        handedTo: donation.handed_to,
-        items: donation.items
-      }));
+      const transformedDonations = centralizedDonations.map(donation => {
+        try {
+          return {
+            ...donation,
+            referenceNumber: donation.reference_number || donation.referenceNumber,
+            submissionDate: donation.submission_date || donation.submissionDate,
+            submissionTime: donation.submission_time || (donation.created_at ? new Date(donation.created_at).toLocaleTimeString() : ''),
+            submissionTimestamp: donation.created_at || donation.submissionTimestamp,
+            parentName: donation.parent_name || donation.parentName,
+            studentName: donation.student_name || donation.studentName,
+            donationMode: donation.donation_mode || donation.donationMode,
+            amount: donation.amount?.toString() || donation.amount,
+            hasReceipt: donation.has_receipt || donation.hasReceipt || false,
+            hasPhoto: donation.has_photo || donation.hasPhoto || false,
+            fileNames: {
+              receipt: donation.attachment_filename || donation.fileNames?.receipt || null,
+              photo: donation.attachment_filename || donation.fileNames?.photo || null
+            },
+            eSignature: donation.e_signature || donation.eSignature,
+            agreementAcceptanceTimestamp: donation.created_at || donation.agreementAcceptanceTimestamp,
+            ipAddress: donation.ipAddress || '127.0.0.1',
+            userAgent: donation.userAgent || 'Centralized Database Entry',
+            date: donation.submission_date || donation.date,
+            time: donation.submission_time || donation.time,
+            handedTo: donation.handed_to || donation.handedTo,
+            items: donation.items
+          };
+        } catch (transformError) {
+          console.error('Error transforming donation:', transformError, donation);
+          return donation; // Return original if transformation fails
+        }
+      }).filter(Boolean); // Filter out any null/undefined results
       
       setDonations(transformedDonations);
       console.log(`💰 Finance Dashboard loaded ${transformedDonations.length} donations from centralized DB`);
     } catch (error) {
       console.error('Error loading centralized donations:', error);
       // Fallback to localStorage if centralized DB fails
-      const localDonations = JSON.parse(localStorage.getItem('donationEntries') || '[]');
-      setDonations(localDonations);
-      console.log(`📱 Fallback: loaded ${localDonations.length} donations from localStorage`);
+      try {
+        const localDonations = JSON.parse(localStorage.getItem('donationEntries') || '[]');
+        setDonations(localDonations);
+        console.log(`📱 Fallback: loaded ${localDonations.length} donations from localStorage`);
+      } catch (localError) {
+        console.error('Error loading from localStorage:', localError);
+        setDonations([]); // Set empty array as final fallback
+      }
     }
   };
 

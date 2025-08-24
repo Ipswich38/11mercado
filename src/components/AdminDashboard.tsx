@@ -82,7 +82,17 @@ export default function AdminDashboard({ getContrastClass, onClose, onShowTutori
       
       setCentralizedDonations(safeDonations);
       setDonationStats(safeStats);
-      console.log(`✅ Loaded ${safeDonations.length} donations from centralized database`);
+      console.log(`✅ Loaded ${safeDonations.length} donations from centralized database:`, safeDonations);
+      
+      // Debug: Show first donation details if any exist
+      if (safeDonations.length > 0) {
+        console.log('📊 First donation details:', {
+          amount: safeDonations[0].amount,
+          parent_name: safeDonations[0].parent_name,
+          donation_mode: safeDonations[0].donation_mode,
+          created_at: safeDonations[0].created_at
+        });
+      }
     } catch (error) {
       console.warn('⚠️ Centralized database connection failed, using localStorage fallback:', error);
       
@@ -726,6 +736,20 @@ What would you like to know about?`;
                     <h3 className={getContrastClass("font-medium text-gray-900 mb-4", "font-medium text-yellow-400 mb-4")}>
                       Recent Donation Entries
                     </h3>
+                    <div className="flex items-center justify-between mb-4">
+                      <span className={getContrastClass("text-sm text-gray-600", "text-sm text-yellow-200")}>
+                        Showing {centralizedDonations.length} donations
+                      </span>
+                      <button
+                        onClick={loadData}
+                        className={getContrastClass(
+                          "px-3 py-1 rounded-lg bg-blue-500 text-white hover:bg-blue-600 text-sm",
+                          "px-3 py-1 rounded-lg bg-yellow-400 text-black hover:bg-yellow-300 text-sm"
+                        )}
+                      >
+                        🔄 Refresh Data
+                      </button>
+                    </div>
                     <div className="space-y-3 max-h-64 overflow-auto">
                       {centralizedDonations.length > 0 ? 
                         centralizedDonations

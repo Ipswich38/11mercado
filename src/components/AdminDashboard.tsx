@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 import { useAdminSession } from '../utils/adminSessionManager';
 import { consolidateAllData, exportDataForDebug } from '../utils/dataSync';
+import { centralizedDB, getAllDonationsFromCentralDB, getDonationStatsFromCentralDB } from '../utils/centralizedDatabase';
 
 export default function AdminDashboard({ getContrastClass, onClose, onShowTutorial, onNavigate }) {
   const [stats, setStats] = useState(null);
@@ -38,6 +39,8 @@ export default function AdminDashboard({ getContrastClass, onClose, onShowTutori
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const [filterType, setFilterType] = useState('all');
+  const [centralizedDonations, setCentralizedDonations] = useState([]);
+  const [donationStats, setDonationStats] = useState(null);
   
   const {
     getAdminStats,
@@ -53,10 +56,24 @@ export default function AdminDashboard({ getContrastClass, onClose, onShowTutori
     return () => clearInterval(interval);
   }, []);
 
-  const loadData = () => {
+  const loadData = async () => {
     setStats(getAdminStats());
     setSessions(getAllSessions());
     setErrors(getAllErrors());
+    
+    // Load centralized donation data
+    try {
+      const donations = await getAllDonationsFromCentralDB();
+      const stats = await getDonationStatsFromCentralDB();
+      setCentralizedDonations(donations);
+      setDonationStats(stats);
+      console.log(`Loaded ${donations.length} donations from centralized database`);
+    } catch (error) {
+      console.error('Error loading centralized donation data:', error);
+      // Fallback to localStorage
+      const localDonations = JSON.parse(localStorage.getItem('donationEntries') || '[]');
+      setCentralizedDonations(localDonations);
+    }
   };
 
   const handleResolveError = (errorId) => {
@@ -623,17 +640,10 @@ What would you like to know about?`;
                         </h3>
                       </div>
                       <div className={getContrastClass("text-2xl font-bold text-gray-900", "text-2xl font-bold text-yellow-400")}>
-                        {(() => {
-                          const donations = JSON.parse(localStorage.getItem('donationEntries') || '[]');
-                          const total = donations.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0);
-                          return `₱${total.toLocaleString()}`;
-                        })()}
+                        ₱{donationStats ? donationStats.totalAmount.toLocaleString() : centralizedDonations.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0).toLocaleString()}
                       </div>
                       <div className={getContrastClass("text-sm text-gray-500", "text-sm text-yellow-300")}>
-                        {(() => {
-                          const donations = JSON.parse(localStorage.getItem('donationEntries') || '[]');
-                          return `${donations.length} entries`;
-                        })()}
+                        {donationStats ? donationStats.totalDonations : centralizedDonations.length} entries from all users
                       </div>
                     </div>
 
@@ -648,11 +658,7 @@ What would you like to know about?`;
                         </h3>
                       </div>
                       <div className={getContrastClass("text-2xl font-bold text-gray-900", "text-2xl font-bold text-blue-400")}>
-                        {(() => {
-                          const donations = JSON.parse(localStorage.getItem('donationEntries') || '[]');
-                          const total = donations.reduce((sum, d) => sum + (d.allocation?.generalSPTA || 0), 0);
-                          return `₱${total.toLocaleString()}`;
-                        })()}
+                        ₱{donationStats ? donationStats.totalGeneralSPTA.toLocaleString() : centralizedDonations.reduce((sum, d) => sum + (d.allocation?.generalSPTA || 0), 0).toLocaleString()}
                       </div>
                       <div className={getContrastClass("text-sm text-gray-500", "text-sm text-yellow-300")}>
                         Allocated funds
@@ -670,11 +676,7 @@ What would you like to know about?`;
                         </h3>
                       </div>
                       <div className={getContrastClass("text-2xl font-bold text-gray-900", "text-2xl font-bold text-purple-400")}>
-                        {(() => {
-                          const donations = JSON.parse(localStorage.getItem('donationEntries') || '[]');
-                          const total = donations.reduce((sum, d) => sum + (d.allocation?.mercadoPTA || 0), 0);
-                          return `₱${total.toLocaleString()}`;
-                        })()}
+                        ₱{donationStats ? donationStats.totalMercadoPTA.toLocaleString() : centralizedDonations.reduce((sum, d) => sum + (d.allocation?.mercadoPTA || 0), 0).toLocaleString()}
                       </div>
                       <div className={getContrastClass("text-sm text-gray-500", "text-sm text-yellow-300")}>
                         Allocated funds
@@ -690,10 +692,9 @@ What would you like to know about?`;
                       Recent Donation Entries
                     </h3>
                     <div className="space-y-3 max-h-64 overflow-auto">
-                      {(() => {
-                        const donations = JSON.parse(localStorage.getItem('donationEntries') || '[]');
-                        return donations
-                          .sort((a, b) => new Date(b.submissionTimestamp).getTime() - new Date(a.submissionTimestamp).getTime())
+                      {centralizedDonations.length > 0 ? 
+                        centralizedDonations
+                          .sort((a, b) => new Date(b.created_at || b.submissionTimestamp).getTime() - new Date(a.created_at || a.submissionTimestamp).getTime())
                           .slice(0, 5)
                           .map((donation, index) => (
                             <div
@@ -706,35 +707,36 @@ What would you like to know about?`;
                               <div className="flex items-center justify-between">
                                 <div>
                                   <div className={getContrastClass("font-medium text-gray-900", "font-medium text-yellow-400")}>
-                                    {donation.parentName}
+                                    {donation.parent_name || donation.parentName}
                                   </div>
                                   <div className={getContrastClass("text-sm text-gray-600", "text-sm text-yellow-200")}>
-                                    {donation.donationMode.toUpperCase()} • {donation.eSignature}
+                                    {(donation.donation_mode || donation.donationMode)?.toUpperCase()} • {donation.e_signature || donation.eSignature}
                                   </div>
+                                  {donation.student_name || donation.studentName ? (
+                                    <div className={getContrastClass("text-xs text-gray-500", "text-xs text-yellow-300")}>
+                                      Student: {donation.student_name || donation.studentName}
+                                    </div>
+                                  ) : null}
                                 </div>
                                 <div className="text-right">
                                   <div className={getContrastClass("font-bold text-gray-900", "font-bold text-yellow-400")}>
                                     {donation.amount ? `₱${parseFloat(donation.amount).toLocaleString()}` : 'In-kind'}
                                   </div>
                                   <div className={getContrastClass("text-xs text-gray-500", "text-xs text-yellow-300")}>
-                                    {donation.submissionDate}
+                                    {donation.submission_date || donation.submissionDate}
                                   </div>
                                 </div>
                               </div>
                             </div>
-                          ));
-                      })()}
-                      {(() => {
-                        const donations = JSON.parse(localStorage.getItem('donationEntries') || '[]');
-                        return donations.length === 0 ? (
+                          ))
+                        : (
                           <div className={getContrastClass(
                             "text-center py-8 text-gray-500",
                             "text-center py-8 text-yellow-300"
                           )}>
-                            No donation entries yet
+                            No donation entries yet - Loading from centralized database...
                           </div>
-                        ) : null;
-                      })()}
+                        )}
                     </div>
                   </div>
                 </div>
@@ -999,14 +1001,43 @@ function ReceiptRecoveryTab({ getContrastClass }) {
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  const searchForReceipt = () => {
+  const searchForReceipt = async () => {
     setIsSearching(true);
     
     try {
-      const donations = JSON.parse(localStorage.getItem('donationEntries') || '[]');
-      const regeneratedReceipts = JSON.parse(localStorage.getItem('regeneratedAcknowledgements') || '[]');
+      // Search in centralized database first
+      const centralResults = await centralizedDB.searchDonations(searchTerm);
       
-      const allRecords = [...donations, ...regeneratedReceipts];
+      // Also search in regenerated receipts (still stored locally)
+      const regeneratedReceipts = JSON.parse(localStorage.getItem('regeneratedAcknowledgements') || '[]');
+      const localResults = regeneratedReceipts.filter(record => 
+        record.referenceNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        record.parentName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        record.studentName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        record.eSignature?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      
+      // Combine results (normalize field names)
+      const normalizedCentral = centralResults.map(record => ({
+        ...record,
+        referenceNumber: record.reference_number || record.referenceNumber,
+        parentName: record.parent_name || record.parentName,
+        studentName: record.student_name || record.studentName,
+        eSignature: record.e_signature || record.eSignature,
+        donationMode: record.donation_mode || record.donationMode,
+        submissionDate: record.submission_date || record.submissionDate
+      }));
+      
+      const allResults = [...normalizedCentral, ...localResults];
+      setSearchResults(allResults);
+      
+      console.log(`Found ${allResults.length} results: ${normalizedCentral.length} from database, ${localResults.length} from local`);
+    } catch (error) {
+      console.error('Error searching for receipts:', error);
+      // Fallback to local search only
+      const localDonations = JSON.parse(localStorage.getItem('donationEntries') || '[]');
+      const regeneratedReceipts = JSON.parse(localStorage.getItem('regeneratedAcknowledgements') || '[]');
+      const allRecords = [...localDonations, ...regeneratedReceipts];
       
       const results = allRecords.filter(record => 
         record.referenceNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -1016,9 +1047,6 @@ function ReceiptRecoveryTab({ getContrastClass }) {
       );
       
       setSearchResults(results);
-    } catch (error) {
-      console.error('Error searching for receipts:', error);
-      setSearchResults([]);
     }
     
     setTimeout(() => setIsSearching(false), 500);

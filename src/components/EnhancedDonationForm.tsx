@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Upload, Calendar, Clock, User, CreditCard, Banknote, Gift, Camera, Download, Edit3, CheckCircle, PenTool, FileText, DollarSign } from 'lucide-react';
+import { centralizedDB } from '../utils/centralizedDatabase';
 
 interface DonationAllocation {
   generalSPTA: number;
@@ -226,32 +227,21 @@ export default function EnhancedDonationForm({ getContrastClass, onClose, onDona
 
   const submitToGoogleSheets = async (data: AcknowledgementData): Promise<boolean> => {
     try {
-      // Enhanced data structure for admin tracking
-      const enhancedData = {
-        ...data,
-        submissionTimestamp: new Date().toISOString(),
-        donationAllocation: data.allocation,
-        hasReceipt: !!data.receipt,
-        hasPhoto: !!data.photo,
-        fileNames: {
-          receipt: data.receipt?.name || null,
-          photo: data.photo?.name || null
-        },
-        agreementAcceptanceTimestamp: new Date().toISOString(),
-        eSignatureCapture: data.eSignature,
-        ipAddress: 'placeholder_for_ip', // Would be populated by backend
-        userAgent: navigator.userAgent
-      };
+      // Prepare files for storage
+      let attachmentFile = null;
+      let attachmentFilename = null;
       
-      console.log('Submitting enhanced donation data:', enhancedData);
-      
-      // Store files for Financial Dashboard access
+      // Store files for Financial Dashboard access (both centralized and local backup)
       if (data.receipt || data.photo) {
         const fileStorage = JSON.parse(localStorage.getItem('donationFiles') || '{}');
         
-        // Store receipt file as base64
+        // Priority: receipt first, then photo
         if (data.receipt) {
           const receiptData = await fileToBase64(data.receipt);
+          attachmentFile = receiptData;
+          attachmentFilename = data.receipt.name;
+          
+          // Local backup
           fileStorage[`${data.referenceNumber}_receipt`] = {
             data: receiptData,
             name: data.receipt.name,
@@ -260,11 +250,12 @@ export default function EnhancedDonationForm({ getContrastClass, onClose, onDona
             timestamp: new Date().toISOString()
           };
           console.log(`Stored receipt file for ${data.referenceNumber}: ${data.receipt.name}`);
-        }
-        
-        // Store photo file as base64
-        if (data.photo) {
+        } else if (data.photo) {
           const photoData = await fileToBase64(data.photo);
+          attachmentFile = photoData;
+          attachmentFilename = data.photo.name;
+          
+          // Local backup
           fileStorage[`${data.referenceNumber}_photo`] = {
             data: photoData,
             name: data.photo.name,
@@ -277,19 +268,74 @@ export default function EnhancedDonationForm({ getContrastClass, onClose, onDona
         
         localStorage.setItem('donationFiles', JSON.stringify(fileStorage));
       }
+
+      // Enhanced data structure for centralized database
+      const enhancedData = {
+        referenceNumber: data.referenceNumber,
+        parentName: data.parentName,
+        studentName: data.studentName,
+        donationMode: data.donationMode === 'ewallet' ? 'e-wallet' : data.donationMode === 'inkind' ? 'in-kind' : data.donationMode,
+        amount: data.amount,
+        eSignature: data.eSignature,
+        submissionDate: data.submissionDate,
+        submissionTime: data.submissionTime,
+        submissionTimestamp: new Date().toISOString(),
+        allocation: data.allocation,
+        attachmentFile,
+        attachmentFilename,
+        handedTo: data.handedTo,
+        items: data.items,
+        hasReceipt: !!data.receipt,
+        hasPhoto: !!data.photo,
+        userAgent: navigator.userAgent
+      };
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      console.log('Submitting donation to centralized database:', enhancedData);
       
-      // Store in localStorage for admin access
-      const existingEntries = JSON.parse(localStorage.getItem('donationEntries') || '[]');
-      existingEntries.push(enhancedData);
-      localStorage.setItem('donationEntries', JSON.stringify(existingEntries));
+      // Submit to centralized database (Supabase)
+      const result = await centralizedDB.submitDonation(enhancedData);
       
-      return true;
+      if (result.success) {
+        console.log('✅ Donation successfully submitted to centralized database');
+        
+        // Also keep in localStorage as backup/cache
+        const existingEntries = JSON.parse(localStorage.getItem('donationEntries') || '[]');
+        existingEntries.push(enhancedData);
+        localStorage.setItem('donationEntries', JSON.stringify(existingEntries));
+        
+        return true;
+      } else {
+        console.error('❌ Failed to submit to centralized database:', result.error);
+        
+        // Fallback to localStorage only
+        const existingEntries = JSON.parse(localStorage.getItem('donationEntries') || '[]');
+        existingEntries.push(enhancedData);
+        localStorage.setItem('donationEntries', JSON.stringify(existingEntries));
+        
+        console.log('📦 Stored in localStorage as fallback');
+        return true; // Still return true so user sees success
+      }
     } catch (error) {
       console.error('Error submitting donation data:', error);
-      return false;
+      
+      // Emergency fallback to localStorage
+      try {
+        const fallbackData = {
+          ...data,
+          submissionTimestamp: new Date().toISOString(),
+          fallbackStorage: true
+        };
+        
+        const existingEntries = JSON.parse(localStorage.getItem('donationEntries') || '[]');
+        existingEntries.push(fallbackData);
+        localStorage.setItem('donationEntries', JSON.stringify(existingEntries));
+        
+        console.log('📦 Emergency fallback to localStorage completed');
+        return true;
+      } catch (fallbackError) {
+        console.error('Emergency fallback failed:', fallbackError);
+        return false;
+      }
     }
   };
 

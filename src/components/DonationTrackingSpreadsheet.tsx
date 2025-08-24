@@ -168,7 +168,7 @@ export default function DonationTrackingSpreadsheet({ getContrastClass, onClose 
         `"${donation.items || 'N/A'}"`,
         donation.hasReceipt ? 'Yes' : 'No',
         donation.hasPhoto ? 'Yes' : 'No',
-        `"${donation.fileNames.receipt || 'N/A'}"`,
+        `"${donation.fileNames?.receipt || 'N/A'}"`,
         `"${donation.fileNames.photo || 'N/A'}"`,
         `"${donation.eSignature}"`,
         donation.agreementAcceptanceTimestamp,
@@ -585,7 +585,7 @@ export default function DonationTrackingSpreadsheet({ getContrastClass, onClose 
                   </label>
                   <div className="space-y-1">
                     <div className={getContrastClass("text-gray-900 text-sm", "text-yellow-200 text-sm")}>
-                      Receipt: {selectedDonation.hasReceipt ? `✓ ${selectedDonation.fileNames.receipt}` : '✗ None'}
+                      Receipt: {selectedDonation.hasReceipt ? `✓ ${selectedDonation.fileNames?.receipt}` : '✗ None'}
                     </div>
                     <div className={getContrastClass("text-gray-900 text-sm", "text-yellow-200 text-sm")}>
                       Photo: {selectedDonation.hasPhoto ? `✓ ${selectedDonation.fileNames.photo}` : '✗ None'}

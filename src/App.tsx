@@ -40,8 +40,16 @@ import FinancialOfficerDashboard from './components/FinancialOfficerDashboard';
 
 export default function MobileApp() {
   // Check for admin monitor access via URL parameter
-  const urlParams = new URLSearchParams(window.location.search);
-  const isAdminMode = urlParams.get('admin') === 'monitor';
+  let isAdminMode = false;
+  try {
+    if (typeof window !== 'undefined' && window.location) {
+      const urlParams = new URLSearchParams(window.location.search);
+      isAdminMode = urlParams.get('admin') === 'monitor';
+    }
+  } catch (error) {
+    console.warn('Error checking URL parameters:', error);
+    isAdminMode = false;
+  }
   
   const [activeApp, setActiveApp] = useState(isAdminMode ? 'admin-monitor' : 'home');
   const [highContrast, setHighContrast] = useState(false);
@@ -477,7 +485,8 @@ export default function MobileApp() {
   };
 
   const renderContent = () => {
-    switch (activeApp) {
+    try {
+      switch (activeApp) {
       case 'home':
         return <MiniAppsGrid 
           onAppSelect={setActiveApp}
@@ -576,37 +585,72 @@ export default function MobileApp() {
           onShowTutorial={setShowTutorial}
           userFirstName={userInfo?.firstName}
         />;
+      }
+    } catch (error) {
+      console.error('Error rendering app content:', error);
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-center p-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Something went wrong</h2>
+            <p className="text-gray-600 mb-6">There was an error loading the application. Please refresh the page.</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+            >
+              Refresh Page
+            </button>
+          </div>
+        </div>
+      );
     }
   };
 
   // Show login screen if not logged in
-  if (!isLoggedIn) {
-    return (
-      <SimpleLogin 
-        onLogin={handleLogin}
-        getContrastClass={getContrastClass}
-      />
-    );
-  }
+  try {
+    if (!isLoggedIn) {
+      return (
+        <SimpleLogin 
+          onLogin={handleLogin}
+          getContrastClass={getContrastClass}
+        />
+      );
+    }
 
-  // Show financial officer dashboard for financial officers
-  if (userInfo?.isFinancialOfficer) {
-    return (
-      <FinancialOfficerDashboard
-        getContrastClass={getContrastClass}
-        onLogout={handleLogout}
-        userInfo={userInfo}
-      />
-    );
-  }
+    // Show financial officer dashboard for financial officers
+    if (userInfo?.isFinancialOfficer) {
+      return (
+        <FinancialOfficerDashboard
+          getContrastClass={getContrastClass}
+          onLogout={handleLogout}
+          userInfo={userInfo}
+        />
+      );
+    }
 
-  // Show PTA Secretary dashboard for secretaries
-  if (userInfo?.isSecretary) {
+    // Show PTA Secretary dashboard for secretaries
+    if (userInfo?.isSecretary) {
+      return (
+        <PTASecretaryDashboard
+          getContrastClass={getContrastClass}
+          onClose={handleLogout}
+        />
+      );
+    }
+  } catch (renderError) {
+    console.error('Critical error in app rendering:', renderError);
     return (
-      <PTASecretaryDashboard
-        getContrastClass={getContrastClass}
-        onClose={handleLogout}
-      />
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center p-8">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Application Error</h2>
+          <p className="text-gray-600 mb-6">The application encountered a critical error. Please refresh the page.</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600"
+          >
+            Refresh Application
+          </button>
+        </div>
+      </div>
     );
   }
 

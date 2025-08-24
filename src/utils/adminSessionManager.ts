@@ -46,8 +46,13 @@ class AdminSessionManager {
   private cleanupTimer?: NodeJS.Timeout;
 
   private constructor() {
-    this.startCleanupTimer();
-    this.loadDataFromStorage();
+    try {
+      this.startCleanupTimer();
+      this.loadDataFromStorage();
+    } catch (error) {
+      console.error('Error initializing AdminSessionManager:', error);
+      // Continue without error to prevent app crash
+    }
   }
 
   public static getInstance(): AdminSessionManager {
@@ -377,24 +382,128 @@ export default AdminSessionManager;
 
 // Hook for React components
 export const useAdminSession = () => {
-  const sessionManager = AdminSessionManager.getInstance();
-  
-  return {
-    requestAccess: (userInfo: any) => sessionManager.requestAccess(userInfo),
-    updateActivity: (sessionId: string) => sessionManager.updateActivity(sessionId),
-    releaseSession: (sessionId: string) => sessionManager.releaseSession(sessionId),
-    logActivity: (sessionId: string, action: string, details: string, component: string, success: boolean, errorMessage?: string) => 
-      sessionManager.logActivity(sessionId, action, details, component, success, errorMessage),
-    logError: (sessionId: string, errorType: string, errorMessage: string, componentPath: string, stackTrace?: string) =>
-      sessionManager.logError(sessionId, errorType, errorMessage, componentPath, stackTrace),
-    resolveError: (errorId: string) => sessionManager.resolveError(errorId),
-    getCurrentUserCount: () => sessionManager.getCurrentUserCount(),
-    getMaxUsers: () => sessionManager.getMaxUsers(),
-    isSessionValid: (sessionId: string) => sessionManager.isSessionValid(sessionId),
-    // Admin methods
-    getAdminStats: () => sessionManager.getAdminStats(),
-    getAllSessions: () => sessionManager.getAllSessions(),
-    getAllErrors: () => sessionManager.getAllErrors(),
-    getSessionDetails: (sessionId: string) => sessionManager.getSessionDetails(sessionId)
-  };
+  try {
+    const sessionManager = AdminSessionManager.getInstance();
+    
+    return {
+      requestAccess: (userInfo: any) => {
+        try {
+          return sessionManager.requestAccess(userInfo);
+        } catch (e) {
+          console.error('Error in requestAccess:', e);
+          return null;
+        }
+      },
+      updateActivity: (sessionId: string) => {
+        try {
+          return sessionManager.updateActivity(sessionId);
+        } catch (e) {
+          console.error('Error in updateActivity:', e);
+        }
+      },
+      releaseSession: (sessionId: string) => {
+        try {
+          return sessionManager.releaseSession(sessionId);
+        } catch (e) {
+          console.error('Error in releaseSession:', e);
+        }
+      },
+      logActivity: (sessionId: string, action: string, details: string, component: string, success: boolean, errorMessage?: string) => {
+        try {
+          return sessionManager.logActivity(sessionId, action, details, component, success, errorMessage);
+        } catch (e) {
+          console.error('Error in logActivity:', e);
+        }
+      },
+      logError: (sessionId: string, errorType: string, errorMessage: string, componentPath: string, stackTrace?: string) => {
+        try {
+          return sessionManager.logError(sessionId, errorType, errorMessage, componentPath, stackTrace);
+        } catch (e) {
+          console.error('Error in logError:', e);
+        }
+      },
+      resolveError: (errorId: string) => {
+        try {
+          return sessionManager.resolveError(errorId);
+        } catch (e) {
+          console.error('Error in resolveError:', e);
+        }
+      },
+      getCurrentUserCount: () => {
+        try {
+          return sessionManager.getCurrentUserCount();
+        } catch (e) {
+          console.error('Error in getCurrentUserCount:', e);
+          return 0;
+        }
+      },
+      getMaxUsers: () => {
+        try {
+          return sessionManager.getMaxUsers();
+        } catch (e) {
+          console.error('Error in getMaxUsers:', e);
+          return 80;
+        }
+      },
+      isSessionValid: (sessionId: string) => {
+        try {
+          return sessionManager.isSessionValid(sessionId);
+        } catch (e) {
+          console.error('Error in isSessionValid:', e);
+          return false;
+        }
+      },
+      // Admin methods
+      getAdminStats: () => {
+        try {
+          return sessionManager.getAdminStats();
+        } catch (e) {
+          console.error('Error in getAdminStats:', e);
+          return { activeSessions: 0, totalSessions: 0, errorCount: 0, sessionsToday: 0, avgSessionDuration: 0, topErrors: [], recentActivities: [] };
+        }
+      },
+      getAllSessions: () => {
+        try {
+          return sessionManager.getAllSessions();
+        } catch (e) {
+          console.error('Error in getAllSessions:', e);
+          return [];
+        }
+      },
+      getAllErrors: () => {
+        try {
+          return sessionManager.getAllErrors();
+        } catch (e) {
+          console.error('Error in getAllErrors:', e);
+          return [];
+        }
+      },
+      getSessionDetails: (sessionId: string) => {
+        try {
+          return sessionManager.getSessionDetails(sessionId);
+        } catch (e) {
+          console.error('Error in getSessionDetails:', e);
+          return undefined;
+        }
+      }
+    };
+  } catch (error) {
+    console.error('Error initializing useAdminSession hook:', error);
+    // Return fallback methods to prevent app crash
+    return {
+      requestAccess: () => null,
+      updateActivity: () => {},
+      releaseSession: () => {},
+      logActivity: () => {},
+      logError: () => {},
+      resolveError: () => {},
+      getCurrentUserCount: () => 0,
+      getMaxUsers: () => 80,
+      isSessionValid: () => false,
+      getAdminStats: () => ({ activeSessions: 0, totalSessions: 0, errorCount: 0, sessionsToday: 0, avgSessionDuration: 0, topErrors: [], recentActivities: [] }),
+      getAllSessions: () => [],
+      getAllErrors: () => [],
+      getSessionDetails: () => undefined
+    };
+  }
 };

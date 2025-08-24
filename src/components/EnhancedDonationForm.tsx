@@ -429,6 +429,7 @@ export default function EnhancedDonationForm({ getContrastClass, onClose, onDona
         existingEntries.push(enhancedData);
         localStorage.setItem('donationEntries', JSON.stringify(existingEntries));
         
+        console.log('🎯 RETURNING TRUE - Supabase success');
         return true;
       } else {
         console.error('❌ Failed to submit to centralized database:', result);
@@ -459,6 +460,7 @@ export default function EnhancedDonationForm({ getContrastClass, onClose, onDona
           userAgent: navigator.userAgent
         });
         
+        console.log('🎯 RETURNING FALSE - Supabase failed');
         return false; // Return false so we know there was an issue
       }
     } catch (error) {
@@ -506,9 +508,12 @@ export default function EnhancedDonationForm({ getContrastClass, onClose, onDona
         submissionTime
       };
 
+      console.log('🔄 About to call submitToGoogleSheets...');
       const success = await submitToGoogleSheets(acknowledgement);
+      console.log('📋 submitToGoogleSheets returned:', success);
       
       if (success) {
+        console.log('✅ Success path: showing acknowledgement');
         // Only show acknowledgement if Supabase sync was successful
         setAcknowledgementData(acknowledgement);
         setShowAcknowledgement(true);
@@ -530,10 +535,12 @@ export default function EnhancedDonationForm({ getContrastClass, onClose, onDona
         }
       } else {
         // CRITICAL: If Supabase sync fails, DO NOT show success or generate receipt
+        console.error('❌ FAILURE path: NOT showing acknowledgement');
         console.error('❌ Donation submission failed - Supabase sync unsuccessful');
         
         alert('❌ Donation Submission Failed\n\nYour donation could not be processed at this time. Please try again or contact admin for assistance.\n\nNote: No reference number has been generated to prevent confusion.');
         
+        console.log('🚫 Preventing acknowledgement display');
         // Do NOT show acknowledgement receipt or reference number
         // Do NOT call onDonationSuccess
         // This prevents generating receipts for failed submissions

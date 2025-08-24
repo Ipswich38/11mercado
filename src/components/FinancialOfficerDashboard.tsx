@@ -289,10 +289,13 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
       console.log('🔄 Loading donations from centralized database...');
       const centralizedDonations = await getAllDonationsFromCentralDB();
       
+      console.log('📊 Raw donations received:', centralizedDonations);
+      
       if (!centralizedDonations || !Array.isArray(centralizedDonations)) {
         console.warn('No valid donations received, falling back to localStorage');
         try {
           const localDonations = JSON.parse(localStorage.getItem('donationEntries') || '[]');
+          console.log('📱 localStorage donations found:', localDonations);
           setDonations(localDonations);
           console.log(`📱 Fallback: loaded ${localDonations.length} donations from localStorage`);
         } catch (e) {
@@ -314,7 +317,7 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
             parentName: donation.parent_name || donation.parentName,
             studentName: donation.student_name || donation.studentName,
             donationMode: donation.donation_mode || donation.donationMode,
-            amount: donation.amount?.toString() || donation.amount,
+            amount: donation.amount ? donation.amount.toString() : (donation.amount === 0 ? '0' : ''),
             hasReceipt: donation.has_receipt || donation.hasReceipt || false,
             hasPhoto: donation.has_photo || donation.hasPhoto || false,
             fileNames: {
@@ -336,6 +339,7 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
         }
       }).filter(Boolean); // Filter out any null/undefined results
       
+      console.log('📊 Transformed donations:', transformedDonations);
       setDonations(transformedDonations);
       console.log(`💰 Finance Dashboard loaded ${transformedDonations.length} donations from centralized DB`);
       setIsLoading(false);
@@ -427,6 +431,8 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
   };
 
   const calculateTotals = () => {
+    console.log('📊 Calculating totals for donations:', filteredDonations);
+    
     const totals = {
       totalAmount: 0,
       generalSPTA: 0,
@@ -447,7 +453,9 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
     const thisYear = new Date().getFullYear();
 
     filteredDonations.forEach(donation => {
+      console.log('💰 Processing donation:', donation.referenceNumber || donation.reference_number, 'amount:', donation.amount);
       const amount = parseFloat((donation.amount || 0).toString());
+      console.log('💰 Parsed amount:', amount);
       totals.totalAmount += amount;
       
       if (donation.allocation) {
@@ -471,6 +479,7 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
       }
     });
 
+    console.log('📊 Final totals calculated:', totals);
     return totals;
   };
 

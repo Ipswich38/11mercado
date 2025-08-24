@@ -312,23 +312,53 @@ export default function EnhancedDonationForm({ getContrastClass, onClose, onDona
         submissionDate: data.submissionDate,
         submissionTime: data.submissionTime,
         submissionTimestamp: new Date().toISOString(),
-        allocation: data.allocation,
+        allocation: data.allocation || { generalSPTA: 0, mercadoPTA: 0 },
         attachmentFile,
         attachmentFilename,
-        handedTo: data.handedTo,
-        items: data.items,
+        handedTo: data.handedTo || null,
+        items: data.items || null,
         hasReceipt: !!data.receipt,
         hasPhoto: !!data.photo,
         userAgent: navigator.userAgent
       };
       
+      // Validate critical fields
+      if (!enhancedData.referenceNumber || !enhancedData.parentName || !enhancedData.studentName) {
+        console.error('❌ Missing critical fields:', {
+          referenceNumber: !!enhancedData.referenceNumber,
+          parentName: !!enhancedData.parentName,
+          studentName: !!enhancedData.studentName
+        });
+        throw new Error('Missing required fields for database submission');
+      }
+      
       console.log('🚀 Submitting donation to centralized database:', enhancedData);
       console.log('🔗 CentralizedDB object:', centralizedDB);
       
-      // Submit to centralized database (Supabase)
-      const result = await centralizedDB.submitDonation(enhancedData);
+      // Submit to centralized database (Supabase) with timeout
+      console.log('🔍 Enhanced data being submitted:', JSON.stringify(enhancedData, null, 2));
+      
+      const submitWithTimeout = new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Supabase submission timeout after 30 seconds'));
+        }, 30000);
+        
+        centralizedDB.submitDonation(enhancedData)
+          .then((result) => {
+            clearTimeout(timeout);
+            resolve(result);
+          })
+          .catch((error) => {
+            clearTimeout(timeout);
+            reject(error);
+          });
+      });
+      
+      const result = await submitWithTimeout;
       
       console.log('📋 Submission result:', result);
+      console.log('📋 Result success status:', result?.success);
+      console.log('📋 Result error:', result?.error);
       
       if (result && result.success) {
         console.log('✅ Donation successfully submitted to centralized database', result.data);
@@ -340,15 +370,16 @@ export default function EnhancedDonationForm({ getContrastClass, onClose, onDona
         
         return true;
       } else {
-        console.error('❌ Failed to submit to centralized database:', result.error);
+        console.error('❌ Failed to submit to centralized database:', result);
+        alert('⚠️ Warning: Donation saved locally but failed to sync to main database. Please contact admin if this persists.');
         
         // Fallback to localStorage only
         const existingEntries = JSON.parse(localStorage.getItem('donationEntries') || '[]');
-        existingEntries.push(enhancedData);
+        existingEntries.push({...enhancedData, supabaseError: result?.error || 'Unknown error'});
         localStorage.setItem('donationEntries', JSON.stringify(existingEntries));
         
-        console.log('📦 Stored in localStorage as fallback');
-        return true; // Still return true so user sees success
+        console.log('📦 Stored in localStorage as fallback due to Supabase error');
+        return false; // Return false so we know there was an issue
       }
     } catch (error) {
       console.error('Error submitting donation data:', error);
@@ -366,9 +397,11 @@ export default function EnhancedDonationForm({ getContrastClass, onClose, onDona
         localStorage.setItem('donationEntries', JSON.stringify(existingEntries));
         
         console.log('📦 Emergency fallback to localStorage completed');
-        return true;
+        console.warn('⚠️ Donation stored locally only due to database connection issues');
+        return false; // Return false to indicate Supabase sync failed
       } catch (fallbackError) {
         console.error('Emergency fallback failed:', fallbackError);
+        alert('❌ Critical error: Unable to save donation data anywhere. Please try again.');
         return false;
       }
     }
@@ -415,7 +448,19 @@ export default function EnhancedDonationForm({ getContrastClass, onClose, onDona
           }
         }
       } else {
-        alert('There was an error submitting your donation. Please try again.');
+        console.error('❌ Form submission failed - checking if data stored locally');
+        
+        // Check if data was stored locally as fallback
+        const localEntries = JSON.parse(localStorage.getItem('donationEntries') || '[]');
+        const wasStoredLocally = localEntries.some(entry => entry.referenceNumber === acknowledgement.referenceNumber);
+        
+        if (wasStoredLocally) {
+          alert('⚠️ Warning: Your donation was saved locally but failed to sync to the main database. You will still receive your receipt, but please contact admin to ensure your donation is properly recorded in the central system.');
+          setAcknowledgementData(acknowledgement);
+          setShowAcknowledgement(true);
+        } else {
+          alert('❌ Critical error: Failed to save your donation. Please try again or contact admin for assistance.');
+        }
       }
     } catch (error) {
       console.error('Submission error:', error);

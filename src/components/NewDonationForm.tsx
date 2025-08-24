@@ -23,7 +23,7 @@ interface FormData {
 }
 
 export default function NewDonationForm({ getContrastClass, onClose, onDonationSuccess }: NewDonationFormProps) {
-  console.log('🆕 NEW DONATION FORM v2.0 LOADING');
+  console.log('🆕 NEW DONATION FORM v2.0 LOADING - Build:', new Date().toISOString());
   
   const [formData, setFormData] = useState<FormData>({
     parentName: '',

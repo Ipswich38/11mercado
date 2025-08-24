@@ -259,6 +259,10 @@ export default function EnhancedDonationForm({ getContrastClass, onClose, onDona
 
   const submitToGoogleSheets = async (data: AcknowledgementData): Promise<boolean> => {
     try {
+      console.log('🔍 Starting donation submission process...');
+      console.log('📱 User agent:', navigator.userAgent);
+      console.log('🌐 Network status:', navigator.onLine ? 'Online' : 'Offline');
+      
       // Prepare files for storage
       let attachmentFile = null;
       let attachmentFilename = null;
@@ -267,11 +271,22 @@ export default function EnhancedDonationForm({ getContrastClass, onClose, onDona
       if (data.receipt || data.photo) {
         const fileStorage = JSON.parse(localStorage.getItem('donationFiles') || '{}');
         
+        console.log('📎 Processing file attachments...');
+        console.log('📄 Receipt file:', data.receipt ? `${data.receipt.name} (${data.receipt.size} bytes)` : 'None');
+        console.log('📷 Photo file:', data.photo ? `${data.photo.name} (${data.photo.size} bytes)` : 'None');
+        
         // Priority: receipt first, then photo
         if (data.receipt) {
-          const receiptData = await fileToBase64(data.receipt);
-          attachmentFile = receiptData;
-          attachmentFilename = data.receipt.name;
+          console.log('🔄 Converting receipt to base64...');
+          try {
+            const receiptData = await fileToBase64(data.receipt);
+            attachmentFile = receiptData;
+            attachmentFilename = data.receipt.name;
+            console.log('✅ Receipt conversion successful, size:', receiptData.length);
+          } catch (fileError) {
+            console.error('❌ Receipt file conversion failed:', fileError);
+            throw new Error('Failed to process receipt file: ' + fileError.message);
+          }
           
           // Local backup
           fileStorage[`${data.referenceNumber}_receipt`] = {
@@ -319,8 +334,16 @@ export default function EnhancedDonationForm({ getContrastClass, onClose, onDona
         items: data.items || null,
         hasReceipt: !!data.receipt,
         hasPhoto: !!data.photo,
-        userAgent: navigator.userAgent
+        userAgent: navigator.userAgent,
+        isMobile: /Mobi|Android/i.test(navigator.userAgent),
+        attachmentSize: attachmentFile ? attachmentFile.length : 0
       };
+      
+      // Check for large file sizes on mobile (common issue)
+      if (enhancedData.isMobile && enhancedData.attachmentSize > 5000000) { // 5MB limit
+        console.warn('⚠️ Large file detected on mobile:', enhancedData.attachmentSize, 'bytes');
+        // Don't fail immediately, but log the warning
+      }
       
       // Validate critical fields
       if (!enhancedData.referenceNumber || !enhancedData.parentName || !enhancedData.studentName) {
@@ -371,14 +394,33 @@ export default function EnhancedDonationForm({ getContrastClass, onClose, onDona
         return true;
       } else {
         console.error('❌ Failed to submit to centralized database:', result);
-        alert('⚠️ Warning: Donation saved locally but failed to sync to main database. Please contact admin if this persists.');
+        
+        // More specific error message for mobile users
+        const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+        const errorMessage = isMobile 
+          ? '⚠️ Mobile Upload Issue: Your donation is saved locally. If you have a large image, try using a smaller file or contact admin.'
+          : '⚠️ Warning: Donation saved locally but failed to sync to main database. Please contact admin if this persists.';
+        
+        alert(errorMessage);
         
         // Fallback to localStorage only
         const existingEntries = JSON.parse(localStorage.getItem('donationEntries') || '[]');
-        existingEntries.push({...enhancedData, supabaseError: result?.error || 'Unknown error'});
+        existingEntries.push({
+          ...enhancedData, 
+          supabaseError: result?.error || 'Unknown error',
+          mobileFallback: isMobile,
+          errorTimestamp: new Date().toISOString()
+        });
         localStorage.setItem('donationEntries', JSON.stringify(existingEntries));
         
         console.log('📦 Stored in localStorage as fallback due to Supabase error');
+        console.log('🔍 Error details for debugging:', {
+          error: result?.error,
+          isMobile,
+          attachmentSize: enhancedData.attachmentSize,
+          userAgent: navigator.userAgent
+        });
+        
         return false; // Return false so we know there was an issue
       }
     } catch (error) {

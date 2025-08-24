@@ -53,6 +53,38 @@ export default function EnhancedDonationForm({ getContrastClass, onClose, onDona
   const [editReferenceNumber, setEditReferenceNumber] = useState('');
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [debugMode, setDebugMode] = useState(false);
+
+  const testSupabaseConnection = async () => {
+    console.log('🧪 Testing Supabase connection from donation form...');
+    try {
+      const testData = {
+        referenceNumber: 'FORM-TEST-' + Date.now(),
+        parentName: 'Form Test Parent',
+        studentName: 'Form Test Student',
+        donationMode: 'e-wallet',
+        amount: '50',
+        eSignature: 'Form Test Signature',
+        submissionDate: new Date().toISOString().split('T')[0],
+        submissionTime: new Date().toLocaleTimeString(),
+        submissionTimestamp: new Date().toISOString(),
+        allocation: { generalSPTA: 40, mercadoPTA: 10 }
+      };
+      
+      console.log('🚀 Attempting to submit test data:', testData);
+      const result = await centralizedDB.submitDonation(testData);
+      console.log('📋 Test result:', result);
+      
+      if (result && result.success) {
+        alert('✅ Supabase connection test successful!');
+      } else {
+        alert('❌ Supabase connection test failed: ' + (result?.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('❌ Test error:', error);
+      alert('❌ Test error: ' + error.message);
+    }
+  };
 
   const receiptInputRef = useRef<HTMLInputElement>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -290,13 +322,16 @@ export default function EnhancedDonationForm({ getContrastClass, onClose, onDona
         userAgent: navigator.userAgent
       };
       
-      console.log('Submitting donation to centralized database:', enhancedData);
+      console.log('🚀 Submitting donation to centralized database:', enhancedData);
+      console.log('🔗 CentralizedDB object:', centralizedDB);
       
       // Submit to centralized database (Supabase)
       const result = await centralizedDB.submitDonation(enhancedData);
       
-      if (result.success) {
-        console.log('✅ Donation successfully submitted to centralized database');
+      console.log('📋 Submission result:', result);
+      
+      if (result && result.success) {
+        console.log('✅ Donation successfully submitted to centralized database', result.data);
         
         // Also keep in localStorage as backup/cache
         const existingEntries = JSON.parse(localStorage.getItem('donationEntries') || '[]');
@@ -635,15 +670,26 @@ For any inquiries, please contact us at 11mercado.pta@gmail.com
           )}>
             Enhanced Donation Form
           </h1>
-          <button
-            onClick={() => setShowEditForm(!showEditForm)}
-            className={getContrastClass(
-              "bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm transition-colors",
-              "bg-gray-800 border border-yellow-400 hover:bg-gray-700 px-3 py-1 rounded-lg text-sm transition-colors text-yellow-400"
-            )}
-          >
-            Edit Entry
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={testSupabaseConnection}
+              className={getContrastClass(
+                "bg-green-500 hover:bg-green-600 px-3 py-1 rounded-lg text-sm transition-colors text-white",
+                "bg-green-600 border border-green-400 hover:bg-green-700 px-3 py-1 rounded-lg text-sm transition-colors text-white"
+              )}
+            >
+              Test DB
+            </button>
+            <button
+              onClick={() => setShowEditForm(!showEditForm)}
+              className={getContrastClass(
+                "bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm transition-colors",
+                "bg-gray-800 border border-yellow-400 hover:bg-gray-700 px-3 py-1 rounded-lg text-sm transition-colors text-yellow-400"
+              )}
+            >
+              Edit Entry
+            </button>
+          </div>
         </div>
         
         {showEditForm && (

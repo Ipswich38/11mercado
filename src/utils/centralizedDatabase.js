@@ -35,9 +35,68 @@ class CentralizedDatabase {
     }
   }
 
+  // Upload image to Supabase Storage
+  async uploadDonationImage(referenceNumber, imageFile, imageType = 'receipt') {
+    try {
+      if (!imageFile) return null;
+
+      const fileExt = imageFile.name.split('.').pop();
+      const fileName = `${referenceNumber}_${imageType}.${fileExt}`;
+      const filePath = `donations/${fileName}`;
+
+      const { data, error } = await supabase.storage
+        .from('donation-images')
+        .upload(filePath, imageFile, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (error) {
+        console.error('Error uploading image:', error);
+        return null;
+      }
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('donation-images')
+        .getPublicUrl(filePath);
+
+      console.log(`✅ Image uploaded: ${fileName}`);
+      return {
+        path: filePath,
+        url: urlData.publicUrl,
+        filename: fileName
+      };
+    } catch (error) {
+      console.error('Error in uploadDonationImage:', error);
+      return null;
+    }
+  }
+
   // Submit donation to centralized database
   async submitDonation(donationData) {
     try {
+      // Handle image uploads first
+      let receiptImageUrl = null;
+      let receiptImagePath = null;
+      
+      if (donationData.attachmentFile && donationData.attachmentFile.startsWith('data:image/')) {
+        // Convert base64 to file if needed
+        try {
+          const base64Response = await fetch(donationData.attachmentFile);
+          const blob = await base64Response.blob();
+          const file = new File([blob], donationData.attachmentFilename || 'receipt.jpg', { type: blob.type });
+          
+          const imageData = await this.uploadDonationImage(donationData.referenceNumber, file, 'receipt');
+          if (imageData) {
+            receiptImageUrl = imageData.url;
+            receiptImagePath = imageData.path;
+          }
+        } catch (uploadError) {
+          console.warn('Failed to upload image, storing as base64 fallback:', uploadError);
+        }
+      }
+
       const donation = {
         reference_number: donationData.referenceNumber,
         parent_name: donationData.parentName,
@@ -49,8 +108,12 @@ class CentralizedDatabase {
         submission_time: donationData.submissionTime,
         submission_timestamp: donationData.submissionTimestamp,
         allocation: donationData.allocation || {},
-        attachment_file: donationData.attachmentFile || null,
+        attachment_file: donationData.attachmentFile || null, // Keep base64 as fallback
         attachment_filename: donationData.attachmentFilename || null,
+        attachment_url: receiptImageUrl, // New: Supabase storage URL
+        attachment_path: receiptImagePath, // New: Supabase storage path
+        has_receipt: !!(donationData.attachmentFile || receiptImageUrl),
+        has_photo: false, // Can be expanded later
         created_at: new Date().toISOString()
       };
 

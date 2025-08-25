@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, Target, Users, Calendar, RefreshCw } from 'lucide-react';
+import { TrendingUp, Target, Calendar, RefreshCw } from 'lucide-react';
 import { getAllDonationsFromCentralDB } from '../utils/centralizedDatabase';
 
 export default function DonationTiles({ donationDrives, getContrastClass }) {
@@ -136,12 +136,6 @@ export default function DonationTiles({ donationDrives, getContrastClass }) {
           "bg-white/60 backdrop-blur-md rounded-3xl p-6 text-center shadow-xl border border-white/20",
           "bg-gray-900 rounded-3xl p-6 text-center shadow-xl border-2 border-yellow-400"
         )}>
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <Users size={20} className={getContrastClass("text-slate-500", "text-yellow-400")} />
-            <span className={getContrastClass("text-sm text-slate-600", "text-sm text-yellow-200")}>
-              {donationDrives.reduce((sum, drive) => sum + ((drive?.receipts || []).length), 0)} total contributors
-            </span>
-          </div>
           <div className={getContrastClass(
             "text-sm text-slate-600",
             "text-sm text-yellow-200"

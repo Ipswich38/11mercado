@@ -213,12 +213,12 @@ export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastC
           {/* Amount Display - Upper Right */}
           <div className="absolute top-3 right-4">
             {isLoading ? (
-              <div className="text-xs text-white/60">
+              <div className="text-sm text-white/60">
                 Loading...
               </div>
             ) : (
               <div className="text-right">
-                <div className="text-lg font-bold text-white">
+                <div className="text-2xl font-bold text-white">
                   ₱{totalDonations.toLocaleString()}
                 </div>
                 <div className="text-white/60 text-xs">
@@ -228,24 +228,17 @@ export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastC
             )}
           </div>
           
-          {/* Dynamic Message - Center with fade effect */}
-          <div className="mt-2 pr-20">
-            <div className="relative">
-              {totalDonations > 0 ? (
-                <p className="text-white/80 text-xs leading-relaxed animate-pulse">
-                  <strong>Thank you parents!</strong> Your support makes a real difference in our children's education.
-                </p>
-              ) : (
-                <p className="text-white/80 text-xs leading-relaxed animate-pulse">
-                  <strong>Help support our children's education</strong> - every contribution creates lasting impact!
-                </p>
-              )}
-              {/* Fade effect */}
-              <div className={getContrastClass(
-                "absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-teal-600/70 to-transparent pointer-events-none",
-                "absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-gray-900/70 to-transparent pointer-events-none"
-              )}></div>
-            </div>
+          {/* Dynamic Message - Center */}
+          <div className="mt-2 pr-24">
+            {totalDonations > 0 ? (
+              <p className="text-white/80 text-xs leading-relaxed animate-pulse">
+                <strong>Thank you parents!</strong> Your support makes a real difference in our children's education.
+              </p>
+            ) : (
+              <p className="text-white/80 text-xs leading-relaxed animate-pulse">
+                <strong>Help support our children's education</strong> - every contribution creates lasting impact!
+              </p>
+            )}
           </div>
         </div>
       </div>

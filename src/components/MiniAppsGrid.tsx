@@ -141,8 +141,48 @@ export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastC
         </div>
       </div>
 
-      {/* Weather - Full Width */}
+      {/* Donation Progress - Full Width */}
       <div className="mb-4">
+        <div
+          className={getContrastClass(
+            `bg-gradient-to-br from-pink-500/90 to-rose-600/90 backdrop-blur-md p-6 rounded-3xl shadow-xl border border-white/20`,
+            `bg-gray-900/90 backdrop-blur-md p-6 rounded-3xl shadow-xl border-2 border-yellow-400/50`
+          )}
+        >
+          <div className="text-white mb-4">
+            <TrendingUp size={24} />
+          </div>
+          <h3 className="text-white font-semibold text-lg mb-2 leading-tight">
+            💝 Community Support Fund
+          </h3>
+          
+          {/* Amount Display - Large and Prominent */}
+          <div className="text-center mb-4">
+            <div className="text-4xl font-bold text-white mb-2">
+              ₱{totalDonations.toLocaleString()}
+            </div>
+            <div className="text-white/80 text-sm">
+              Total Raised So Far
+            </div>
+          </div>
+          
+          {/* Dynamic Message */}
+          <div className="text-center">
+            {totalDonations > 0 ? (
+              <p className="text-white/90 text-sm leading-relaxed">
+                🙏 <strong>Thank you amazing parents!</strong> Your support makes a real difference in our children's education. Together, we're building a brighter future! 💪
+              </p>
+            ) : (
+              <p className="text-white/90 text-sm leading-relaxed">
+                👋 <strong>Dear Parents,</strong> help us support our children's education! Every contribution, big or small, creates lasting impact. Join our community of caring families! ❤️
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Row 1: Weather App + Donation Form */}
+      <div className="grid grid-cols-2 gap-4 mb-4">
         <div
           onClick={() => onAppSelect('weather')}
           className={getContrastClass(
@@ -161,30 +201,6 @@ export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastC
           </p>
           <div className="text-white/60 text-xs">
             Live Updates
-          </div>
-        </div>
-      </div>
-
-      {/* Row 1: Donation Progress + Donation Form */}
-      <div className="grid grid-cols-2 gap-4 mb-4">
-        <div
-          onClick={() => onAppSelect('donation-tiles')}
-          className={getContrastClass(
-            `bg-gradient-to-br from-pink-500/90 to-rose-600/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border border-white/20`,
-            `bg-gray-900/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border-2 border-yellow-400/50`
-          )}
-        >
-          <div className="text-white mb-4">
-            <TrendingUp size={24} />
-          </div>
-          <h3 className="text-white font-semibold text-lg mb-2 leading-tight">
-            Donation Progress
-          </h3>
-          <p className="text-white/80 text-sm mb-3">
-            View donation campaigns
-          </p>
-          <div className="text-white/60 text-xs">
-            {totalDonations > 0 ? `₱${totalDonations.toLocaleString()}` : 'No campaigns yet'}
           </div>
         </div>
 

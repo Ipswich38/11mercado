@@ -192,50 +192,60 @@ export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastC
         </div>
       </div>
 
-      {/* Donation Progress - Full Width */}
+      {/* Donation Progress - Compact */}
       <div className="mb-4">
         <div
           className={getContrastClass(
-            `bg-gradient-to-br from-teal-500/90 to-cyan-600/90 backdrop-blur-md p-6 rounded-3xl shadow-xl border border-white/20`,
-            `bg-gray-900/90 backdrop-blur-md p-6 rounded-3xl shadow-xl border-2 border-teal-400/50`
+            `relative bg-gradient-to-br from-teal-500/70 to-cyan-600/70 backdrop-blur-md p-4 rounded-2xl shadow-lg border border-white/20 overflow-hidden`,
+            `relative bg-gray-900/70 backdrop-blur-md p-4 rounded-2xl shadow-lg border border-teal-400/30 overflow-hidden`
           )}
         >
-          <div className="text-white mb-4">
-            <TrendingUp size={24} />
+          {/* Icon and Title - Left side */}
+          <div className="flex items-center mb-3">
+            <div className="text-white/80 mr-2">
+              <TrendingUp size={18} />
+            </div>
+            <h3 className="text-white font-medium text-sm leading-tight">
+              💝 Community Support
+            </h3>
           </div>
-          <h3 className="text-white font-semibold text-lg mb-2 leading-tight">
-            💝 Community Support Fund
-          </h3>
           
-          {/* Amount Display - Large and Prominent */}
-          <div className="text-center mb-4">
+          {/* Amount Display - Upper Right */}
+          <div className="absolute top-3 right-4">
             {isLoading ? (
-              <div className="text-2xl text-white/80 mb-2">
+              <div className="text-xs text-white/60">
                 Loading...
               </div>
             ) : (
-              <>
-                <div className="text-4xl font-bold text-white mb-2">
+              <div className="text-right">
+                <div className="text-lg font-bold text-white">
                   ₱{totalDonations.toLocaleString()}
                 </div>
-                <div className="text-white/80 text-sm">
-                  Total Raised So Far
+                <div className="text-white/60 text-xs">
+                  raised
                 </div>
-              </>
+              </div>
             )}
           </div>
           
-          {/* Dynamic Message */}
-          <div className="text-center">
-            {totalDonations > 0 ? (
-              <p className="text-white/90 text-sm leading-relaxed">
-                🙏 <strong>Thank you amazing parents!</strong> Your support makes a real difference in our children's education. Together, we're building a brighter future! 💪
-              </p>
-            ) : (
-              <p className="text-white/90 text-sm leading-relaxed">
-                👋 <strong>Dear Parents,</strong> help us support our children's education! Every contribution, big or small, creates lasting impact. Join our community of caring families! ❤️
-              </p>
-            )}
+          {/* Dynamic Message - Center with fade effect */}
+          <div className="mt-2 pr-20">
+            <div className="relative">
+              {totalDonations > 0 ? (
+                <p className="text-white/80 text-xs leading-relaxed animate-pulse">
+                  <strong>Thank you parents!</strong> Your support makes a real difference in our children's education.
+                </p>
+              ) : (
+                <p className="text-white/80 text-xs leading-relaxed animate-pulse">
+                  <strong>Help support our children's education</strong> - every contribution creates lasting impact!
+                </p>
+              )}
+              {/* Fade effect */}
+              <div className={getContrastClass(
+                "absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-teal-600/70 to-transparent pointer-events-none",
+                "absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-gray-900/70 to-transparent pointer-events-none"
+              )}></div>
+            </div>
           </div>
         </div>
       </div>

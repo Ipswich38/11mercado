@@ -219,7 +219,7 @@ export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastC
                   ₱{totalDonations.toLocaleString()}
                 </div>
                 <div className="text-white/80 text-sm">
-                  Total Raised • {donationCount} donations
+                  Total Raised So Far
                 </div>
               </>
             )}

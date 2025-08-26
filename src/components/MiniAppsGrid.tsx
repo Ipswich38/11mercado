@@ -203,9 +203,6 @@ export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastC
           <div className="text-white mb-4">
             <TrendingUp size={20} />
           </div>
-          <h3 className="text-white font-semibold text-base mb-3 leading-tight">
-            💝 Community Support Fund
-          </h3>
           
           {/* Amount Display - Center but smaller */}
           <div className="text-center mb-4">

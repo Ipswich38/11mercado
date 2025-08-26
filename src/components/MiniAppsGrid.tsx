@@ -192,51 +192,48 @@ export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastC
         </div>
       </div>
 
-      {/* Donation Progress - Compact */}
+      {/* Donation Progress - Full Width */}
       <div className="mb-4">
         <div
           className={getContrastClass(
-            `relative bg-gradient-to-br from-teal-500/70 to-cyan-600/70 backdrop-blur-md p-4 rounded-2xl shadow-lg border border-white/20 overflow-hidden`,
-            `relative bg-gray-900/70 backdrop-blur-md p-4 rounded-2xl shadow-lg border border-teal-400/30 overflow-hidden`
+            `bg-gradient-to-br from-teal-500/90 to-cyan-600/90 backdrop-blur-md p-6 rounded-3xl shadow-xl border border-white/20`,
+            `bg-gray-900/90 backdrop-blur-md p-6 rounded-3xl shadow-xl border-2 border-teal-400/50`
           )}
         >
-          {/* Icon and Title - Left side */}
-          <div className="flex items-center mb-3">
-            <div className="text-white/80 mr-2">
-              <TrendingUp size={18} />
-            </div>
-            <h3 className="text-white font-medium text-sm leading-tight">
-              💝 Community Support
-            </h3>
+          <div className="text-white mb-4">
+            <TrendingUp size={20} />
           </div>
+          <h3 className="text-white font-semibold text-base mb-3 leading-tight">
+            💝 Community Support Fund
+          </h3>
           
-          {/* Amount Display - Upper Right */}
-          <div className="absolute top-3 right-4">
+          {/* Amount Display - Center but smaller */}
+          <div className="text-center mb-4">
             {isLoading ? (
-              <div className="text-sm text-white/60">
+              <div className="text-lg text-white/80 mb-2">
                 Loading...
               </div>
             ) : (
-              <div className="text-right">
-                <div className="text-2xl font-bold text-white">
+              <>
+                <div className="text-2xl font-bold text-white mb-2">
                   ₱{totalDonations.toLocaleString()}
                 </div>
-                <div className="text-white/60 text-xs">
-                  raised
+                <div className="text-white/80 text-xs">
+                  Total Raised So Far
                 </div>
-              </div>
+              </>
             )}
           </div>
           
-          {/* Dynamic Message - Center */}
-          <div className="mt-2 pr-24">
+          {/* Dynamic Message - Center but smaller text */}
+          <div className="text-center">
             {totalDonations > 0 ? (
-              <p className="text-white/80 text-xs leading-relaxed animate-pulse">
-                <strong>Thank you parents!</strong> Your support makes a real difference in our children's education.
+              <p className="text-white/90 text-xs leading-relaxed">
+                <strong>Thank you amazing parents!</strong> Your support makes a real difference in our children's education.
               </p>
             ) : (
-              <p className="text-white/80 text-xs leading-relaxed animate-pulse">
-                <strong>Help support our children's education</strong> - every contribution creates lasting impact!
+              <p className="text-white/90 text-xs leading-relaxed">
+                <strong>Dear Parents,</strong> help us support our children's education! Every contribution creates lasting impact.
               </p>
             )}
           </div>

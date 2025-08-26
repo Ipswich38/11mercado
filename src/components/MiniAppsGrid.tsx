@@ -1,8 +1,59 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calculator, Cloud, Upload, Users, UserCheck, ExternalLink, TrendingUp, BookOpen, Mail, FolderPlus, Shield, HelpCircle } from 'lucide-react';
+import { getDonationStatsFromCentralDB } from '../utils/centralizedDatabase';
 
 export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastClass, onShowTutorial, userFirstName }) {
-  const totalDonations = donationDrives.reduce((sum, drive) => sum + drive.currentAmount, 0);
+  const [donationStats, setDonationStats] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    loadDonationStats();
+    // Refresh stats every 30 seconds to keep them current
+    const interval = setInterval(loadDonationStats, 30000);
+    
+    // Listen for donation update events
+    const handleDonationUpdate = () => {
+      console.log('🔄 Donation updated, refreshing stats...');
+      loadDonationStats();
+    };
+    
+    const handleCentralizedDataSync = () => {
+      console.log('🔄 Centralized data synced, refreshing stats...');
+      loadDonationStats();
+    };
+    
+    window.addEventListener('donationUpdated', handleDonationUpdate);
+    window.addEventListener('centralizedDataSync', handleCentralizedDataSync);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('donationUpdated', handleDonationUpdate);
+      window.removeEventListener('centralizedDataSync', handleCentralizedDataSync);
+    };
+  }, []);
+  
+  const loadDonationStats = async () => {
+    try {
+      console.log('📊 Loading donation stats for home screen...');
+      const stats = await getDonationStatsFromCentralDB();
+      setDonationStats(stats);
+      setIsLoading(false);
+      console.log('✅ Donation stats loaded:', stats);
+    } catch (error) {
+      console.error('Error loading donation stats:', error);
+      setDonationStats({
+        totalAmount: 0,
+        totalDonations: 0,
+        totalGeneralSPTA: 0,
+        totalMercadoPTA: 0
+      });
+      setIsLoading(false);
+    }
+  };
+  
+  // Use centralized database stats instead of local drives
+  const totalDonations = donationStats?.totalAmount || 0;
+  const donationCount = donationStats?.totalDonations || 0;
   
   const apps = [
     {
@@ -145,8 +196,8 @@ export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastC
       <div className="mb-4">
         <div
           className={getContrastClass(
-            `bg-gradient-to-br from-pink-500/90 to-rose-600/90 backdrop-blur-md p-6 rounded-3xl shadow-xl border border-white/20`,
-            `bg-gray-900/90 backdrop-blur-md p-6 rounded-3xl shadow-xl border-2 border-yellow-400/50`
+            `bg-gradient-to-br from-teal-500/90 to-cyan-600/90 backdrop-blur-md p-6 rounded-3xl shadow-xl border border-white/20`,
+            `bg-gray-900/90 backdrop-blur-md p-6 rounded-3xl shadow-xl border-2 border-teal-400/50`
           )}
         >
           <div className="text-white mb-4">
@@ -158,12 +209,20 @@ export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastC
           
           {/* Amount Display - Large and Prominent */}
           <div className="text-center mb-4">
-            <div className="text-4xl font-bold text-white mb-2">
-              ₱{totalDonations.toLocaleString()}
-            </div>
-            <div className="text-white/80 text-sm">
-              Total Raised So Far
-            </div>
+            {isLoading ? (
+              <div className="text-2xl text-white/80 mb-2">
+                Loading...
+              </div>
+            ) : (
+              <>
+                <div className="text-4xl font-bold text-white mb-2">
+                  ₱{totalDonations.toLocaleString()}
+                </div>
+                <div className="text-white/80 text-sm">
+                  Total Raised • {donationCount} donations
+                </div>
+              </>
+            )}
           </div>
           
           {/* Dynamic Message */}

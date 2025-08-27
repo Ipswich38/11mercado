@@ -60,26 +60,28 @@ export default function SimpleLogin({ onLogin, getContrastClass }) {
 
   return (
     <div className={getContrastClass(
-      "min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 flex items-center justify-center p-4",
-      "min-h-screen bg-black flex items-center justify-center p-4"
+      "min-h-screen bg-surface-50 flex items-center justify-center p-4",
+      "min-h-screen bg-surface-900 flex items-center justify-center p-4"
     )}>
       <div className={getContrastClass(
-        "bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 w-full max-w-md",
-        "bg-gray-900/90 backdrop-blur-xl rounded-3xl shadow-2xl border-2 border-yellow-400/50 w-full max-w-md"
+        "card-elevated w-full max-w-md overflow-hidden",
+        "glass-dark rounded-material-xl shadow-material-xl w-full max-w-md overflow-hidden border border-surface-700"
       )}>
-        {/* Header with Logo */}
+        {/* Material Design Header */}
         <div className="text-center p-8 pb-6">
-          <div className="mb-6">
-            <div className="text-6xl mb-4">🎓</div>
+          <div className="mb-8">
+            <div className="w-16 h-16 bg-primary-600 rounded-material-xl mx-auto mb-6 flex items-center justify-center text-white text-2xl">
+              🎓
+            </div>
             <h1 className={getContrastClass(
-              "text-2xl font-light text-slate-900 mb-2",
-              "text-2xl font-light text-yellow-400 mb-2"
+              "text-headline-medium text-surface-900 mb-2",
+              "text-headline-medium text-surface-100 mb-2"
             )}>
               11Mercado
             </h1>
             <p className={getContrastClass(
-              "text-slate-600 text-sm",
-              "text-yellow-200 text-sm"
+              "text-body-medium text-surface-600",
+              "text-body-medium text-surface-400"
             )}>
               Access to Integrated Platform
             </p>
@@ -88,17 +90,17 @@ export default function SimpleLogin({ onLogin, getContrastClass }) {
 
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="p-8 pt-0 space-y-6">
-          {/* Access Code Input */}
+          {/* Material Design Input - Access Code */}
           <div>
             <label className={getContrastClass(
-              "block text-sm font-medium text-gray-700 mb-2",
-              "block text-sm font-medium text-yellow-400 mb-2"
+              "block text-title-small text-surface-700 mb-2",
+              "block text-title-small text-surface-300 mb-2"
             )}>
               Access Code
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Key className={getContrastClass("h-5 w-5 text-gray-400", "h-5 w-5 text-yellow-400")} />
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <Key className={getContrastClass("h-5 w-5 text-surface-500", "h-5 w-5 text-surface-400")} />
               </div>
               <input
                 type="text"
@@ -106,25 +108,25 @@ export default function SimpleLogin({ onLogin, getContrastClass }) {
                 onChange={(e) => setAccessCode(e.target.value)}
                 placeholder="Enter your access code"
                 className={getContrastClass(
-                  "w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/70 backdrop-blur-sm",
-                  "w-full pl-10 pr-4 py-3 border border-yellow-400 rounded-xl focus:ring-2 focus:ring-yellow-400 focus:border-transparent bg-gray-800/70 backdrop-blur-sm text-yellow-100"
+                  "input-outlined w-full pl-12 text-surface-900",
+                  "input-outlined w-full pl-12 text-surface-100 border-surface-600 focus:border-primary-400 bg-surface-800"
                 )}
                 required
               />
             </div>
           </div>
 
-          {/* First Name Input */}
+          {/* Material Design Input - First Name */}
           <div>
             <label className={getContrastClass(
-              "block text-sm font-medium text-gray-700 mb-2",
-              "block text-sm font-medium text-yellow-400 mb-2"
+              "block text-title-small text-surface-700 mb-2",
+              "block text-title-small text-surface-300 mb-2"
             )}>
               First Name
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <User className={getContrastClass("h-5 w-5 text-gray-400", "h-5 w-5 text-yellow-400")} />
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <User className={getContrastClass("h-5 w-5 text-surface-500", "h-5 w-5 text-surface-400")} />
               </div>
               <input
                 type="text"
@@ -132,21 +134,21 @@ export default function SimpleLogin({ onLogin, getContrastClass }) {
                 onChange={(e) => setFirstName(e.target.value)}
                 placeholder="Enter your first name"
                 className={getContrastClass(
-                  "w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/70 backdrop-blur-sm",
-                  "w-full pl-10 pr-4 py-3 border border-yellow-400 rounded-xl focus:ring-2 focus:ring-yellow-400 focus:border-transparent bg-gray-800/70 backdrop-blur-sm text-yellow-100"
+                  "input-outlined w-full pl-12 text-surface-900",
+                  "input-outlined w-full pl-12 text-surface-100 border-surface-600 focus:border-primary-400 bg-surface-800"
                 )}
                 required
               />
             </div>
           </div>
 
-          {/* Get Started Button */}
+          {/* Material Design Button */}
           <button
             type="submit"
             disabled={!accessCode.trim() || !firstName.trim() || isLoading}
             className={getContrastClass(
-              "w-full flex items-center justify-center gap-3 bg-blue-600 text-white py-3 px-6 rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:shadow-lg",
-              "w-full flex items-center justify-center gap-3 bg-yellow-400 text-black py-3 px-6 rounded-xl font-medium hover:bg-yellow-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:shadow-lg"
+              "btn-filled w-full flex items-center justify-center gap-3 state-layer",
+              "btn-filled w-full flex items-center justify-center gap-3 state-layer bg-primary-600 hover:bg-primary-700"
             )}
           >
             {isLoading ? (
@@ -163,11 +165,11 @@ export default function SimpleLogin({ onLogin, getContrastClass }) {
           </button>
         </form>
 
-        {/* Developer Credit */}
+        {/* Material Design Footer */}
         <div className="px-8 pb-6">
           <div className={getContrastClass(
-            "text-center text-xs text-gray-400 border-t border-gray-200 pt-4",
-            "text-center text-xs text-yellow-500/60 border-t border-yellow-400/20 pt-4"
+            "text-center text-body-small text-surface-500 border-t border-surface-200 pt-4",
+            "text-center text-body-small text-surface-400 border-t border-surface-700 pt-4"
           )}>
             Designed and developed by Cherwin Fernandez / KreativLoops • v1.1
           </div>

@@ -659,20 +659,22 @@ export default function MobileApp() {
   return (
     <UserLimitGate getContrastClass={getContrastClass}>
       <div className={getContrastClass(
-        "min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/30 pb-10",
-        "min-h-screen bg-black pb-10"
+        "min-h-screen bg-surface-50 pb-10",
+        "min-h-screen bg-surface-900 pb-10"
       )}>
-        {/* Notification */}
+        {/* Material Design Snackbar */}
         {showNotification && (
-          <div className="fixed top-4 right-4 z-50">
-            <div className={`p-4 rounded-lg shadow-lg max-w-sm ${
-              notificationType === 'success' ? 'bg-green-500' : 'bg-red-500'
-            } text-white`}>
+          <div className="fixed top-20 right-4 z-50 animate-in slide-in-from-right duration-300">
+            <div className={`p-4 rounded-material shadow-material-md max-w-sm ${
+              notificationType === 'success' 
+                ? 'bg-success-500 text-white' 
+                : 'bg-error-500 text-white'
+            }`}>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">{notificationMessage}</span>
+                <span className="text-body-medium font-medium">{notificationMessage}</span>
                 <button 
                   onClick={() => setShowNotification(false)}
-                  className="ml-2 text-white hover:text-gray-200"
+                  className="ml-3 text-white/80 hover:text-white btn-text p-1 rounded-material"
                 >
                   <X size={16} />
                 </button>
@@ -681,10 +683,10 @@ export default function MobileApp() {
           </div>
         )}
 
-        {/* Mobile Header */}
+        {/* Material Design Header */}
         <header className={getContrastClass(
-          "bg-white/70 backdrop-blur-xl border-b border-white/30 shadow-xl sticky top-0 z-40",
-          "bg-black/80 backdrop-blur-xl border-b-2 border-yellow-400/50 sticky top-0 z-40"
+          "glass border-b border-surface-300 sticky top-0 z-40 shadow-material",
+          "glass-dark border-b border-surface-700 sticky top-0 z-40 shadow-material"
         )}>
           <div className="px-4 py-3">
             <div className="flex items-center justify-between">
@@ -692,49 +694,56 @@ export default function MobileApp() {
                 {activeApp !== 'home' && (
                   <button
                     onClick={() => setActiveApp('home')}
-                    className="p-2 rounded-xl text-slate-600 hover:bg-white/50 backdrop-blur-sm transition-all duration-300 hover:shadow-lg"
+                    className={getContrastClass(
+                      "btn-text state-layer p-3 rounded-material text-surface-700",
+                      "btn-text state-layer p-3 rounded-material text-surface-300"
+                    )}
                   >
                     <ArrowLeft size={20} />
                   </button>
                 )}
-                <div className="text-2xl">🎓</div>
-                <div>
-                  <h1 className={getContrastClass(
-                    "text-lg font-light tracking-tight text-slate-900",
-                    "text-lg font-light tracking-tight text-yellow-400"
-                  )}>
-                    11Mercado
-                  </h1>
-                  <p className={getContrastClass("text-xs text-slate-600", "text-xs text-yellow-200")}>
-                    {activeApp === 'home' ? `Welcome, ${userInfo?.firstName || 'Student'}!` : getAppTitle(activeApp)}
-                  </p>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-primary-600 rounded-material flex items-center justify-center text-white text-lg">
+                    🎓
+                  </div>
+                  <div>
+                    <h1 className={getContrastClass(
+                      "text-title-large text-surface-900",
+                      "text-title-large text-surface-100"
+                    )}>
+                      11Mercado
+                    </h1>
+                    <p className={getContrastClass("text-body-small text-surface-600", "text-body-small text-surface-400")}>
+                      {activeApp === 'home' ? `Welcome, ${userInfo?.firstName || 'Student'}!` : getAppTitle(activeApp)}
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 {userInfo?.isAdmin && (
                   <button
                     onClick={() => setShowAdminDashboard(true)}
                     className={getContrastClass(
-                      "flex items-center gap-2 px-3 py-2 rounded-xl text-slate-600 hover:bg-blue-50 hover:text-blue-600 backdrop-blur-sm transition-all duration-300 hover:shadow-lg",
-                      "flex items-center gap-2 px-3 py-2 rounded-xl text-yellow-400 hover:bg-blue-900/20 hover:text-blue-400 backdrop-blur-sm transition-all duration-300 hover:shadow-lg"
+                      "btn-outlined state-layer flex items-center gap-2 py-2 px-3 text-body-small",
+                      "btn-outlined state-layer flex items-center gap-2 py-2 px-3 text-body-small border-surface-600 text-surface-300"
                     )}
                     title="Admin Dashboard"
                   >
                     <Shield size={16} />
-                    <span className="text-xs font-medium">Admin</span>
+                    <span>Admin</span>
                   </button>
                 )}
                 <button
                   onClick={handleLogout}
                   className={getContrastClass(
-                    "flex items-center gap-2 px-3 py-2 rounded-xl text-slate-600 hover:bg-red-50 hover:text-red-600 backdrop-blur-sm transition-all duration-300 hover:shadow-lg",
-                    "flex items-center gap-2 px-3 py-2 rounded-xl text-yellow-400 hover:bg-red-900/20 hover:text-red-400 backdrop-blur-sm transition-all duration-300 hover:shadow-lg"
+                    "btn-text state-layer flex items-center gap-2 py-2 px-3 text-body-small text-error-500 hover:bg-error-50",
+                    "btn-text state-layer flex items-center gap-2 py-2 px-3 text-body-small text-error-400 hover:bg-error-900/20"
                   )}
                   title="Logout"
                 >
                   <LogOut size={16} />
-                  <span className="text-xs font-medium">Logout</span>
+                  <span>Logout</span>
                 </button>
               </div>
             </div>
@@ -780,14 +789,14 @@ export default function MobileApp() {
           />
         )}
 
-        {/* Developer Credit Footer */}
+        {/* Material Design Footer */}
         <div className={getContrastClass(
-          "fixed bottom-0 left-0 right-0 z-10 bg-white/80 backdrop-blur-sm border-t border-gray-200",
-          "fixed bottom-0 left-0 right-0 z-10 bg-black/80 backdrop-blur-sm border-t border-yellow-400/20"
+          "fixed bottom-0 left-0 right-0 z-10 glass border-t border-surface-200",
+          "fixed bottom-0 left-0 right-0 z-10 glass-dark border-t border-surface-700"
         )}>
           <div className={getContrastClass(
-            "text-center text-xs text-gray-400 py-2",
-            "text-center text-xs text-yellow-500/60 py-2"
+            "text-center text-body-small text-surface-500 py-3",
+            "text-center text-body-small text-surface-400 py-3"
           )}>
             Designed and developed by Cherwin Fernandez / KreativLoops • v1.1
           </div>

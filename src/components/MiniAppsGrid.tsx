@@ -212,10 +212,10 @@ export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastC
               </div>
             ) : (
               <>
-                <div className="text-2xl font-bold text-white mb-2">
+                <div className="text-headline-medium text-white mb-2">
                   ₱{totalDonations.toLocaleString()}
                 </div>
-                <div className="text-white/80 text-xs">
+                <div className="text-body-medium text-white/80">
                   Total Raised So Far
                 </div>
               </>
@@ -225,12 +225,12 @@ export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastC
           {/* Dynamic Message - Center but smaller text */}
           <div className="text-center">
             {totalDonations > 0 ? (
-              <p className="text-white/90 text-xs leading-relaxed">
-                <strong>Thank you amazing parents!</strong> Your support makes a real difference in our children's education.
+              <p className="text-body-medium text-white/95 leading-relaxed">
+                <span className="font-medium">Thank you amazing parents!</span> Your support makes a real difference in our children's education.
               </p>
             ) : (
-              <p className="text-white/90 text-xs leading-relaxed">
-                <strong>Dear Parents,</strong> help us support our children's education! Every contribution creates lasting impact.
+              <p className="text-body-medium text-white/95 leading-relaxed">
+                <span className="font-medium">Dear Parents,</span> help us support our children's education! Every contribution creates lasting impact.
               </p>
             )}
           </div>
@@ -264,20 +264,20 @@ export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastC
           <div
             onClick={() => onAppSelect('donation-upload')}
             className={getContrastClass(
-              `bg-gradient-to-br from-green-500/90 to-emerald-600/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border border-white/20`,
-              `bg-gray-900/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border-2 border-yellow-400/50`
+              "card-elevated bg-gradient-to-br from-success-500 to-success-600 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98]",
+              "glass-dark bg-gradient-to-br from-success-600 to-success-700 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98] border border-surface-700"
             )}
           >
             <div className="text-white mb-4">
               <Upload size={24} />
             </div>
-            <h3 className="text-white font-semibold text-lg mb-2 leading-tight">
+            <h3 className="text-title-medium text-white mb-2">
               Donation Form
             </h3>
-            <p className="text-white/80 text-sm mb-3">
+            <p className="text-body-medium text-white/90 mb-3">
               Submit donation details with receipt
             </p>
-            <div className="text-white/60 text-xs">
+            <div className="text-body-small text-white/70">
               Complete Form
             </div>
           </div>
@@ -294,25 +294,24 @@ export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastC
         </div>
       </div>
 
-      {/* Row 2: Projects + Meet the Officers */}
-      <div className="grid grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-2 gap-4 mb-6">
         <div
           onClick={() => onAppSelect('projects')}
           className={getContrastClass(
-            `bg-gradient-to-br from-violet-500/90 to-purple-600/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border border-white/20`,
-            `bg-gray-900/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border-2 border-yellow-400/50`
+            "card-elevated bg-gradient-to-br from-purple-500 to-purple-600 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98]",
+            "glass-dark bg-gradient-to-br from-purple-600 to-purple-700 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98] border border-surface-700"
           )}
         >
           <div className="text-white mb-4">
             <FolderPlus size={24} />
           </div>
-          <h3 className="text-white font-semibold text-lg mb-2 leading-tight">
+          <h3 className="text-title-medium text-white mb-2">
             Projects
           </h3>
-          <p className="text-white/80 text-sm mb-3">
+          <p className="text-body-medium text-white/90 mb-3">
             Track PTA projects and submit proposals
           </p>
-          <div className="text-white/60 text-xs">
+          <div className="text-body-small text-white/70">
             Submit Ideas
           </div>
         </div>
@@ -320,44 +319,43 @@ export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastC
         <div
           onClick={() => onAppSelect('officers')}
           className={getContrastClass(
-            `bg-gradient-to-br from-indigo-500/90 to-purple-600/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border border-white/20`,
-            `bg-gray-900/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border-2 border-yellow-400/50`
+            "card-elevated bg-gradient-to-br from-indigo-500 to-indigo-600 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98]",
+            "glass-dark bg-gradient-to-br from-indigo-600 to-indigo-700 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98] border border-surface-700"
           )}
         >
           <div className="text-white mb-4">
             <UserCheck size={24} />
           </div>
-          <h3 className="text-white font-semibold text-lg mb-2 leading-tight">
+          <h3 className="text-title-medium text-white mb-2">
             Meet the Officers
           </h3>
-          <p className="text-white/80 text-sm mb-3">
+          <p className="text-body-medium text-white/90 mb-3">
             Contact information
           </p>
-          <div className="text-white/60 text-xs">
+          <div className="text-body-small text-white/70">
             5 Officers
           </div>
         </div>
       </div>
 
-      {/* Row 3: School Links + Community Hub */}
-      <div className="grid grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-2 gap-4 mb-6">
         <div
           onClick={() => onAppSelect('csansci-links')}
           className={getContrastClass(
-            `bg-gradient-to-br from-teal-500/90 to-cyan-600/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border border-white/20`,
-            `bg-gray-900/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border-2 border-yellow-400/50`
+            "card-elevated bg-gradient-to-br from-primary-500 to-primary-700 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98]",
+            "glass-dark bg-gradient-to-br from-primary-600 to-primary-800 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98] border border-surface-700"
           )}
         >
           <div className="text-white mb-4">
             <ExternalLink size={24} />
           </div>
-          <h3 className="text-white font-semibold text-lg mb-2 leading-tight">
+          <h3 className="text-title-medium text-white mb-2">
             School Links
           </h3>
-          <p className="text-white/80 text-sm mb-3">
+          <p className="text-body-medium text-white/90 mb-3">
             Official CSANSCI and LGU links
           </p>
-          <div className="text-white/60 text-xs">
+          <div className="text-body-small text-white/70">
             3 Links
           </div>
         </div>
@@ -366,20 +364,20 @@ export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastC
           <div
             onClick={() => onAppSelect('community')}
             className={getContrastClass(
-              `bg-gradient-to-br from-orange-500/90 to-red-600/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border border-white/20`,
-              `bg-gray-900/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border-2 border-yellow-400/50`
+              "card-elevated bg-gradient-to-br from-warning-500 to-warning-600 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98]",
+              "glass-dark bg-gradient-to-br from-warning-600 to-error-600 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98] border border-surface-700"
             )}
           >
             <div className="text-white mb-4">
               <Users size={24} />
             </div>
-            <h3 className="text-white font-semibold text-lg mb-2 leading-tight">
+            <h3 className="text-title-medium text-white mb-2">
               Community Hub
             </h3>
-            <p className="text-white/80 text-sm mb-3">
+            <p className="text-body-medium text-white/90 mb-3">
               Social platform for thoughts & blog posts
             </p>
-            <div className="text-white/60 text-xs">
+            <div className="text-body-small text-white/70">
               Share & Connect
             </div>
           </div>
@@ -396,25 +394,24 @@ export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastC
         </div>
       </div>
 
-      {/* Row 4: Contact Us + Legal */}
       <div className="grid grid-cols-2 gap-4">
         <div
           onClick={() => onAppSelect('contact-us')}
           className={getContrastClass(
-            `bg-gradient-to-br from-sky-500/90 to-blue-600/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border border-white/20`,
-            `bg-gray-900/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border-2 border-yellow-400/50`
+            "card-elevated bg-gradient-to-br from-primary-400 to-primary-500 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98]",
+            "glass-dark bg-gradient-to-br from-primary-500 to-primary-600 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98] border border-surface-700"
           )}
         >
           <div className="text-white mb-4">
             <Mail size={24} />
           </div>
-          <h3 className="text-white font-semibold text-lg mb-2 leading-tight">
+          <h3 className="text-title-medium text-white mb-2">
             Contact Us
           </h3>
-          <p className="text-white/80 text-sm mb-3">
+          <p className="text-body-medium text-white/90 mb-3">
             Send message to PTA
           </p>
-          <div className="text-white/60 text-xs">
+          <div className="text-body-small text-white/70">
             Quick Message
           </div>
         </div>
@@ -422,20 +419,20 @@ export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastC
         <div
           onClick={() => onAppSelect('legal')}
           className={getContrastClass(
-            `bg-gradient-to-br from-gray-500/90 to-slate-600/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border border-white/20`,
-            `bg-gray-900/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border-2 border-yellow-400/50`
+            "card-elevated bg-gradient-to-br from-surface-600 to-surface-700 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98]",
+            "glass-dark bg-gradient-to-br from-surface-700 to-surface-800 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98] border border-surface-700"
           )}
         >
           <div className="text-white mb-4">
             <Shield size={24} />
           </div>
-          <h3 className="text-white font-semibold text-lg mb-2 leading-tight">
+          <h3 className="text-title-medium text-white mb-2">
             Legal
           </h3>
-          <p className="text-white/80 text-sm mb-3">
+          <p className="text-body-medium text-white/90 mb-3">
             Privacy, T&Cs, disclaimers
           </p>
-          <div className="text-white/60 text-xs">
+          <div className="text-body-small text-white/70">
             Important Info
           </div>
         </div>

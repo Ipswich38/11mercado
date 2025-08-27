@@ -69,35 +69,35 @@ export default function DonationTiles({ donationDrives, getContrastClass }) {
   const totalRaised = centralizedTotal;
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-4 space-y-6">
       <div className={getContrastClass(
-        "bg-white/60 backdrop-blur-md rounded-3xl p-6 shadow-xl border border-white/20",
-        "bg-gray-900 rounded-3xl p-6 shadow-xl border-2 border-yellow-400"
+        "card-elevated p-6",
+        "glass-dark rounded-material-xl p-6 border border-surface-700"
       )}>
         <h2 className={getContrastClass(
-          "text-2xl font-light text-slate-900 mb-2",
-          "text-2xl font-light text-yellow-400 mb-2"
+          "text-headline-medium text-surface-900 mb-3",
+          "text-headline-medium text-surface-100 mb-3"
         )}>
           Donation Progress
         </h2>
         <p className={getContrastClass(
-          "text-slate-600",
-          "text-yellow-200"
+          "text-body-large text-surface-600",
+          "text-body-large text-surface-400"
         )}>
           Track our community fundraising efforts
         </p>
       </div>
 
       <div className={getContrastClass(
-        "bg-gradient-to-br from-green-500 to-emerald-600 p-6 rounded-3xl shadow-xl text-white",
-        "bg-gray-900 p-6 rounded-3xl shadow-xl border-2 border-yellow-400"
+        "card-elevated bg-gradient-to-br from-success-500 to-success-600 p-6 text-white",
+        "glass-dark bg-gradient-to-br from-success-600 to-success-700 p-6 border border-surface-700"
       )}>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <TrendingUp size={28} className={getContrastClass("text-white", "text-yellow-400")} />
+            <TrendingUp size={28} className={getContrastClass("text-white", "text-surface-100")} />
             <h3 className={getContrastClass(
-              "text-xl font-semibold text-white",
-              "text-xl font-semibold text-yellow-400"
+              "text-title-large text-white",
+              "text-title-large text-surface-100"
             )}>
               Overall Progress
             </h3>
@@ -106,8 +106,8 @@ export default function DonationTiles({ donationDrives, getContrastClass }) {
             onClick={loadCentralizedData}
             disabled={isLoading}
             className={getContrastClass(
-              "p-2 rounded-lg bg-white/20 hover:bg-white/30 text-white",
-              "p-2 rounded-lg bg-yellow-400/20 hover:bg-yellow-400/30 text-yellow-400"
+              "btn-text state-layer p-3 rounded-material text-white hover:bg-white/10",
+              "btn-text state-layer p-3 rounded-material text-surface-100 hover:bg-surface-700/20"
             )}
             title="Refresh donation data"
           >
@@ -117,14 +117,14 @@ export default function DonationTiles({ donationDrives, getContrastClass }) {
         
         <div className="text-center mb-6">
           <div className={getContrastClass(
-            "text-4xl font-light text-white mb-2",
-            "text-4xl font-light text-yellow-400 mb-2"
+            "text-display-small text-white mb-2",
+            "text-display-small text-surface-100 mb-2"
           )}>
             ₱{totalRaised.toLocaleString()}
           </div>
           <div className={getContrastClass(
-            "text-white/90",
-            "text-yellow-200"
+            "text-title-medium text-white/90",
+            "text-title-medium text-surface-200"
           )}>
             Total Raised
           </div>
@@ -133,12 +133,12 @@ export default function DonationTiles({ donationDrives, getContrastClass }) {
 
       {totalRaised > 0 && (
         <div className={getContrastClass(
-          "bg-white/60 backdrop-blur-md rounded-3xl p-6 text-center shadow-xl border border-white/20",
-          "bg-gray-900 rounded-3xl p-6 text-center shadow-xl border-2 border-yellow-400"
+          "card-elevated p-6 text-center",
+          "glass-dark rounded-material-xl p-6 text-center border border-surface-700"
         )}>
           <div className={getContrastClass(
-            "text-sm text-slate-600",
-            "text-sm text-yellow-200"
+            "text-body-large text-surface-600",
+            "text-body-large text-surface-300"
           )}>
             Thank you to all our generous donors who are supporting 11Mercado SPTA initiatives
           </div>

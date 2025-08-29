@@ -310,7 +310,7 @@ export default function PublicHomepage({ getContrastClass, onLogin }) {
         {/* Row 4: Contact Us + Legal */}
         <div className="grid grid-cols-2 gap-4">
           <div
-            onClick={() => alert("Contact Information:\n\n📧 Email: 11mercado.pta@gmail.com\n📍 Location: CSANSCI Mercado Elementary School\n🕒 Office Hours: Monday-Friday, 8:00 AM - 4:00 PM\n\nFor detailed contact forms and messaging, please login with your access code.")}
+            onClick={() => window.open('mailto:11mercado.pta@gmail.com?subject=Contact%20from%2011Mercado%20PTA%20Website', '_blank')}
             className={getContrastClass(
               "card-elevated bg-gradient-to-br from-primary-400 to-primary-500 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98]",
               "glass-dark bg-gradient-to-br from-primary-500 to-primary-600 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98] border border-surface-700"
@@ -323,10 +323,10 @@ export default function PublicHomepage({ getContrastClass, onLogin }) {
               Contact Us
             </h3>
             <p className="text-body-medium text-white/90 mb-3">
-              Get in touch with the PTA
+              📧 11mercado.pta@gmail.com
             </p>
             <div className="text-body-small text-white/70">
-              Basic info available
+              Tap to send email
             </div>
           </div>
 

@@ -152,7 +152,7 @@ export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastC
           "mt-3 text-xs text-slate-500 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2",
           "mt-3 text-xs text-yellow-300 bg-gray-800 border border-yellow-400 rounded-lg px-3 py-2"
         )}>
-          ⚡ Limited to 80 concurrent users • Session expires after 15 min of inactivity
+          ⚡ Secure access with session management • AI-powered tools available
         </div>
       </div>
 

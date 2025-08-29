@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calculator, Cloud, Upload, Users, UserCheck, ExternalLink, TrendingUp, BookOpen, Mail, FolderPlus, Shield, Lock, LogIn } from 'lucide-react';
+import { Calculator, Cloud, Upload, Users, UserCheck, ExternalLink, TrendingUp, Mail, FolderPlus, Shield, Lock, LogIn } from 'lucide-react';
 import SimpleLogin from './SimpleLogin';
 
 export default function PublicHomepage({ getContrastClass, onLogin }) {
@@ -67,7 +67,7 @@ export default function PublicHomepage({ getContrastClass, onLogin }) {
           </div>
         </div>
 
-        {/* School Information - Full Width */}
+        {/* Public Donation Progress - Full Width */}
         <div className="mb-4">
           <div
             className={getContrastClass(
@@ -76,21 +76,23 @@ export default function PublicHomepage({ getContrastClass, onLogin }) {
             )}
           >
             <div className="text-white mb-4">
-              <BookOpen size={20} />
+              <TrendingUp size={20} />
             </div>
             
+            {/* Amount Display - Center */}
             <div className="text-center mb-4">
               <div className="text-headline-medium text-white mb-2">
-                CSANSCI Mercado Elementary School
+                ₱0
               </div>
               <div className="text-body-medium text-white/80">
-                Supporting Excellence in Education
+                Total Raised So Far
               </div>
             </div>
             
+            {/* Dynamic Message - Center */}
             <div className="text-center">
               <p className="text-body-medium text-white/95 leading-relaxed">
-                <span className="font-medium">Welcome to our community!</span> We're dedicated to providing quality education and fostering parent-teacher collaboration for our children's success.
+                <span className="font-medium">Dear Parents,</span> help us support our children's education! Every contribution creates lasting impact. Login to submit donations and view detailed progress.
               </p>
             </div>
           </div>

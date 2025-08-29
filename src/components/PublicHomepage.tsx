@@ -198,7 +198,31 @@ export default function PublicHomepage({ getContrastClass, onLogin }) {
         </div>
       </div>
 
-      {/* Donation Progress - EXACT COPY FROM MiniAppsGrid */}
+      {/* STEM Resources - Full Width - EXACT COPY FROM MiniAppsGrid */}
+      <div className="mb-4">
+        <div
+          onClick={() => handleProtectedAccess('stem-resources')}
+          className={getContrastClass(
+            `bg-gradient-to-br from-purple-500/90 to-violet-600/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border border-white/20`,
+            `bg-gray-900/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border-2 border-yellow-400/50`
+          )}
+        >
+          <div className="text-white mb-4">
+            <Calculator size={24} />
+          </div>
+          <h3 className="text-white font-semibold text-lg mb-2 leading-tight">
+            STEM Resources
+          </h3>
+          <p className="text-white/80 text-sm mb-3">
+            AI tools and educational resources
+          </p>
+          <div className="text-white/60 text-xs">
+            10 Resources
+          </div>
+        </div>
+      </div>
+
+      {/* Donation Progress - Full Width - EXACT COPY FROM MiniAppsGrid */}
       <div className="mb-4">
         <div
           className={getContrastClass(
@@ -444,29 +468,6 @@ export default function PublicHomepage({ getContrastClass, onLogin }) {
         </div>
       </div>
 
-      {/* STEM Tools Section - EXACT COPY FROM STEMTools */}
-      <div className="mb-6">
-        <div
-          onClick={() => handleProtectedAccess('stem-resources')}
-          className={getContrastClass(
-            `bg-gradient-to-br from-purple-500/90 to-violet-600/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border border-white/20`,
-            `bg-gray-900/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border-2 border-yellow-400/50`
-          )}
-        >
-          <div className="text-white mb-4">
-            <Calculator size={24} />
-          </div>
-          <h3 className="text-white font-semibold text-lg mb-2 leading-tight">
-            STEM Resources
-          </h3>
-          <p className="text-white/80 text-sm mb-3">
-            🤖 AI-powered tools including College Entrance Exam Quiz Generator, AI Scientific Calculator, and AI Assistant for STEM learning
-          </p>
-          <div className="text-white/60 text-xs">
-            AI Tools Available
-          </div>
-        </div>
-      </div>
 
       {/* Authentication Modal */}
       {showAuth && (

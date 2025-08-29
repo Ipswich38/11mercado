@@ -90,7 +90,7 @@ export default function PublicHomepage({ getContrastClass, onLogin }) {
             "mt-4 text-sm text-slate-600 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2",
             "mt-4 text-sm text-yellow-300 bg-gray-800 border border-yellow-400 rounded-lg px-3 py-2"
           )}>
-            💡 Some sections require login with access code MERCADO80 and your name
+            💡 Some sections require login with your access code and name
           </div>
         </div>
 
@@ -286,7 +286,7 @@ export default function PublicHomepage({ getContrastClass, onLogin }) {
           </div>
 
           <div
-            onClick={() => alert("Community Hub is available for parents and teachers to share thoughts and connect. Please login with access code MERCADO80 and your name to access the full community features.")}
+            onClick={() => alert("Community Hub is available for parents and teachers to share thoughts and connect. Please login with your access code and name to access the full community features.")}
             className={getContrastClass(
               "card-elevated bg-gradient-to-br from-warning-500 to-warning-600 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98]",
               "glass-dark bg-gradient-to-br from-warning-600 to-error-600 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98] border border-surface-700"
@@ -364,7 +364,7 @@ export default function PublicHomepage({ getContrastClass, onLogin }) {
             Ready to Access All Features?
           </h3>
           <p className="text-white/90 text-sm mb-4">
-            Login with access code MERCADO80 and your name to unlock STEM tools, donation forms, and community features.
+            Enter your access code and name to unlock STEM tools, donation forms, and community features.
           </p>
           <button
             onClick={() => handleProtectedClick('Full Access')}
@@ -392,7 +392,7 @@ export default function PublicHomepage({ getContrastClass, onLogin }) {
                 </button>
               </div>
               <p className="text-sm text-gray-600 mt-2">
-                Enter access code MERCADO80 and your name to continue
+                Enter your access code and name to continue
               </p>
             </div>
             <div className="p-0">

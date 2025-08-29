@@ -227,39 +227,41 @@ export default function PublicHomepage({ getContrastClass, onLogin }) {
               Submit donation details with receipt
             </p>
             <div className="text-body-small text-white/70">
-              🔒 Mercado Access
+              Complete Form
             </div>
           </div>
-          <div className="absolute top-3 right-3">
-            <Lock size={16} className="text-white/80" />
-          </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              alert("💡 Donation Form Tutorial:\n\n📋 Submit donations with receipt uploads\n💰 Automatic allocation between General SPTA and 11Mercado PTA\n📱 Mobile-optimized file upload\n✅ Electronic signature validation\n📧 Email confirmation with reference number\n\nLogin required for Mercado community members!");
+            }}
+            className="absolute top-2 right-2 p-1.5 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors"
+            title="Show Tutorial"
+          >
+            <HelpCircle size={14} className="text-white" />
+          </button>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4 mb-6">
-        <div className="relative">
-          <div
-            onClick={() => handleAppSelect('projects')}
-            className={getContrastClass(
-              "card-elevated bg-gradient-to-br from-purple-500 to-purple-600 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98]",
-              "glass-dark bg-gradient-to-br from-purple-600 to-purple-700 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98] border border-surface-700"
-            )}
-          >
-            <div className="text-white mb-4">
-              <FolderPlus size={24} />
-            </div>
-            <h3 className="text-title-medium text-white mb-2">
-              Projects
-            </h3>
-            <p className="text-body-medium text-white/90 mb-3">
-              Track PTA projects and submit proposals
-            </p>
-            <div className="text-body-small text-white/70">
-              🔒 Mercado Access
-            </div>
+        <div
+          onClick={() => handleAppSelect('projects')}
+          className={getContrastClass(
+            "card-elevated bg-gradient-to-br from-purple-500 to-purple-600 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98]",
+            "glass-dark bg-gradient-to-br from-purple-600 to-purple-700 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98] border border-surface-700"
+          )}
+        >
+          <div className="text-white mb-4">
+            <FolderPlus size={24} />
           </div>
-          <div className="absolute top-3 right-3">
-            <Lock size={16} className="text-white/80" />
+          <h3 className="text-title-medium text-white mb-2">
+            Projects
+          </h3>
+          <p className="text-body-medium text-white/90 mb-3">
+            Track PTA projects and submit proposals
+          </p>
+          <div className="text-body-small text-white/70">
+            Submit Ideas
           </div>
         </div>
 

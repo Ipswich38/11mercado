@@ -831,7 +831,7 @@ export default function MobileApp() {
             "text-center text-body-small text-surface-500 py-3",
             "text-center text-body-small text-surface-400 py-3"
           )}>
-            Designed and developed by Cherwin Fernandez / KreativLoops • v1.1
+            Designed and developed by Cherwin Fernandez / KreativLoops • v2.0
           </div>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { X, Upload, CheckCircle, AlertCircle, Smartphone } from 'lucide-react';
+import { X, Upload, CheckCircle, AlertCircle, Smartphone, Edit, Star } from 'lucide-react';
 import { centralizedDB } from '../utils/centralizedDatabase';
 
 interface NewDonationFormProps {
@@ -20,6 +20,7 @@ interface FormData {
   };
   receipt: File | null;
   agreementAccepted: boolean;
+  comments: string;
 }
 
 export default function NewDonationForm({ getContrastClass, onClose, onDonationSuccess }: NewDonationFormProps) {
@@ -33,13 +34,18 @@ export default function NewDonationForm({ getContrastClass, onClose, onDonationS
     eSignature: '',
     allocation: { generalSPTA: 0, mercadoPTA: 0 },
     receipt: null,
-    agreementAccepted: false
+    agreementAccepted: false,
+    comments: ''
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [showSuccess, setShowSuccess] = useState(false);
   const [successData, setSuccessData] = useState<any>(null);
+  const [showSatisfactionSurvey, setShowSatisfactionSurvey] = useState(false);
+  const [satisfactionRating, setSatisfactionRating] = useState(0);
+  const [showEditMode, setShowEditMode] = useState(false);
+  const [editReferenceNumber, setEditReferenceNumber] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Mobile detection
@@ -149,6 +155,7 @@ export default function NewDonationForm({ getContrastClass, onClose, onDonationS
         donationMode: formData.donationMode === 'ewallet' ? 'e-wallet' : formData.donationMode,
         amount: formData.amount,
         eSignature: formData.eSignature,
+        comments: formData.comments,
         submissionDate: new Date().toISOString().split('T')[0],
         submissionTime: new Date().toLocaleTimeString(),
         submissionTimestamp: new Date().toISOString(),
@@ -167,14 +174,14 @@ export default function NewDonationForm({ getContrastClass, onClose, onDonationS
       console.log('📋 Result:', result);
 
       if (result && result.success) {
-        console.log('✅ Success! Showing acknowledgement');
+        console.log('✅ Success! Showing satisfaction survey first');
         setSuccessData({
           referenceNumber,
           parentName: formData.parentName,
           amount: formData.amount,
           allocation: formData.allocation
         });
-        setShowSuccess(true);
+        setShowSatisfactionSurvey(true);
         
         // Trigger donation success callback
         onDonationSuccess({
@@ -198,6 +205,86 @@ export default function NewDonationForm({ getContrastClass, onClose, onDonationS
     }
   };
 
+  // Satisfaction Survey Screen
+  if (showSatisfactionSurvey && successData) {
+    return (
+      <div className={getContrastClass(
+        "fixed inset-0 bg-white z-50 flex flex-col",
+        "fixed inset-0 bg-black z-50 flex flex-col"
+      )}>
+        <div className={getContrastClass(
+          "bg-blue-500 p-4 text-center",
+          "bg-gray-900 border-b-2 border-yellow-400 p-4 text-center"
+        )}>
+          <h1 className={getContrastClass("text-xl font-bold text-white", "text-xl font-bold text-yellow-400")}>
+            We Value Your Feedback!
+          </h1>
+        </div>
+        
+        <div className="flex-1 p-4 flex items-center justify-center">
+          <div className={getContrastClass(
+            "bg-white rounded-xl p-6 shadow-lg border max-w-md w-full",
+            "bg-gray-900 rounded-xl p-6 shadow-lg border-2 border-yellow-400 max-w-md w-full"
+          )}>
+            <h2 className={getContrastClass("text-xl font-bold text-gray-900 mb-4 text-center", "text-xl font-bold text-yellow-400 mb-4 text-center")}>
+              How satisfied are you with our donation form?
+            </h2>
+            <p className={getContrastClass("text-gray-600 text-center mb-6", "text-yellow-200 text-center mb-6")}>
+              Your feedback helps us improve the experience for everyone
+            </p>
+            
+            <div className="flex justify-center gap-2 mb-6">
+              {[1, 2, 3, 4, 5].map((rating) => (
+                <button
+                  key={rating}
+                  onClick={() => setSatisfactionRating(rating)}
+                  className={`p-2 transition-colors ${
+                    satisfactionRating >= rating 
+                      ? 'text-yellow-400' 
+                      : getContrastClass('text-gray-300 hover:text-yellow-400', 'text-gray-600 hover:text-yellow-400')
+                  }`}
+                >
+                  <Star 
+                    size={32} 
+                    fill={satisfactionRating >= rating ? 'currentColor' : 'none'}
+                  />
+                </button>
+              ))}
+            </div>
+            
+            <div className="text-center mb-6">
+              <p className={getContrastClass("text-sm text-gray-600", "text-sm text-yellow-300")}>
+                {satisfactionRating === 0 && "Please rate your experience"}
+                {satisfactionRating === 1 && "😞 We'll work to improve"}
+                {satisfactionRating === 2 && "😐 Thanks for the feedback"}
+                {satisfactionRating === 3 && "🙂 Good to know"}
+                {satisfactionRating === 4 && "😊 Great! Thank you"}
+                {satisfactionRating === 5 && "🎉 Excellent! We're thrilled"}
+              </p>
+            </div>
+            
+            <button
+              onClick={() => {
+                console.log(`User satisfaction rating: ${satisfactionRating}/5`);
+                setShowSatisfactionSurvey(false);
+                setShowSuccess(true);
+              }}
+              disabled={satisfactionRating === 0}
+              className={`w-full py-3 rounded-lg font-medium transition-colors ${
+                satisfactionRating === 0 
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-blue-500 hover:bg-blue-600 text-white'
+              }`}
+            >
+              {satisfactionRating === 0 ? 'Please select a rating' : 'Continue to Receipt'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Success Screen (after survey)
   if (showSuccess && successData) {
     return (
       <div className={getContrastClass(
@@ -228,11 +315,97 @@ export default function NewDonationForm({ getContrastClass, onClose, onDonationS
               <p><span className="font-medium">11Mercado PTA:</span> ₱{successData.allocation.mercadoPTA}</p>
             </div>
             
+            {satisfactionRating > 0 && (
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                <p className="text-xs text-blue-800">
+                  Thank you for rating us {satisfactionRating}/5 stars! 
+                  {satisfactionRating >= 4 ? ' Your positive feedback motivates us!' : ' We appreciate your honest feedback and will continue improving.'}
+                </p>
+              </div>
+            )}
+            
             <button
               onClick={onClose}
               className="w-full mt-6 bg-blue-500 text-white py-3 rounded-lg font-medium"
             >
               Done
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Edit Mode Modal
+  if (showEditMode) {
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-60">
+        <div className={getContrastClass(
+          "bg-white rounded-3xl max-w-md w-full p-6",
+          "bg-gray-900 rounded-3xl max-w-md w-full p-6 border-2 border-yellow-400"
+        )}>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className={getContrastClass("text-lg font-semibold text-gray-900", "text-lg font-semibold text-yellow-400")}>
+              Edit Existing Entry
+            </h2>
+            <button
+              onClick={() => setShowEditMode(false)}
+              className="p-2 hover:bg-gray-100 rounded-full"
+            >
+              <X size={20} />
+            </button>
+          </div>
+          
+          <p className={getContrastClass("text-sm text-gray-600 mb-4", "text-sm text-yellow-200 mb-4")}>
+            Enter your reference number to edit an existing donation entry. Reference numbers start with "PTA-".
+          </p>
+          
+          <div className="mb-4">
+            <label className={getContrastClass("block text-sm font-medium mb-2", "block text-sm font-medium text-yellow-400 mb-2")}>
+              Reference Number
+            </label>
+            <input
+              type="text"
+              value={editReferenceNumber}
+              onChange={(e) => setEditReferenceNumber(e.target.value)}
+              className={`w-full p-3 border rounded-lg ${getContrastClass('bg-white', 'bg-gray-900 text-yellow-200')} border-gray-300`}
+              placeholder="PTA-XXXXXXXXX-XXX"
+            />
+          </div>
+          
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                if (!editReferenceNumber.trim()) {
+                  alert('Please enter a reference number');
+                  return;
+                }
+                
+                // Simulate loading existing data (you would implement the actual loading logic here)
+                alert('Edit functionality will load the existing entry data based on the reference number. This feature requires backend integration to fetch and update existing records.');
+                setShowEditMode(false);
+                setEditReferenceNumber('');
+              }}
+              disabled={!editReferenceNumber.trim()}
+              className={`flex-1 py-3 rounded-lg font-medium transition-colors ${
+                !editReferenceNumber.trim() 
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-blue-500 hover:bg-blue-600 text-white'
+              }`}
+            >
+              Load Entry
+            </button>
+            <button
+              onClick={() => {
+                setShowEditMode(false);
+                setEditReferenceNumber('');
+              }}
+              className={getContrastClass(
+                "px-4 py-3 rounded-lg font-medium bg-gray-500 hover:bg-gray-600 text-white",
+                "px-4 py-3 rounded-lg font-medium bg-gray-700 border border-yellow-400 hover:bg-gray-600 text-yellow-400"
+              )}
+            >
+              Cancel
             </button>
           </div>
         </div>
@@ -256,9 +429,22 @@ export default function NewDonationForm({ getContrastClass, onClose, onDonationS
           </h1>
           {isMobile && <span className="text-xs text-yellow-300 bg-green-600 px-2 py-1 rounded">Mobile</span>}
         </div>
-        <button onClick={onClose} className="text-white p-1">
-          <X size={24} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowEditMode(true)}
+            className={getContrastClass(
+              "flex items-center gap-1 text-white hover:bg-blue-600 px-3 py-1 rounded text-sm",
+              "flex items-center gap-1 text-yellow-400 hover:bg-gray-800 px-3 py-1 rounded text-sm border border-yellow-400"
+            )}
+            title="Edit existing entry using reference number"
+          >
+            <Edit size={16} />
+            Edit
+          </button>
+          <button onClick={onClose} className="text-white p-1">
+            <X size={24} />
+          </button>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -426,6 +612,24 @@ export default function NewDonationForm({ getContrastClass, onClose, onDonationS
             {errors.receipt && <p className="text-red-500 text-xs mt-1">{errors.receipt}</p>}
           </div>
         )}
+
+        {/* Comments/Special Instructions */}
+        <div>
+          <label className={getContrastClass("block text-sm font-medium mb-1", "block text-sm font-medium text-yellow-400 mb-1")}>
+            Comments/Special Instructions (Optional)
+          </label>
+          <textarea
+            value={formData.comments}
+            onChange={(e) => setFormData(prev => ({ ...prev, comments: e.target.value }))}
+            className={`w-full p-3 border rounded-lg ${getContrastClass('bg-white', 'bg-gray-900 text-yellow-200')} border-gray-300 resize-none`}
+            placeholder="Any special instructions, preferred allocation details, or additional notes..."
+            rows={3}
+            maxLength={500}
+          />
+          <div className={`text-xs mt-1 ${getContrastClass('text-gray-500', 'text-yellow-400')}`}>
+            {formData.comments.length}/500 characters
+          </div>
+        </div>
 
         {/* E-signature */}
         <div>

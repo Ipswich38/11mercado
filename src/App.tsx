@@ -35,7 +35,6 @@ import Legal from './components/Legal';
 import PTASecretaryDashboard from './components/PTASecretaryDashboard';
 import MiniTutorial from './components/MiniTutorial';
 import SimpleLogin from './components/SimpleLogin';
-import PublicHomepage from './components/PublicHomepage';
 import AdminDashboard from './components/AdminDashboard';
 import FinancialOfficerDashboard from './components/FinancialOfficerDashboard';
 import MaintenanceMode from './components/MaintenanceMode';
@@ -530,6 +529,7 @@ export default function MobileApp() {
         />;
       case 'csansci-links':
         return <CSANSCILinks 
+          onClose={() => setActiveApp('home')}
           getContrastClass={getContrastClass}
         />;
       case 'donation-tiles':
@@ -609,41 +609,15 @@ export default function MobileApp() {
     }
   };
 
-  // Show public homepage if not logged in
+  // Show login form if not logged in
   try {
     if (!isLoggedIn) {
       return (
         <div className={getContrastClass(
-          "min-h-screen bg-surface-50",
-          "min-h-screen bg-surface-900"
+          "min-h-screen bg-surface-50 flex items-center justify-center p-4",
+          "min-h-screen bg-surface-900 flex items-center justify-center p-4"
         )}>
-          {/* Material Design Header for Public */}
-          <header className={getContrastClass(
-            "glass border-b border-surface-300 sticky top-0 z-40 shadow-material",
-            "glass-dark border-b border-surface-700 sticky top-0 z-40 shadow-material"
-          )}>
-            <div className="px-4 py-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-primary-600 rounded-material flex items-center justify-center text-white text-lg">
-                    🎓
-                  </div>
-                  <div>
-                    <h1 className={getContrastClass(
-                      "text-title-large text-surface-900",
-                      "text-title-large text-surface-100"
-                    )}>
-                      11Mercado PTA
-                    </h1>
-                    <p className={getContrastClass("text-body-small text-surface-600", "text-body-small text-surface-400")}>
-                      Public Access • Login for Full Features
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </header>
-          <PublicHomepage 
+          <SimpleLogin 
             onLogin={handleLogin}
             getContrastClass={getContrastClass}
           />

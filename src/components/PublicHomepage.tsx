@@ -1,10 +1,58 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calculator, Cloud, Upload, Users, UserCheck, ExternalLink, TrendingUp, Mail, FolderPlus, Shield, Lock, LogIn } from 'lucide-react';
 import SimpleLogin from './SimpleLogin';
+import { getDonationStatsFromCentralDB } from '../utils/centralizedDatabase';
 
 export default function PublicHomepage({ getContrastClass, onLogin }) {
   const [showAuth, setShowAuth] = useState(false);
   const [authFor, setAuthFor] = useState('');
+  const [donationStats, setDonationStats] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    loadDonationStats();
+    // Refresh stats every 30 seconds to keep them current
+    const interval = setInterval(loadDonationStats, 30000);
+    
+    // Listen for donation update events
+    const handleDonationUpdate = () => {
+      console.log('🔄 Donation updated, refreshing stats...');
+      loadDonationStats();
+    };
+    
+    const handleCentralizedDataSync = () => {
+      console.log('🔄 Centralized data synced, refreshing stats...');
+      loadDonationStats();
+    };
+    
+    window.addEventListener('donationUpdated', handleDonationUpdate);
+    window.addEventListener('centralizedDataSync', handleCentralizedDataSync);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('donationUpdated', handleDonationUpdate);
+      window.removeEventListener('centralizedDataSync', handleCentralizedDataSync);
+    };
+  }, []);
+  
+  const loadDonationStats = async () => {
+    try {
+      console.log('📊 Loading donation stats for public homepage...');
+      const stats = await getDonationStatsFromCentralDB();
+      setDonationStats(stats);
+      setIsLoading(false);
+      console.log('✅ Donation stats loaded:', stats);
+    } catch (error) {
+      console.error('Error loading donation stats:', error);
+      setDonationStats({
+        totalAmount: 0,
+        totalDonations: 0,
+        totalGeneralSPTA: 0,
+        totalMercadoPTA: 0
+      });
+      setIsLoading(false);
+    }
+  };
 
   const handleProtectedClick = (section) => {
     setAuthFor(section);
@@ -15,6 +63,9 @@ export default function PublicHomepage({ getContrastClass, onLogin }) {
     setShowAuth(false);
     onLogin(loginData);
   };
+
+  // Use centralized database stats
+  const totalDonations = donationStats?.totalAmount || 0;
 
   return (
     <div className="min-h-screen">
@@ -81,19 +132,33 @@ export default function PublicHomepage({ getContrastClass, onLogin }) {
             
             {/* Amount Display - Center */}
             <div className="text-center mb-4">
-              <div className="text-headline-medium text-white mb-2">
-                ₱0
-              </div>
-              <div className="text-body-medium text-white/80">
-                Total Raised So Far
-              </div>
+              {isLoading ? (
+                <div className="text-lg text-white/80 mb-2">
+                  Loading...
+                </div>
+              ) : (
+                <>
+                  <div className="text-headline-medium text-white mb-2">
+                    ₱{totalDonations.toLocaleString()}
+                  </div>
+                  <div className="text-body-medium text-white/80">
+                    Total Raised So Far
+                  </div>
+                </>
+              )}
             </div>
             
             {/* Dynamic Message - Center */}
             <div className="text-center">
-              <p className="text-body-medium text-white/95 leading-relaxed">
-                <span className="font-medium">Dear Parents,</span> help us support our children's education! Every contribution creates lasting impact. Login to submit donations and view detailed progress.
-              </p>
+              {totalDonations > 0 ? (
+                <p className="text-body-medium text-white/95 leading-relaxed">
+                  <span className="font-medium">Thank you amazing parents!</span> Your support makes a real difference in our children's education. Login to submit donations and view detailed progress.
+                </p>
+              ) : (
+                <p className="text-body-medium text-white/95 leading-relaxed">
+                  <span className="font-medium">Dear Parents,</span> help us support our children's education! Every contribution creates lasting impact. Login to submit donations and view detailed progress.
+                </p>
+              )}
             </div>
           </div>
         </div>

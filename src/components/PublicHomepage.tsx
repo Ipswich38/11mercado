@@ -101,11 +101,25 @@ export default function PublicHomepage({ getContrastClass, onLogin }) {
     setShowTutorial(appType);
   };
 
+  // Weather data for WeatherApp component  
+  const weather = {
+    location: "San Jose del Monte, Bulacan",
+    temperature: "28°C",
+    condition: "Partly Cloudy",
+    humidity: "75%",
+    windSpeed: "15 km/h",
+    forecast: [
+      { day: "Today", high: "32°C", low: "24°C", condition: "Partly Cloudy", icon: "⛅" },
+      { day: "Tomorrow", high: "31°C", low: "23°C", condition: "Sunny", icon: "☀️" },
+      { day: "Wednesday", high: "29°C", low: "22°C", condition: "Light Rain", icon: "🌦️" }
+    ]
+  };
+
   // Render specific apps when selected (same as authenticated version)
   if (activeApp === 'weather') {
     return (
       <WeatherApp 
-        onClose={() => setActiveApp('mini-apps')}
+        weather={weather}
         getContrastClass={getContrastClass}
       />
     );

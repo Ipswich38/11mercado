@@ -114,9 +114,23 @@ export default function PublicHomepage({ getContrastClass, onLogin }) {
     );
   }
 
+  // Helper function to handle protected access
+  const handleProtectedAccess = (appId, fallback = null) => {
+    const protectedApps = ['stem-resources', 'donation-upload', 'projects'];
+    
+    if (protectedApps.includes(appId)) {
+      handleProtectedClick(appId === 'stem-resources' ? 'STEM Resources' : 
+                          appId === 'donation-upload' ? 'Donation Form' : 'PTA Projects');
+    } else if (fallback) {
+      fallback();
+    } else {
+      handleAppSelect(appId);
+    }
+  };
+
   return (
     <div className="p-4 space-y-4">
-      {/* Welcome Header */}
+      {/* Welcome Header - EXACT COPY FROM MiniAppsGrid */}
       <div className={getContrastClass(
         "bg-white/60 backdrop-blur-md rounded-3xl p-6 shadow-xl border border-white/20",
         "bg-gray-900 rounded-3xl p-6 shadow-xl border-2 border-yellow-400"
@@ -137,11 +151,11 @@ export default function PublicHomepage({ getContrastClass, onLogin }) {
           "mt-4 text-sm text-slate-600 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2",
           "mt-4 text-sm text-yellow-300 bg-gray-800 border border-yellow-400 rounded-lg px-3 py-2"
         )}>
-          ⚡ Explore all features below • Some sections require login for Mercado community access
+          ⚡ Secure access with session management • AI-powered tools available
         </div>
       </div>
 
-      {/* Donation Progress - Full Width */}
+      {/* Donation Progress - EXACT COPY FROM MiniAppsGrid */}
       <div className="mb-4">
         <div
           className={getContrastClass(
@@ -153,7 +167,7 @@ export default function PublicHomepage({ getContrastClass, onLogin }) {
             <TrendingUp size={20} />
           </div>
           
-          {/* Amount Display - Center */}
+          {/* Amount Display - Center but smaller */}
           <div className="text-center mb-4">
             {isLoading ? (
               <div className="text-lg text-white/80 mb-2">
@@ -171,7 +185,7 @@ export default function PublicHomepage({ getContrastClass, onLogin }) {
             )}
           </div>
           
-          {/* Dynamic Message - Center */}
+          {/* Dynamic Message - Center but smaller text */}
           <div className="text-center">
             {totalDonations > 0 ? (
               <p className="text-body-medium text-white/95 leading-relaxed">
@@ -186,10 +200,10 @@ export default function PublicHomepage({ getContrastClass, onLogin }) {
         </div>
       </div>
 
-      {/* Row 1: Weather App + Donation Form */}
+      {/* Row 1: Weather App + Donation Form - EXACT COPY FROM MiniAppsGrid */}
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div
-          onClick={() => handleAppSelect('weather')}
+          onClick={() => handleProtectedAccess('weather', () => window.location.href = "https://weather.com")}
           className={getContrastClass(
             `bg-gradient-to-br from-blue-500/90 to-cyan-600/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border border-white/20`,
             `bg-gray-900/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border-2 border-yellow-400/50`
@@ -211,7 +225,7 @@ export default function PublicHomepage({ getContrastClass, onLogin }) {
 
         <div className="relative">
           <div
-            onClick={() => handleAppSelect('donation-upload')}
+            onClick={() => handleProtectedAccess('donation-upload')}
             className={getContrastClass(
               "card-elevated bg-gradient-to-br from-success-500 to-success-600 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98]",
               "glass-dark bg-gradient-to-br from-success-600 to-success-700 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98] border border-surface-700"
@@ -245,7 +259,7 @@ export default function PublicHomepage({ getContrastClass, onLogin }) {
 
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div
-          onClick={() => handleAppSelect('projects')}
+          onClick={() => handleProtectedAccess('projects')}
           className={getContrastClass(
             "card-elevated bg-gradient-to-br from-purple-500 to-purple-600 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98]",
             "glass-dark bg-gradient-to-br from-purple-600 to-purple-700 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98] border border-surface-700"
@@ -266,7 +280,7 @@ export default function PublicHomepage({ getContrastClass, onLogin }) {
         </div>
 
         <div
-          onClick={() => handleAppSelect('officers')}
+          onClick={() => handleProtectedAccess('officers')}
           className={getContrastClass(
             "card-elevated bg-gradient-to-br from-indigo-500 to-indigo-600 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98]",
             "glass-dark bg-gradient-to-br from-indigo-600 to-indigo-700 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98] border border-surface-700"
@@ -289,7 +303,7 @@ export default function PublicHomepage({ getContrastClass, onLogin }) {
 
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div
-          onClick={() => handleAppSelect('csansci-links')}
+          onClick={() => handleProtectedAccess('csansci-links')}
           className={getContrastClass(
             "card-elevated bg-gradient-to-br from-primary-500 to-primary-700 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98]",
             "glass-dark bg-gradient-to-br from-primary-600 to-primary-800 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98] border border-surface-700"
@@ -311,7 +325,7 @@ export default function PublicHomepage({ getContrastClass, onLogin }) {
 
         <div className="relative">
           <div
-            onClick={() => handleAppSelect('community')}
+            onClick={() => handleProtectedAccess('community')}
             className={getContrastClass(
               "card-elevated bg-gradient-to-br from-warning-500 to-warning-600 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98]",
               "glass-dark bg-gradient-to-br from-warning-600 to-error-600 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98] border border-surface-700"
@@ -345,7 +359,7 @@ export default function PublicHomepage({ getContrastClass, onLogin }) {
 
       <div className="grid grid-cols-2 gap-4 mb-6">
         <div
-          onClick={() => handleAppSelect('contact-us')}
+          onClick={() => handleProtectedAccess('contact-us', () => setShowContactUs(true))}
           className={getContrastClass(
             "card-elevated bg-gradient-to-br from-primary-400 to-primary-500 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98]",
             "glass-dark bg-gradient-to-br from-primary-500 to-primary-600 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98] border border-surface-700"
@@ -366,7 +380,7 @@ export default function PublicHomepage({ getContrastClass, onLogin }) {
         </div>
 
         <div
-          onClick={() => handleAppSelect('legal')}
+          onClick={() => handleProtectedAccess('legal')}
           className={getContrastClass(
             "card-elevated bg-gradient-to-br from-surface-600 to-surface-700 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98]",
             "glass-dark bg-gradient-to-br from-surface-700 to-surface-800 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98] border border-surface-700"
@@ -387,55 +401,28 @@ export default function PublicHomepage({ getContrastClass, onLogin }) {
         </div>
       </div>
 
-      {/* STEM Resources Card - Protected */}
+      {/* STEM Tools Section - EXACT COPY FROM STEMTools */}
       <div className="mb-6">
-        <div className="relative">
-          <div
-            onClick={() => handleAppSelect('stem-resources')}
-            className={getContrastClass(
-              `bg-gradient-to-br from-purple-500/90 to-violet-600/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border border-white/20`,
-              `bg-gray-900/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border-2 border-yellow-400/50`
-            )}
-          >
-            <div className="text-white mb-4">
-              <Calculator size={24} />
-            </div>
-            <h3 className="text-white font-semibold text-lg mb-2 leading-tight">
-              STEM Resources
-            </h3>
-            <p className="text-white/80 text-sm mb-3">
-              🤖 AI-powered tools including College Entrance Exam Quiz Generator, AI Scientific Calculator, and AI Assistant for STEM learning
-            </p>
-            <div className="text-white/60 text-xs">
-              🔒 Mercado Community Access
-            </div>
-          </div>
-          <div className="absolute top-3 right-3">
-            <Lock size={16} className="text-white/80" />
-          </div>
-        </div>
-      </div>
-
-      {/* Login CTA */}
-      <div className={getContrastClass(
-        "bg-gradient-to-r from-primary-500 to-primary-600 rounded-3xl p-6 text-center shadow-xl",
-        "bg-gradient-to-r from-primary-600 to-primary-700 rounded-3xl p-6 text-center shadow-xl border-2 border-yellow-400"
-      )}>
-        <div className="text-white mb-4">
-          <LogIn size={32} className="mx-auto" />
-        </div>
-        <h3 className="text-white font-semibold text-xl mb-2">
-          Join 11Mercado Community
-        </h3>
-        <p className="text-white/90 text-sm mb-4">
-          Enter your access code and name to unlock exclusive STEM tools, donation forms, and community projects.
-        </p>
-        <button
-          onClick={() => handleProtectedClick('Full Access')}
-          className="bg-white text-primary-600 font-semibold py-3 px-6 rounded-full hover:bg-gray-50 transition-colors"
+        <div
+          onClick={() => handleProtectedAccess('stem-resources')}
+          className={getContrastClass(
+            `bg-gradient-to-br from-purple-500/90 to-violet-600/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border border-white/20`,
+            `bg-gray-900/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border-2 border-yellow-400/50`
+          )}
         >
-          Login Now
-        </button>
+          <div className="text-white mb-4">
+            <Calculator size={24} />
+          </div>
+          <h3 className="text-white font-semibold text-lg mb-2 leading-tight">
+            STEM Resources
+          </h3>
+          <p className="text-white/80 text-sm mb-3">
+            🤖 AI-powered tools including College Entrance Exam Quiz Generator, AI Scientific Calculator, and AI Assistant for STEM learning
+          </p>
+          <div className="text-white/60 text-xs">
+            AI Tools Available
+          </div>
+        </div>
       </div>
 
       {/* Authentication Modal */}

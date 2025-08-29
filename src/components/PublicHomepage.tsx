@@ -173,7 +173,7 @@ export default function PublicHomepage({ getContrastClass, onLogin }) {
 
   return (
     <div className="p-4 space-y-4">
-      {/* Welcome Header - EXACT COPY FROM MiniAppsGrid */}
+      {/* Welcome Header - EXACT COPY FROM MiniAppsGrid - Updated layout order */}
       <div className={getContrastClass(
         "bg-white/60 backdrop-blur-md rounded-3xl p-6 shadow-xl border border-white/20",
         "bg-gray-900 rounded-3xl p-6 shadow-xl border-2 border-yellow-400"

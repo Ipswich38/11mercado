@@ -3,42 +3,42 @@ import { ArrowLeft, Shield, AlertTriangle, Mail, User } from 'lucide-react';
 
 export default function Legal({ getContrastClass, onClose }) {
   return (
-    <div className="p-4 max-w-4xl mx-auto">
+    <div className={getContrastClass(
+      "min-h-screen bg-surface-50",
+      "min-h-screen bg-surface-900"
+    )}>
       {/* Header */}
-      <div className={getContrastClass(
-        "bg-white/80 backdrop-blur-xl rounded-3xl p-6 shadow-xl border border-white/30 mb-6",
-        "bg-gray-900/80 backdrop-blur-xl rounded-3xl p-6 shadow-xl border-2 border-yellow-400/50 mb-6"
+      <header className={getContrastClass(
+        "glass border-b border-surface-300 sticky top-0 z-40 shadow-material",
+        "glass-dark border-b border-surface-700 sticky top-0 z-40 shadow-material"
       )}>
-        <div className="flex items-center justify-between mb-4">
-          <button
-            onClick={onClose}
-            className={getContrastClass(
-              "p-2 rounded-xl text-gray-600 hover:bg-gray-100",
-              "p-2 rounded-xl text-yellow-400 hover:bg-gray-800"
-            )}
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <h1 className={getContrastClass(
-            "text-xl font-light text-gray-900",
-            "text-xl font-light text-yellow-400"
-          )}>
-            Legal Information
-          </h1>
-          <div className={getContrastClass(
-            "text-xs bg-gray-100 text-gray-800 px-3 py-1 rounded-full",
-            "text-xs bg-gray-800 text-gray-400 px-3 py-1 rounded-full border border-gray-400"
-          )}>
-            Important
+        <div className="px-4 py-3">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onClose}
+              className={getContrastClass(
+                "btn-text state-layer p-3 rounded-material text-surface-700",
+                "btn-text state-layer p-3 rounded-material text-surface-300"
+              )}
+            >
+              <ArrowLeft size={20} />
+            </button>
+            <div>
+              <h1 className={getContrastClass(
+                "text-title-large text-surface-900",
+                "text-title-large text-surface-100"
+              )}>
+                Legal Information
+              </h1>
+              <p className={getContrastClass("text-body-small text-surface-600", "text-body-small text-surface-400")}>
+                Privacy, Terms & Conditions
+              </p>
+            </div>
           </div>
         </div>
-        <p className={getContrastClass(
-          "text-gray-600 text-sm",
-          "text-yellow-200 text-sm"
-        )}>
-          Privacy policy, terms & conditions, and important disclaimers
-        </p>
-      </div>
+      </header>
+
+      <div className="p-4 max-w-4xl mx-auto">
 
       {/* Early Stage Disclaimer */}
       <div className={getContrastClass(
@@ -247,6 +247,7 @@ export default function Legal({ getContrastClass, onClose }) {
             </p>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

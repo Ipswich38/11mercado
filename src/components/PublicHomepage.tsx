@@ -4,6 +4,14 @@ import SimpleLogin from './SimpleLogin';
 import ContactUs from './ContactUs';
 import { getDonationStatsFromCentralDB } from '../utils/centralizedDatabase';
 
+// Import the same components used in authenticated version
+import WeatherApp from './WeatherApp';
+import CommunityHub from './CommunityHub';
+import Officers from './Officers';
+import CSANSCILinks from './CSANSCILinks';
+import Legal from './Legal';
+import MiniTutorial from './MiniTutorial';
+
 export default function PublicHomepage({ getContrastClass, onLogin }) {
   const [showAuth, setShowAuth] = useState(false);
   const [authFor, setAuthFor] = useState('');
@@ -70,45 +78,80 @@ export default function PublicHomepage({ getContrastClass, onLogin }) {
   // Use centralized database stats
   const totalDonations = donationStats?.totalAmount || 0;
 
-  // Handle app selection for public preview
+  // Add the same state variables as the authenticated version
+  const [activeApp, setActiveApp] = useState('mini-apps');
+  const [showTutorial, setShowTutorial] = useState(null);
+
+  // Copy the exact same app selection logic as authenticated version
   const handleAppSelect = (appId) => {
-    switch(appId) {
-      case 'weather':
-        window.location.href = "https://weather.com";
-        break;
-      case 'donation-upload':
-        handleProtectedClick('Donation Form');
-        break;
-      case 'projects':
-        handleProtectedClick('PTA Projects');
-        break;
-      case 'officers':
-        alert("Officer Information:\n\nPresident: Cherwin Fernandez\nVice President: Dante Navarro\nSecretary: Laarni Gilles\nTreasurer: Cyndee Delmendo\nAuditor: Gina Genido\n\nContact: 11mercado.pta@gmail.com");
-        break;
-      case 'csansci-links':
-        alert("School Links:\n\n🏫 CSANSCI Official Website\n🏛️ San Jose del Monte LGU\n📧 School Email Contact\n\nFor detailed access and direct links, please login with your access code.");
-        break;
-      case 'community':
-        alert("Community Hub Preview:\n\n📝 Share thoughts and ideas\n💬 Connect with other parents\n📚 Education discussions\n🎯 PTA announcements\n\nLogin for full access to post, comment, and interact!");
-        break;
-      case 'contact-us':
-        setShowContactUs(true);
-        break;
-      case 'legal':
-        alert("Legal Information:\n\n📋 Privacy Policy - We protect your data\n📄 Terms and Conditions - Fair use guidelines\n⚠️ Disclaimers - Important notices\n🔒 Data Protection - GDPR compliance\n\nThis platform supports educational activities and parent-teacher collaboration.");
-        break;
-      case 'stem-resources':
-        handleProtectedClick('STEM Resources');
-        break;
-      default:
-        console.log(`App ${appId} not implemented for public view`);
+    // Protected apps that require login
+    const protectedApps = ['stem-resources', 'donation-upload', 'projects'];
+    
+    if (protectedApps.includes(appId)) {
+      handleProtectedClick(appId === 'stem-resources' ? 'STEM Resources' : 
+                          appId === 'donation-upload' ? 'Donation Form' : 'PTA Projects');
+      return;
     }
+    
+    // For public apps, use exact same logic as authenticated version
+    setActiveApp(appId);
   };
 
-  if (showContactUs) {
+  const handleShowTutorial = (appType) => {
+    setShowTutorial(appType);
+  };
+
+  // Render specific apps when selected (same as authenticated version)
+  if (activeApp === 'weather') {
+    return (
+      <WeatherApp 
+        onClose={() => setActiveApp('mini-apps')}
+        getContrastClass={getContrastClass}
+      />
+    );
+  }
+
+  if (activeApp === 'community') {
+    return (
+      <CommunityHub 
+        onClose={() => setActiveApp('mini-apps')}
+        getContrastClass={getContrastClass}
+        onShowTutorial={handleShowTutorial}
+      />
+    );
+  }
+
+  if (activeApp === 'officers') {
+    return (
+      <Officers 
+        onClose={() => setActiveApp('mini-apps')}
+        getContrastClass={getContrastClass}
+      />
+    );
+  }
+
+  if (activeApp === 'csansci-links') {
+    return (
+      <CSANSCILinks 
+        onClose={() => setActiveApp('mini-apps')}
+        getContrastClass={getContrastClass}
+      />
+    );
+  }
+
+  if (activeApp === 'legal') {
+    return (
+      <Legal 
+        onClose={() => setActiveApp('mini-apps')}
+        getContrastClass={getContrastClass}
+      />
+    );
+  }
+
+  if (activeApp === 'contact-us') {
     return (
       <ContactUs 
-        onClose={() => setShowContactUs(false)}
+        onClose={() => setActiveApp('mini-apps')}
         getContrastClass={getContrastClass}
       />
     );
@@ -203,7 +246,7 @@ export default function PublicHomepage({ getContrastClass, onLogin }) {
       {/* Row 1: Weather App + Donation Form - EXACT COPY FROM MiniAppsGrid */}
       <div className="grid grid-cols-2 gap-4 mb-4">
         <div
-          onClick={() => handleProtectedAccess('weather', () => window.location.href = "https://weather.com")}
+          onClick={() => handleAppSelect('weather')}
           className={getContrastClass(
             `bg-gradient-to-br from-blue-500/90 to-cyan-600/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border border-white/20`,
             `bg-gray-900/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border-2 border-yellow-400/50`

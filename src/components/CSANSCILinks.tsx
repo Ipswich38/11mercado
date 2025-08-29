@@ -1,7 +1,7 @@
 import React from 'react';
-import { ExternalLink, School, FileText, Calendar, Users, BookOpen, MapPin } from 'lucide-react';
+import { ExternalLink, School, FileText, Calendar, Users, BookOpen, MapPin, ArrowLeft } from 'lucide-react';
 
-export default function CSANSCILinks({ getContrastClass }) {
+export default function CSANSCILinks({ onClose, getContrastClass }) {
   const links = [
     {
       id: 1,
@@ -34,7 +34,42 @@ export default function CSANSCILinks({ getContrastClass }) {
   };
 
   return (
-    <div className="p-4 space-y-4">
+    <div className={getContrastClass(
+      "min-h-screen bg-surface-50",
+      "min-h-screen bg-surface-900"
+    )}>
+      {/* Header */}
+      <header className={getContrastClass(
+        "glass border-b border-surface-300 sticky top-0 z-40 shadow-material",
+        "glass-dark border-b border-surface-700 sticky top-0 z-40 shadow-material"
+      )}>
+        <div className="px-4 py-3">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onClose}
+              className={getContrastClass(
+                "btn-text state-layer p-3 rounded-material text-surface-700",
+                "btn-text state-layer p-3 rounded-material text-surface-300"
+              )}
+            >
+              <ArrowLeft size={20} />
+            </button>
+            <div>
+              <h1 className={getContrastClass(
+                "text-title-large text-surface-900",
+                "text-title-large text-surface-100"
+              )}>
+                School Links
+              </h1>
+              <p className={getContrastClass("text-body-small text-surface-600", "text-body-small text-surface-400")}>
+                Official CSANSCI & LGU Resources
+              </p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="p-4 space-y-4">
       <div className={getContrastClass(
         "bg-white/60 backdrop-blur-md rounded-3xl p-6 shadow-xl border border-white/20",
         "bg-gray-900 rounded-3xl p-6 shadow-xl border-2 border-yellow-400"
@@ -104,6 +139,7 @@ export default function CSANSCILinks({ getContrastClass }) {
         )}>
           These links will open in your default browser. Make sure you're connected to the internet.
         </p>
+      </div>
       </div>
     </div>
   );

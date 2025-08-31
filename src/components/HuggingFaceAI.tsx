@@ -31,31 +31,106 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Clean and format AI response text
+  // Enhanced text formatting function that preserves structure
   const formatAIResponse = (text) => {
-    // Remove all asterisks and markdown formatting
-    let cleaned = text.replace(/\*+/g, '');
-    
-    // Remove excessive whitespace and normalize line breaks
-    cleaned = cleaned.replace(/\s+/g, ' ').trim();
-    
-    // Split into sentences
-    const sentences = cleaned.split(/[.!?]+/).filter(sentence => sentence.trim().length > 0);
-    
-    // Group sentences into paragraphs of 3 sentences each
-    const paragraphs = [];
-    for (let i = 0; i < sentences.length; i += 3) {
-      const paragraph = sentences.slice(i, i + 3)
-        .map(sentence => sentence.trim())
-        .filter(sentence => sentence.length > 0)
-        .join('. ');
+    if (!text || typeof text !== 'string') return '';
+
+    // Step 1: Clean up excessive markdown while preserving structure
+    let cleaned = text
+      // Remove excessive asterisks but preserve single ones for emphasis  
+      .replace(/\*{3,}/g, '*')
+      // Remove markdown headers but keep the text
+      .replace(/^#{1,6}\s+/gm, '')
+      // Remove excessive hashtags
+      .replace(/#{2,}/g, '#')
+      // Clean up markdown links but preserve the text
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      // Remove excessive underscores
+      .replace(/_{3,}/g, '_')
+      // Preserve intentional line breaks and paragraph structure
+      .replace(/\r\n/g, '\n')
+      .replace(/\r/g, '\n');
+
+    // Step 2: Normalize whitespace within lines but preserve line structure
+    const lines = cleaned.split('\n');
+    const processedLines = lines.map(line => {
+      // Preserve empty lines for paragraph breaks
+      if (line.trim() === '') return '';
       
-      if (paragraph) {
-        paragraphs.push(paragraph + (paragraph.endsWith('.') ? '' : '.'));
+      // Clean excessive whitespace within the line
+      return line.replace(/\s+/g, ' ').trim();
+    });
+
+    // Step 3: Handle special formatting patterns
+    const formattedLines = [];
+    let inCodeBlock = false;
+    
+    for (let i = 0; i < processedLines.length; i++) {
+      const line = processedLines[i];
+      const nextLine = processedLines[i + 1];
+      
+      // Detect and preserve code blocks
+      if (line.includes('```')) {
+        inCodeBlock = !inCodeBlock;
+        formattedLines.push(line);
+        continue;
       }
+      
+      // If we're in a code block, preserve exactly
+      if (inCodeBlock) {
+        formattedLines.push(line);
+        continue;
+      }
+      
+      // Handle numbered lists (preserve structure)
+      if (/^\d+\.\s/.test(line)) {
+        // This is a numbered list item
+        formattedLines.push(line);
+        continue;
+      }
+      
+      // Handle bulleted lists  
+      if (/^[-*+•]\s/.test(line)) {
+        formattedLines.push(line);
+        continue;
+      }
+      
+      // Handle section headers (lines that end with a colon and next line is content)
+      if (line.endsWith(':') && nextLine && !nextLine.startsWith(' ') && nextLine.trim() !== '') {
+        formattedLines.push(line);
+        continue;
+      }
+      
+      // Handle continuation of numbered lists (lines that should be joined)
+      if (line !== '' && 
+          formattedLines.length > 0 && 
+          /^\d+\.$/.test(formattedLines[formattedLines.length - 1])) {
+        // Previous line was a number followed by period - join them
+        formattedLines[formattedLines.length - 1] += ' ' + line;
+        continue;
+      }
+      
+      // Regular line processing
+      formattedLines.push(line);
     }
     
-    return paragraphs.join('\n\n');
+    // Step 4: Clean up paragraph structure
+    const result = formattedLines
+      // Remove multiple consecutive empty lines
+      .reduce((acc, line, index) => {
+        if (line === '' && acc[acc.length - 1] === '') {
+          return acc; // Skip multiple empty lines
+        }
+        acc.push(line);
+        return acc;
+      }, [])
+      // Join lines back together
+      .join('\n')
+      // Clean up any remaining issues
+      .replace(/\n{3,}/g, '\n\n') // Max 2 consecutive newlines
+      .trim();
+
+    return result;
   };
 
   const getRelevantResources = (question) => {

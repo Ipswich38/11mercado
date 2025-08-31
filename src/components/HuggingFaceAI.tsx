@@ -493,6 +493,38 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
               ))}
             </div>
           </div>
+          
+          {/* App Version Footer */}
+          <div className="mt-8 pt-6 border-t border-gray-200/50">
+            <div className={getContrastClass(
+              "text-center py-4 px-3 bg-white/60 rounded-xl border border-blue-100",
+              "text-center py-4 px-3 bg-gray-800/60 rounded-xl border border-yellow-400/50"
+            )}>
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-md flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">11</span>
+                </div>
+                <span className={getContrastClass(
+                  "text-sm font-semibold text-gray-800",
+                  "text-sm font-semibold text-yellow-400"
+                )}>
+                  11Mercado STEM Resources
+                </span>
+              </div>
+              <div className={getContrastClass(
+                "text-xs text-gray-600",
+                "text-xs text-yellow-200"
+              )}>
+                Version 3.0.0 • Enhanced AI Learning Platform
+              </div>
+              <div className={getContrastClass(
+                "text-xs text-blue-600 mt-1",
+                "text-xs text-yellow-300 mt-1"
+              )}>
+                🚀 ChatGPT-Style Interface • 🧠 Advanced AI Intelligence
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

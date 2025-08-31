@@ -362,7 +362,7 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
           </button>
         </div>
         
-        <div className="p-4 space-y-6 overflow-y-auto h-full pb-20">
+        <div className="p-4 space-y-6 overflow-y-auto" style={{height: 'calc(100vh - 80px)'}}>
           {/* Mathematics */}
           <div>
             <h4 className={getContrastClass("font-medium text-gray-800 mb-3", "font-medium text-yellow-300 mb-3")}>📐 Mathematics</h4>
@@ -371,7 +371,11 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
                 { name: "Khan Academy Math", url: "https://www.khanacademy.org/math" },
                 { name: "OpenStax Math", url: "https://openstax.org/subjects/math" },
                 { name: "Wolfram Alpha", url: "https://www.wolframalpha.com" },
-                { name: "GeoGebra", url: "https://www.geogebra.org" }
+                { name: "GeoGebra", url: "https://www.geogebra.org" },
+                { name: "Paul's Online Math Notes", url: "https://tutorial.math.lamar.edu" },
+                { name: "Brilliant Math", url: "https://brilliant.org/courses/algebra/" },
+                { name: "PatrickJMT", url: "https://patrickjmt.com" },
+                { name: "Professor Leonard", url: "https://www.youtube.com/c/ProfessorLeonard" }
               ].map((resource, idx) => (
                 <a
                   key={idx}
@@ -400,7 +404,11 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
                 { name: "PhET Simulations", url: "https://phet.colorado.edu" },
                 { name: "NASA Education", url: "https://www.nasa.gov/audience/foreducators/" },
                 { name: "OpenStax Science", url: "https://openstax.org/subjects/science" },
-                { name: "NOAA Education", url: "https://www.noaa.gov/education" }
+                { name: "NOAA Education", url: "https://www.noaa.gov/education" },
+                { name: "LabXchange", url: "https://www.labxchange.org" },
+                { name: "ChemCollective", url: "https://www.chemcollective.org" },
+                { name: "OLabs Virtual Labs", url: "https://www.olabs.edu.in" },
+                { name: "Crash Course Science", url: "https://www.youtube.com/c/crashcourse" }
               ].map((resource, idx) => (
                 <a
                   key={idx}

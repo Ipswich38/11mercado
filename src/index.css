@@ -18,6 +18,23 @@
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom, 0);
   }
+
+  /* Custom scrollbar hiding utility */
+  .scrollbar-hide {
+    /* Firefox */
+    scrollbar-width: none;
+    /* Safari and Chrome */
+    -ms-overflow-style: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Ensure smooth scrolling */
+  .scrollbar-hide {
+    scroll-behavior: smooth;
+  }
 }
 
 @layer components {

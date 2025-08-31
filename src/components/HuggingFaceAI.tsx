@@ -341,8 +341,8 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
       showResourcePanel ? 'translate-x-0' : 'translate-x-full'
     }`}>
       <div className={getContrastClass(
-        "h-full bg-white/80 backdrop-blur-xl border-l border-gray-200 shadow-2xl",
-        "h-full bg-gray-900/90 backdrop-blur-xl border-l-2 border-yellow-400 shadow-2xl"
+        "h-full bg-gradient-to-br from-white/85 via-blue-50/80 to-purple-50/85 backdrop-blur-xl border-l border-blue-200 shadow-2xl",
+        "h-full bg-gradient-to-br from-gray-900/95 via-gray-800/90 to-gray-900/95 backdrop-blur-xl border-l-2 border-yellow-400 shadow-2xl"
       )}>
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <h3 className={getContrastClass(
@@ -362,7 +362,14 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
           </button>
         </div>
         
-        <div className="p-4 space-y-6 overflow-y-auto" style={{height: 'calc(100vh - 80px)'}}>
+        <div 
+          className="p-4 space-y-6 overflow-y-auto scrollbar-hide"
+          style={{
+            height: 'calc(100vh - 80px)',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none'
+          }}
+        >
           {/* Mathematics */}
           <div>
             <h4 className={getContrastClass("font-medium text-gray-800 mb-3", "font-medium text-yellow-300 mb-3")}>📐 Mathematics</h4>

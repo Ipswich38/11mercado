@@ -22,7 +22,7 @@ export default function AIChatBot({ getContrastClass, onClose }: AIChatBotProps)
     {
       id: '1',
       role: 'assistant',
-      content: 'Hello! I\'m your PTA assistant for the 11Mercado hub. I can help you with DepEd PTA guidelines including formation, roles, financial management, and meetings. I also know how to use all 9 mini apps in 11Mercado and can provide tips for donation forms, project proposals, and community features.\n\nWhat would you like to know? I\'m here to make your PTA experience smoother and more efficient.',
+      content: 'Hello! I\'m your enhanced PTA assistant for the 11Mercado hub v3.0. I now have advanced AI capabilities including context-aware responses, adaptive intelligence, and educational support. I can help you with DepEd PTA guidelines, all 9 mini apps, STEM learning assistance, and provide personalized recommendations based on our conversation.\n\nMy new v3.0 features include smart query routing, conversation memory, and proactive suggestions. Whether you need step-by-step guidance, complex analysis, or creative brainstorming, I adapt my responses to match your needs.\n\nWhat would you like to explore today? I\'m here to make your PTA experience more intelligent and efficient than ever before.',
       timestamp: new Date()
     }
   ]);
@@ -61,51 +61,33 @@ export default function AIChatBot({ getContrastClass, onClose }: AIChatBotProps)
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // Helper function for regular AI responses
+  // Enhanced AI response generation with conversation context and smart routing
   const generateRegularResponse = async (userInput: string, context: string): Promise<Message> => {
-    const systemPrompt = `You are an expert assistant for the 11Mercado PTA hub. You help parents, teachers, and school administrators with two main areas:
+    // Analyze conversation history for context
+    const conversationContext = messages
+      .slice(-5) // Last 5 messages for context
+      .map(m => `${m.role}: ${m.content}`)
+      .join('\n');
 
-1. DepEd Omnibus Code for Parent-Teacher Associations (PTA): Guidelines, procedures, and best practices
-2. 11Mercado Mini Apps: Complete usage instructions for all 9 apps in the hub
-
-RELEVANT KNOWLEDGE:
-${context}
-
-INSTRUCTIONS:
-- Provide accurate, helpful answers based on the provided knowledge
-- For app usage questions, give step-by-step instructions
-- For PTA policy questions, reference DepEd guidelines
-- If asked about features not covered in the knowledge base, acknowledge the limitation
-- Be friendly and conversational while staying informative
-- Write in clean, readable paragraphs without using asterisks, bold text, or markdown formatting
-- Use simple, clear language organized in easy-to-read paragraphs
-- Avoid bullet points and use flowing paragraph text instead
-
-AVAILABLE MINI APPS IN 11MERCADO:
-1. STEM Resources (AI tools + educational links)
-2. Weather App (local weather info)  
-3. Donation Form (4 payment modes)
-4. Community Forum (discussions)
-5. Meet the Officers (PTA contact info)
-6. School Links (official websites)
-7. Donation Progress (campaign tracking)
-8. Contact Us (message PTA)
-9. Projects (proposals + tracking)
-
-Answer the user's question based on this knowledge.`;
+    // Smart routing based on query type
+    const queryType = analyzeQueryType(userInput);
+    const enhancedSystemPrompt = buildEnhancedSystemPrompt(context, queryType, conversationContext);
 
     if (!groq || !isGroqConfigured) {
       throw new Error('AI service not configured');
     }
     
+    // Use more advanced model for complex queries
+    const modelChoice = queryType === 'complex' ? 'llama3-70b-8192' : 'llama3-8b-8192';
+    
     const response = await groq.chat.completions.create({
       messages: [
-        { role: 'system', content: systemPrompt },
+        { role: 'system', content: enhancedSystemPrompt },
         { role: 'user', content: userInput }
       ],
-      model: 'llama3-8b-8192',
-      temperature: 0.3,
-      max_tokens: 1000,
+      model: modelChoice,
+      temperature: queryType === 'creative' ? 0.7 : 0.3,
+      max_tokens: queryType === 'detailed' ? 1500 : 1000,
       top_p: 1,
       stream: false
     });
@@ -119,6 +101,97 @@ Answer the user's question based on this knowledge.`;
       content: formattedContent,
       timestamp: new Date()
     };
+  };
+
+  // Analyze query type for smart routing
+  const analyzeQueryType = (query: string): 'simple' | 'detailed' | 'complex' | 'creative' => {
+    const lowerQuery = query.toLowerCase();
+    
+    // Complex queries require deeper analysis
+    if (lowerQuery.includes('explain why') || lowerQuery.includes('compare') || lowerQuery.includes('analyze') || lowerQuery.includes('what if')) {
+      return 'complex';
+    }
+    
+    // Detailed queries need comprehensive responses
+    if (lowerQuery.includes('step by step') || lowerQuery.includes('how to') || lowerQuery.includes('process') || query.length > 100) {
+      return 'detailed';
+    }
+    
+    // Creative queries for brainstorming or suggestions
+    if (lowerQuery.includes('ideas') || lowerQuery.includes('suggest') || lowerQuery.includes('brainstorm') || lowerQuery.includes('creative')) {
+      return 'creative';
+    }
+    
+    return 'simple';
+  };
+
+  // Build enhanced system prompt based on context
+  const buildEnhancedSystemPrompt = (context: string, queryType: string, conversationContext: string): string => {
+    const basePrompt = `You are an advanced AI assistant for the 11Mercado PTA hub v3.0. You help parents, teachers, and school administrators with:
+
+1. DepEd Omnibus Code for Parent-Teacher Associations (PTA): Guidelines, procedures, and best practices
+2. 11Mercado Mini Apps: Complete usage instructions for all 9 apps in the hub
+3. Educational support and STEM learning assistance
+
+CONVERSATION CONTEXT:
+${conversationContext}
+
+RELEVANT KNOWLEDGE:
+${context}
+
+ENHANCED CAPABILITIES (v3.0):
+- Context-aware responses based on conversation history
+- Adaptive response style based on query complexity
+- Proactive suggestions and follow-up questions
+- Cross-functional knowledge integration
+- Educational guidance and learning support
+
+AVAILABLE MINI APPS IN 11MERCADO:
+1. STEM Resources (AI tools + educational links)
+2. Weather App (local weather info)  
+3. Donation Form (4 payment modes)
+4. Community Forum (discussions)
+5. Meet the Officers (PTA contact info)
+6. School Links (official websites)
+7. Donation Progress (campaign tracking)
+8. Contact Us (message PTA)
+9. Projects (proposals + tracking)
+
+RESPONSE STYLE FOR ${queryType.toUpperCase()} QUERIES:`;
+
+    switch (queryType) {
+      case 'complex':
+        return basePrompt + `
+- Provide comprehensive analysis with multiple perspectives
+- Include examples and case studies where relevant
+- Break down complex concepts into understandable parts
+- Offer practical implementation strategies
+- Consider potential challenges and solutions`;
+
+      case 'detailed':
+        return basePrompt + `
+- Provide clear, step-by-step instructions
+- Include all necessary details and prerequisites  
+- Mention common pitfalls to avoid
+- Offer alternative approaches when applicable
+- Include verification or success indicators`;
+
+      case 'creative':
+        return basePrompt + `
+- Generate innovative and practical ideas
+- Provide multiple options and approaches
+- Consider different stakeholder perspectives
+- Include implementation tips for creative solutions
+- Encourage collaboration and community involvement`;
+
+      default:
+        return basePrompt + `
+- Provide concise, accurate information
+- Be friendly and conversational
+- Include relevant next steps or related topics
+- Write in clear, simple language
+- Avoid bullet points, use flowing paragraphs`;
+    }
   };
 
   useEffect(() => {

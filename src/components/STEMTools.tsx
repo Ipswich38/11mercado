@@ -44,6 +44,8 @@ export default function STEMTools({ aiSTEMTools, stemLinks, getContrastClass, on
                   onToolSelect('ai-scientific-calculator');
                 } else if (tool.id === 3) { // AI Assistant (Combined)
                   onToolSelect('ai-assistant');
+                } else if (tool.id === 4) { // AI Study Planner
+                  onToolSelect('ai-study-planner');
                 } else {
                   // Handle other AI tools here in the future
                   console.log(`Opening ${tool.name}`);
@@ -178,7 +180,7 @@ export default function STEMTools({ aiSTEMTools, stemLinks, getContrastClass, on
           "text-blue-700 text-sm",
           "text-yellow-200 text-sm"
         )}>
-          All AI-powered STEM tools are now available! College Entrance Exam Quiz Generator, AI Scientific Calculator, AI Research Tool, and STEM GPT Tools are ready for learning.
+          🎉 Welcome to v3.0! Enhanced AI intelligence, new Study Planner with personalized learning paths, advanced scientific calculator with AI tutoring, and upgraded STEM research tools are now available for superior learning experiences.
         </p>
       </div>
     </div>

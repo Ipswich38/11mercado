@@ -1,11 +1,35 @@
-import React, { useState } from 'react';
-import { ArrowLeft, Send } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { ArrowLeft, Send, Bot, User, BookOpen, X, Menu, ExternalLink } from 'lucide-react';
 import groq, { isGroqConfigured } from '../utils/groqClient';
+
+interface Message {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+}
 
 export default function HuggingFaceAI({ getContrastClass, onClose }) {
   const [inputText, setInputText] = useState('');
-  const [response, setResponse] = useState('');
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: '1',
+      role: 'assistant',
+      content: 'Hello! I\'m Research and STEM-GPT v3.0, your advanced AI assistant for STEM subjects and research methodology. I can help you with mathematics, science, engineering, technology, and research methods with enhanced capabilities including deeper analysis, interdisciplinary connections, and practical applications.\n\nWhat would you like to explore today?',
+      timestamp: new Date()
+    }
+  ]);
   const [isLoading, setIsLoading] = useState(false);
+  const [showResourcePanel, setShowResourcePanel] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   // Clean and format AI response text
   const formatAIResponse = (text) => {
@@ -154,16 +178,20 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
   };
 
   const handleSubmit = async () => {
-    if (!inputText.trim()) return;
-    
+    if (!inputText.trim() || isLoading) return;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: inputText,
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInputText('');
     setIsLoading(true);
-    setResponse('');
-    
+
     try {
-      // Get relevant resources based on the question
-      const relevantResources = getRelevantResources(inputText);
-      
-      // Create a comprehensive response with resources
       let aiResponse = '';
       
       // Try to get AI response from Groq first
@@ -182,7 +210,7 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
             ],
             model: 'llama3-70b-8192',
             temperature: 0.3,
-            max_tokens: 500
+            max_tokens: 800
           });
 
           const rawResponse = response.choices[0]?.message?.content || '';
@@ -196,219 +224,349 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
       let fullResponse = '';
       
       if (aiResponse && aiResponse.trim().length > 10) {
-        fullResponse = `🤖 AI Response:\n${aiResponse}\n\n`;
-        // Only add resources if the AI response is short or seems incomplete
-        if (aiResponse.length < 100) {
-          fullResponse += `📚 For more information:\n${relevantResources.slice(0, 2).join('\n')}\n\n`;
-        }
+        fullResponse = aiResponse;
       } else {
         // Enhanced fallback responses with actual educational content
         fullResponse = generateEducationalResponse(inputText);
-        
-        // Add a few relevant resources only if the question is very specific
-        if (relevantResources.length > 0 && inputText.length > 20) {
-          fullResponse += `\n\n📚 Additional Resources:\n${relevantResources.slice(0, 3).join('\n')}`;
-        }
       }
 
-      setResponse(fullResponse);
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: fullResponse,
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, assistantMessage]);
       
     } catch (error) {
       console.error('Error:', error);
-      // Use the same educational response system for errors
-      const fallbackResponse = generateEducationalResponse(inputText);
-      setResponse(fallbackResponse);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: 'I apologize, but I\'m experiencing some technical difficulties right now. Please try again in a moment, or feel free to ask your question in a different way.',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  return (
-    <div className="p-4 max-w-4xl mx-auto">
-      {/* Header */}
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
+  // Create Resource Panel Component
+  const ResourcePanel = () => (
+    <div className={`fixed top-0 right-0 h-full w-80 z-50 transform transition-transform duration-300 ease-in-out ${
+      showResourcePanel ? 'translate-x-0' : 'translate-x-full'
+    }`}>
       <div className={getContrastClass(
-        "bg-white/80 backdrop-blur-xl rounded-3xl p-6 shadow-xl border border-white/30 mb-6",
-        "bg-gray-900/80 backdrop-blur-xl rounded-3xl p-6 shadow-xl border-2 border-yellow-400/50 mb-6"
+        "h-full bg-white/80 backdrop-blur-xl border-l border-gray-200 shadow-2xl",
+        "h-full bg-gray-900/90 backdrop-blur-xl border-l-2 border-yellow-400 shadow-2xl"
       )}>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+          <h3 className={getContrastClass(
+            "text-lg font-semibold text-gray-900",
+            "text-lg font-semibold text-yellow-400"
+          )}>
+            📚 Resource Links
+          </h3>
           <button
-            onClick={onClose}
+            onClick={() => setShowResourcePanel(false)}
             className={getContrastClass(
-              "p-2 rounded-xl text-gray-600 hover:bg-gray-100",
-              "p-2 rounded-xl text-yellow-400 hover:bg-gray-800"
+              "p-2 rounded-lg text-gray-500 hover:bg-gray-100",
+              "p-2 rounded-lg text-yellow-400 hover:bg-gray-800"
             )}
           >
-            <ArrowLeft size={20} />
+            <X size={18} />
           </button>
-          <h1 className={getContrastClass(
-            "text-xl font-light text-gray-900",
-            "text-xl font-light text-yellow-400"
-          )}>
-            Research and STEM-GPT v3.0
-          </h1>
-          <div className={getContrastClass(
-            "text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded-full",
-            "text-xs bg-gray-800 text-blue-400 px-3 py-1 rounded-full border border-blue-400"
-          )}>
-            Enhanced KreativLoops AI
+        </div>
+        
+        <div className="p-4 space-y-6 overflow-y-auto h-full pb-20">
+          {/* Mathematics */}
+          <div>
+            <h4 className={getContrastClass("font-medium text-gray-800 mb-3", "font-medium text-yellow-300 mb-3")}>📐 Mathematics</h4>
+            <div className="space-y-2">
+              {[
+                { name: "Khan Academy Math", url: "https://www.khanacademy.org/math" },
+                { name: "OpenStax Math", url: "https://openstax.org/subjects/math" },
+                { name: "Wolfram Alpha", url: "https://www.wolframalpha.com" },
+                { name: "GeoGebra", url: "https://www.geogebra.org" }
+              ].map((resource, idx) => (
+                <a
+                  key={idx}
+                  href={resource.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={getContrastClass(
+                    "block p-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors",
+                    "block p-2 rounded-lg text-sm text-yellow-200 hover:bg-gray-800 transition-colors"
+                  )}
+                >
+                  <div className="flex items-center justify-between">
+                    <span>{resource.name}</span>
+                    <ExternalLink size={12} />
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* Science */}
+          <div>
+            <h4 className={getContrastClass("font-medium text-gray-800 mb-3", "font-medium text-yellow-300 mb-3")}>🔬 Science</h4>
+            <div className="space-y-2">
+              {[
+                { name: "PhET Simulations", url: "https://phet.colorado.edu" },
+                { name: "NASA Education", url: "https://www.nasa.gov/audience/foreducators/" },
+                { name: "OpenStax Science", url: "https://openstax.org/subjects/science" },
+                { name: "NOAA Education", url: "https://www.noaa.gov/education" }
+              ].map((resource, idx) => (
+                <a
+                  key={idx}
+                  href={resource.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={getContrastClass(
+                    "block p-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors",
+                    "block p-2 rounded-lg text-sm text-yellow-200 hover:bg-gray-800 transition-colors"
+                  )}
+                >
+                  <div className="flex items-center justify-between">
+                    <span>{resource.name}</span>
+                    <ExternalLink size={12} />
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* Technology */}
+          <div>
+            <h4 className={getContrastClass("font-medium text-gray-800 mb-3", "font-medium text-yellow-300 mb-3")}>💻 Technology</h4>
+            <div className="space-y-2">
+              {[
+                { name: "FreeCodeCamp", url: "https://www.freecodecamp.org" },
+                { name: "MIT OpenCourseWare", url: "https://ocw.mit.edu" },
+                { name: "Coursera Free", url: "https://www.coursera.org/courses?query=free" },
+                { name: "edX Courses", url: "https://www.edx.org" }
+              ].map((resource, idx) => (
+                <a
+                  key={idx}
+                  href={resource.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={getContrastClass(
+                    "block p-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors",
+                    "block p-2 rounded-lg text-sm text-yellow-200 hover:bg-gray-800 transition-colors"
+                  )}
+                >
+                  <div className="flex items-center justify-between">
+                    <span>{resource.name}</span>
+                    <ExternalLink size={12} />
+                  </div>
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* Research */}
+          <div>
+            <h4 className={getContrastClass("font-medium text-gray-800 mb-3", "font-medium text-yellow-300 mb-3")}>🔍 Research</h4>
+            <div className="space-y-2">
+              {[
+                { name: "Google Scholar", url: "https://scholar.google.com" },
+                { name: "arXiv Preprints", url: "https://arxiv.org" },
+                { name: "PubMed", url: "https://www.ncbi.nlm.nih.gov/pubmed/" },
+                { name: "Open Access Journals", url: "https://doaj.org" }
+              ].map((resource, idx) => (
+                <a
+                  key={idx}
+                  href={resource.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={getContrastClass(
+                    "block p-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors",
+                    "block p-2 rounded-lg text-sm text-yellow-200 hover:bg-gray-800 transition-colors"
+                  )}
+                >
+                  <div className="flex items-center justify-between">
+                    <span>{resource.name}</span>
+                    <ExternalLink size={12} />
+                  </div>
+                </a>
+              ))}
+            </div>
           </div>
         </div>
-        <p className={getContrastClass(
-          "text-gray-600 text-sm",
-          "text-yellow-200 text-sm"
-        )}>
-          Enhanced AI v3.0 • Advanced STEM analysis and interdisciplinary learning
-        </p>
       </div>
+    </div>
+  );
 
-      {/* Main Content */}
+  return (
+    <div className={getContrastClass(
+      "fixed inset-0 bg-gray-50 z-50 flex flex-col",
+      "fixed inset-0 bg-black z-50 flex flex-col"
+    )}>
+      {/* Header */}
       <div className={getContrastClass(
-        "bg-white/70 backdrop-blur-lg rounded-2xl p-6 shadow-lg border border-white/30 space-y-6",
-        "bg-gray-900/80 backdrop-blur-lg rounded-2xl p-6 shadow-lg border-2 border-yellow-400/50 space-y-6"
+        "bg-white border-b border-gray-200 p-4",
+        "bg-gray-900 border-b-2 border-yellow-400 p-4"
       )}>
-        {/* Input Section */}
-        <div>
-          <h3 className={getContrastClass("font-semibold text-gray-900 mb-4", "font-semibold text-yellow-400 mb-4")}>
-            Ask about STEM or Research
-          </h3>
-          
-          <textarea
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            placeholder="Ask about math, science, engineering, technology, or research methodology..."
-            className={getContrastClass(
-              "w-full h-32 p-4 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500",
-              "w-full h-32 p-4 bg-gray-800 border border-yellow-400 text-yellow-100 rounded-lg resize-none focus:ring-2 focus:ring-yellow-400"
-            )}
-          />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={onClose}
+              className={getContrastClass(
+                "p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors",
+                "p-2 rounded-lg text-yellow-400 hover:bg-gray-800 transition-colors"
+              )}
+            >
+              <ArrowLeft size={20} />
+            </button>
+            <Bot size={24} className={getContrastClass("text-gray-700", "text-yellow-400")} />
+            <div>
+              <h1 className={getContrastClass(
+                "text-lg font-semibold text-gray-900",
+                "text-lg font-semibold text-yellow-400"
+              )}>
+                Research and STEM-GPT v3.0
+              </h1>
+              <p className={getContrastClass(
+                "text-sm text-gray-600",
+                "text-sm text-yellow-200"
+              )}>
+                Enhanced AI for STEM learning and research
+              </p>
+            </div>
+          </div>
           
           <button
-            onClick={handleSubmit}
-            disabled={!inputText.trim() || isLoading}
+            onClick={() => setShowResourcePanel(true)}
             className={getContrastClass(
-              "mt-4 flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50",
-              "mt-4 flex items-center gap-2 bg-yellow-400 text-black px-6 py-3 rounded-lg hover:bg-yellow-300 disabled:opacity-50"
+              "flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors",
+              "flex items-center gap-2 px-4 py-2 bg-gray-800 text-yellow-400 border border-yellow-400 rounded-lg hover:bg-gray-700 transition-colors"
             )}
           >
-            {isLoading ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
-                Processing...
-              </>
-            ) : (
-              <>
-                <Send size={16} />
-                Ask AI
-              </>
-            )}
+            <BookOpen size={16} />
+            Resource Links
           </button>
         </div>
+      </div>
 
-        {/* Response Section */}
-        {response && (
-          <div className={getContrastClass(
-            "bg-blue-50/70 backdrop-blur-md rounded-xl p-6 border border-blue-200/50",
-            "bg-gray-800/70 backdrop-blur-md rounded-xl p-6 border border-yellow-400/50"
-          )}>
-            <h3 className={getContrastClass("font-semibold text-blue-900 mb-4", "font-semibold text-yellow-400 mb-4")}>
-              Research and STEM-GPT Response
-            </h3>
+      {/* Conversation Area */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {messages.map((message) => (
+          <div
+            key={message.id}
+            className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+          >
+            {message.role === 'assistant' && (
+              <div className={getContrastClass(
+                "w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0",
+                "w-8 h-8 bg-gray-700 border border-yellow-400 rounded-full flex items-center justify-center flex-shrink-0"
+              )}>
+                <Bot size={16} className={getContrastClass("text-white", "text-yellow-400")} />
+              </div>
+            )}
+            <div
+              className={`max-w-[85%] p-4 rounded-2xl ${
+                message.role === 'user'
+                  ? getContrastClass(
+                      'bg-blue-500 text-white ml-auto',
+                      'bg-yellow-400 text-black ml-auto'
+                    )
+                  : getContrastClass(
+                      'bg-white border border-gray-200 text-gray-900',
+                      'bg-gray-800 border border-yellow-400 text-yellow-200'
+                    )
+              }`}
+            >
+              <p className="whitespace-pre-wrap leading-relaxed text-sm">{message.content}</p>
+              <p className={`text-xs mt-2 opacity-70`}>
+                {message.timestamp.toLocaleTimeString()}
+              </p>
+            </div>
+            {message.role === 'user' && (
+              <div className={getContrastClass(
+                "w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center flex-shrink-0",
+                "w-8 h-8 bg-gray-700 border border-yellow-400 rounded-full flex items-center justify-center flex-shrink-0"
+              )}>
+                <User size={16} className={getContrastClass("text-white", "text-yellow-400")} />
+              </div>
+            )}
+          </div>
+        ))}
+        
+        {isLoading && (
+          <div className="flex gap-3 justify-start">
             <div className={getContrastClass(
-              "text-blue-900 whitespace-pre-wrap leading-relaxed",
-              "text-yellow-100 whitespace-pre-wrap leading-relaxed"
+              "w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0",
+              "w-8 h-8 bg-gray-700 border border-yellow-400 rounded-full flex items-center justify-center flex-shrink-0"
             )}>
-              {response}
+              <Bot size={16} className={getContrastClass("text-white", "text-yellow-400")} />
+            </div>
+            <div className={getContrastClass(
+              "bg-white border border-gray-200 text-gray-900 p-4 rounded-2xl",
+              "bg-gray-800 border border-yellow-400 text-yellow-200 p-4 rounded-2xl"
+            )}>
+              <div className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-400 border-t-transparent" />
+                <span className="text-sm">Thinking...</span>
+              </div>
             </div>
           </div>
         )}
+        <div ref={messagesEndRef} />
+      </div>
 
-        {/* Open Source STEM Resources */}
-        <div className={getContrastClass(
-          "bg-green-50/70 backdrop-blur-md rounded-xl p-6 border border-green-200/50",
-          "bg-gray-900/70 backdrop-blur-md rounded-xl p-6 border border-green-400/50"
-        )}>
-          <h3 className={getContrastClass("font-semibold text-green-900 mb-4", "font-semibold text-green-400 mb-4")}>
-            📚 Open Source STEM & Research Resources
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-3">
-              <h4 className={getContrastClass("font-medium text-green-800", "font-medium text-green-300")}>📐 Mathematics</h4>
-              <ul className={getContrastClass("text-green-700 text-sm space-y-1", "text-green-200 text-sm space-y-1")}>
-                <li>• <a href="https://www.khanacademy.org/math" target="_blank" rel="noopener noreferrer" className="hover:underline">Khan Academy Mathematics</a></li>
-                <li>• <a href="https://openstax.org/subjects/math" target="_blank" rel="noopener noreferrer" className="hover:underline">OpenStax Math Textbooks</a></li>
-                <li>• <a href="https://www.wolframalpha.com" target="_blank" rel="noopener noreferrer" className="hover:underline">Wolfram Alpha Calculator</a></li>
-                <li>• <a href="https://www.geogebra.org" target="_blank" rel="noopener noreferrer" className="hover:underline">GeoGebra Math Tools</a></li>
-              </ul>
+      {/* Input Area - ChatGPT Style */}
+      <div className={getContrastClass(
+        "border-t border-gray-200 bg-white p-4",
+        "border-t-2 border-yellow-400 bg-black p-4"
+      )}>
+        <div className="max-w-4xl mx-auto">
+          <div className="flex gap-3 items-end">
+            <div className="flex-1">
+              <textarea
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Ask about math, science, engineering, technology, or research methodology..."
+                className={getContrastClass(
+                  "w-full p-3 border border-gray-300 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
+                  "w-full p-3 border border-gray-600 bg-gray-900 text-yellow-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                )}
+                rows={Math.min(Math.max(inputText.split('\n').length, 1), 6)}
+                disabled={isLoading}
+              />
             </div>
-            
-            <div className="space-y-3">
-              <h4 className={getContrastClass("font-medium text-green-800", "font-medium text-green-300")}>🔬 Science</h4>
-              <ul className={getContrastClass("text-green-700 text-sm space-y-1", "text-green-200 text-sm space-y-1")}>
-                <li>• <a href="https://phet.colorado.edu" target="_blank" rel="noopener noreferrer" className="hover:underline">PhET Interactive Simulations</a></li>
-                <li>• <a href="https://www.nasa.gov/audience/foreducators/" target="_blank" rel="noopener noreferrer" className="hover:underline">NASA Educational Resources</a></li>
-                <li>• <a href="https://openstax.org/subjects/science" target="_blank" rel="noopener noreferrer" className="hover:underline">OpenStax Science Books</a></li>
-                <li>• <a href="https://www.noaa.gov/education" target="_blank" rel="noopener noreferrer" className="hover:underline">NOAA Education Resources</a></li>
-              </ul>
-            </div>
-            
-            <div className="space-y-3">
-              <h4 className={getContrastClass("font-medium text-green-800", "font-medium text-green-300")}>💻 Technology</h4>
-              <ul className={getContrastClass("text-green-700 text-sm space-y-1", "text-green-200 text-sm space-y-1")}>
-                <li>• <a href="https://www.freecodecamp.org" target="_blank" rel="noopener noreferrer" className="hover:underline">FreeCodeCamp</a></li>
-                <li>• <a href="https://ocw.mit.edu" target="_blank" rel="noopener noreferrer" className="hover:underline">MIT OpenCourseWare</a></li>
-                <li>• <a href="https://www.coursera.org/courses?query=free" target="_blank" rel="noopener noreferrer" className="hover:underline">Coursera Free Courses</a></li>
-                <li>• <a href="https://www.edx.org" target="_blank" rel="noopener noreferrer" className="hover:underline">edX Free Courses</a></li>
-              </ul>
-            </div>
-            
-            <div className="space-y-3">
-              <h4 className={getContrastClass("font-medium text-green-800", "font-medium text-green-300")}>🔍 Research</h4>
-              <ul className={getContrastClass("text-green-700 text-sm space-y-1", "text-green-200 text-sm space-y-1")}>
-                <li>• <a href="https://scholar.google.com" target="_blank" rel="noopener noreferrer" className="hover:underline">Google Scholar</a></li>
-                <li>• <a href="https://arxiv.org" target="_blank" rel="noopener noreferrer" className="hover:underline">arXiv Preprints</a></li>
-                <li>• <a href="https://www.ncbi.nlm.nih.gov/pubmed/" target="_blank" rel="noopener noreferrer" className="hover:underline">PubMed Database</a></li>
-                <li>• <a href="https://doaj.org" target="_blank" rel="noopener noreferrer" className="hover:underline">Directory of Open Access Journals</a></li>
-              </ul>
-            </div>
-            
-            <div className="space-y-3">
-              <h4 className={getContrastClass("font-medium text-green-800", "font-medium text-green-300")}>⚙️ Engineering</h4>
-              <ul className={getContrastClass("text-green-700 text-sm space-y-1", "text-green-200 text-sm space-y-1")}>
-                <li>• <a href="https://www.engineeringtoolbox.com" target="_blank" rel="noopener noreferrer" className="hover:underline">Engineering ToolBox</a></li>
-                <li>• <a href="https://www.autodesk.com/education/edu-software" target="_blank" rel="noopener noreferrer" className="hover:underline">Autodesk Education (Free)</a></li>
-                <li>• <a href="https://www.solidworks.com/sw/education/" target="_blank" rel="noopener noreferrer" className="hover:underline">SolidWorks Student Edition</a></li>
-                <li>• <a href="https://www.analog.com/en/education.html" target="_blank" rel="noopener noreferrer" className="hover:underline">Analog Devices University</a></li>
-              </ul>
-            </div>
-            
-            <div className="space-y-3">
-              <h4 className={getContrastClass("font-medium text-green-800", "font-medium text-green-300")}>🧪 Laboratory</h4>
-              <ul className={getContrastClass("text-green-700 text-sm space-y-1", "text-green-200 text-sm space-y-1")}>
-                <li>• <a href="https://www.labxchange.org" target="_blank" rel="noopener noreferrer" className="hover:underline">LabXchange Virtual Labs</a></li>
-                <li>• <a href="https://www.chemcollective.org" target="_blank" rel="noopener noreferrer" className="hover:underline">ChemCollective Virtual Labs</a></li>
-                <li>• <a href="https://www.merlot.org" target="_blank" rel="noopener noreferrer" className="hover:underline">MERLOT Science Resources</a></li>
-                <li>• <a href="https://www.olabs.edu.in" target="_blank" rel="noopener noreferrer" className="hover:underline">Online Labs (OLabs)</a></li>
-              </ul>
-            </div>
+            <button
+              onClick={handleSubmit}
+              disabled={!inputText.trim() || isLoading}
+              className="p-3 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-xl transition-colors flex items-center justify-center"
+            >
+              <Send size={20} />
+            </button>
           </div>
-        </div>
-
-        {/* AI Info Section */}
-        <div className={getContrastClass(
-          "bg-blue-50/70 backdrop-blur-md rounded-xl p-4 border border-blue-200/50",
-          "bg-gray-800/70 backdrop-blur-md rounded-xl p-4 border border-blue-400/50"
-        )}>
-          <div className="flex items-center gap-2 mb-2">
-            <div className="text-blue-600">🤖</div>
-            <h4 className={getContrastClass("font-medium text-blue-900", "font-medium text-blue-400")}>
-              Powered by KreativLoops AI
-            </h4>
-          </div>
-          <p className={getContrastClass("text-blue-800 text-sm", "text-blue-200 text-sm")}>
-            Advanced AI technology for STEM education and research methodology guidance. Fast, accurate responses for students and researchers.
-          </p>
         </div>
       </div>
+
+      {/* Resource Panel */}
+      <ResourcePanel />
+      
+      {/* Backdrop for Resource Panel */}
+      {showResourcePanel && (
+        <div
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
+          onClick={() => setShowResourcePanel(false)}
+        />
+      )}
     </div>
   );
 }

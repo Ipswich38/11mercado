@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, Send, Bot, User, BookOpen, X, Menu, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Send, Bot, User, BookOpen, X, Menu, ExternalLink, ChevronDown, ChevronRight } from 'lucide-react';
 import groq, { isGroqConfigured } from '../utils/groqClient';
 
 interface Message {
@@ -21,6 +21,13 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const [showResourcePanel, setShowResourcePanel] = useState(false);
+  const [expandedCategories, setExpandedCategories] = useState({
+    mathematics: false,
+    science: false,
+    technology: false,
+    research: false,
+    engineering: false
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -335,6 +342,13 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
     }
   };
 
+  const toggleCategory = (category: string) => {
+    setExpandedCategories(prev => ({
+      ...prev,
+      [category]: !prev[category]
+    }));
+  };
+
   // Create Resource Panel Component
   const ResourcePanel = () => (
     <div className={`fixed top-0 right-0 h-full w-80 z-50 transform transition-transform duration-300 ease-in-out ${
@@ -370,128 +384,281 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
             msOverflowStyle: 'none'
           }}
         >
-          {/* Mathematics */}
-          <div>
-            <h4 className={getContrastClass("font-medium text-gray-800 mb-3", "font-medium text-yellow-300 mb-3")}>📐 Mathematics</h4>
-            <div className="space-y-2">
-              {[
-                { name: "Khan Academy Math", url: "https://www.khanacademy.org/math" },
-                { name: "OpenStax Math", url: "https://openstax.org/subjects/math" },
-                { name: "Wolfram Alpha", url: "https://www.wolframalpha.com" },
-                { name: "GeoGebra", url: "https://www.geogebra.org" },
-                { name: "Paul's Online Math Notes", url: "https://tutorial.math.lamar.edu" },
-                { name: "Brilliant Math", url: "https://brilliant.org/courses/algebra/" },
-                { name: "PatrickJMT", url: "https://patrickjmt.com" },
-                { name: "Professor Leonard", url: "https://www.youtube.com/c/ProfessorLeonard" }
-              ].map((resource, idx) => (
-                <a
-                  key={idx}
-                  href={resource.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={getContrastClass(
-                    "block p-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors",
-                    "block p-2 rounded-lg text-sm text-yellow-200 hover:bg-gray-800 transition-colors"
-                  )}
-                >
-                  <div className="flex items-center justify-between">
-                    <span>{resource.name}</span>
-                    <ExternalLink size={12} />
-                  </div>
-                </a>
-              ))}
-            </div>
+          {/* Mathematics Dropdown */}
+          <div className={getContrastClass(
+            "bg-white/60 rounded-xl border border-gray-200",
+            "bg-gray-800/60 rounded-xl border border-yellow-400/50"
+          )}>
+            <button
+              onClick={() => toggleCategory('mathematics')}
+              className={getContrastClass(
+                "w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 rounded-xl transition-colors",
+                "w-full flex items-center justify-between p-4 text-left hover:bg-gray-700 rounded-xl transition-colors"
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <span className={getContrastClass("font-medium text-gray-800", "font-medium text-yellow-300")}>
+                  📐 Mathematics
+                </span>
+                <span className={getContrastClass("text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full", "text-xs bg-gray-700 text-yellow-200 px-2 py-1 rounded-full")}>
+                  8 resources
+                </span>
+              </div>
+              {expandedCategories.mathematics ? (
+                <ChevronDown size={16} className={getContrastClass("text-gray-600", "text-yellow-400")} />
+              ) : (
+                <ChevronRight size={16} className={getContrastClass("text-gray-600", "text-yellow-400")} />
+              )}
+            </button>
+            {expandedCategories.mathematics && (
+              <div className="px-4 pb-4 space-y-2">
+                {[
+                  { name: "Khan Academy Math", url: "https://www.khanacademy.org/math" },
+                  { name: "OpenStax Math", url: "https://openstax.org/subjects/math" },
+                  { name: "Wolfram Alpha", url: "https://www.wolframalpha.com" },
+                  { name: "GeoGebra", url: "https://www.geogebra.org" },
+                  { name: "Paul's Online Math Notes", url: "https://tutorial.math.lamar.edu" },
+                  { name: "Brilliant Math", url: "https://brilliant.org/courses/algebra/" },
+                  { name: "PatrickJMT", url: "https://patrickjmt.com" },
+                  { name: "Professor Leonard", url: "https://www.youtube.com/c/ProfessorLeonard" }
+                ].map((resource, idx) => (
+                  <a
+                    key={idx}
+                    href={resource.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={getContrastClass(
+                      "block p-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors",
+                      "block p-2 rounded-lg text-sm text-yellow-200 hover:bg-gray-800 transition-colors"
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span>{resource.name}</span>
+                      <ExternalLink size={12} />
+                    </div>
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Science */}
-          <div>
-            <h4 className={getContrastClass("font-medium text-gray-800 mb-3", "font-medium text-yellow-300 mb-3")}>🔬 Science</h4>
-            <div className="space-y-2">
-              {[
-                { name: "PhET Simulations", url: "https://phet.colorado.edu" },
-                { name: "NASA Education", url: "https://www.nasa.gov/audience/foreducators/" },
-                { name: "OpenStax Science", url: "https://openstax.org/subjects/science" },
-                { name: "NOAA Education", url: "https://www.noaa.gov/education" },
-                { name: "LabXchange", url: "https://www.labxchange.org" },
-                { name: "ChemCollective", url: "https://www.chemcollective.org" },
-                { name: "OLabs Virtual Labs", url: "https://www.olabs.edu.in" },
-                { name: "Crash Course Science", url: "https://www.youtube.com/c/crashcourse" }
-              ].map((resource, idx) => (
-                <a
-                  key={idx}
-                  href={resource.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={getContrastClass(
-                    "block p-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors",
-                    "block p-2 rounded-lg text-sm text-yellow-200 hover:bg-gray-800 transition-colors"
-                  )}
-                >
-                  <div className="flex items-center justify-between">
-                    <span>{resource.name}</span>
-                    <ExternalLink size={12} />
-                  </div>
-                </a>
-              ))}
-            </div>
+          {/* Science Dropdown */}
+          <div className={getContrastClass(
+            "bg-white/60 rounded-xl border border-gray-200",
+            "bg-gray-800/60 rounded-xl border border-yellow-400/50"
+          )}>
+            <button
+              onClick={() => toggleCategory('science')}
+              className={getContrastClass(
+                "w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 rounded-xl transition-colors",
+                "w-full flex items-center justify-between p-4 text-left hover:bg-gray-700 rounded-xl transition-colors"
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <span className={getContrastClass("font-medium text-gray-800", "font-medium text-yellow-300")}>
+                  🔬 Science
+                </span>
+                <span className={getContrastClass("text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full", "text-xs bg-gray-700 text-yellow-200 px-2 py-1 rounded-full")}>
+                  8 resources
+                </span>
+              </div>
+              {expandedCategories.science ? (
+                <ChevronDown size={16} className={getContrastClass("text-gray-600", "text-yellow-400")} />
+              ) : (
+                <ChevronRight size={16} className={getContrastClass("text-gray-600", "text-yellow-400")} />
+              )}
+            </button>
+            {expandedCategories.science && (
+              <div className="px-4 pb-4 space-y-2">
+                {[
+                  { name: "PhET Simulations", url: "https://phet.colorado.edu" },
+                  { name: "NASA Education", url: "https://www.nasa.gov/audience/foreducators/" },
+                  { name: "OpenStax Science", url: "https://openstax.org/subjects/science" },
+                  { name: "NOAA Education", url: "https://www.noaa.gov/education" },
+                  { name: "LabXchange", url: "https://www.labxchange.org" },
+                  { name: "ChemCollective", url: "https://www.chemcollective.org" },
+                  { name: "OLabs Virtual Labs", url: "https://www.olabs.edu.in" },
+                  { name: "Crash Course Science", url: "https://www.youtube.com/c/crashcourse" }
+                ].map((resource, idx) => (
+                  <a
+                    key={idx}
+                    href={resource.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={getContrastClass(
+                      "block p-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors",
+                      "block p-2 rounded-lg text-sm text-yellow-200 hover:bg-gray-800 transition-colors"
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span>{resource.name}</span>
+                      <ExternalLink size={12} />
+                    </div>
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Technology */}
-          <div>
-            <h4 className={getContrastClass("font-medium text-gray-800 mb-3", "font-medium text-yellow-300 mb-3")}>💻 Technology</h4>
-            <div className="space-y-2">
-              {[
-                { name: "FreeCodeCamp", url: "https://www.freecodecamp.org" },
-                { name: "MIT OpenCourseWare", url: "https://ocw.mit.edu" },
-                { name: "Coursera Free", url: "https://www.coursera.org/courses?query=free" },
-                { name: "edX Courses", url: "https://www.edx.org" }
-              ].map((resource, idx) => (
-                <a
-                  key={idx}
-                  href={resource.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={getContrastClass(
-                    "block p-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors",
-                    "block p-2 rounded-lg text-sm text-yellow-200 hover:bg-gray-800 transition-colors"
-                  )}
-                >
-                  <div className="flex items-center justify-between">
-                    <span>{resource.name}</span>
-                    <ExternalLink size={12} />
-                  </div>
-                </a>
-              ))}
-            </div>
+          {/* Technology Dropdown */}
+          <div className={getContrastClass(
+            "bg-white/60 rounded-xl border border-gray-200",
+            "bg-gray-800/60 rounded-xl border border-yellow-400/50"
+          )}>
+            <button
+              onClick={() => toggleCategory('technology')}
+              className={getContrastClass(
+                "w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 rounded-xl transition-colors",
+                "w-full flex items-center justify-between p-4 text-left hover:bg-gray-700 rounded-xl transition-colors"
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <span className={getContrastClass("font-medium text-gray-800", "font-medium text-yellow-300")}>
+                  💻 Technology
+                </span>
+                <span className={getContrastClass("text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full", "text-xs bg-gray-700 text-yellow-200 px-2 py-1 rounded-full")}>
+                  4 resources
+                </span>
+              </div>
+              {expandedCategories.technology ? (
+                <ChevronDown size={16} className={getContrastClass("text-gray-600", "text-yellow-400")} />
+              ) : (
+                <ChevronRight size={16} className={getContrastClass("text-gray-600", "text-yellow-400")} />
+              )}
+            </button>
+            {expandedCategories.technology && (
+              <div className="px-4 pb-4 space-y-2">
+                {[
+                  { name: "FreeCodeCamp", url: "https://www.freecodecamp.org" },
+                  { name: "MIT OpenCourseWare", url: "https://ocw.mit.edu" },
+                  { name: "Coursera Free", url: "https://www.coursera.org/courses?query=free" },
+                  { name: "edX Courses", url: "https://www.edx.org" }
+                ].map((resource, idx) => (
+                  <a
+                    key={idx}
+                    href={resource.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={getContrastClass(
+                      "block p-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors",
+                      "block p-2 rounded-lg text-sm text-yellow-200 hover:bg-gray-800 transition-colors"
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span>{resource.name}</span>
+                      <ExternalLink size={12} />
+                    </div>
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* Research */}
-          <div>
-            <h4 className={getContrastClass("font-medium text-gray-800 mb-3", "font-medium text-yellow-300 mb-3")}>🔍 Research</h4>
-            <div className="space-y-2">
-              {[
-                { name: "Google Scholar", url: "https://scholar.google.com" },
-                { name: "arXiv Preprints", url: "https://arxiv.org" },
-                { name: "PubMed", url: "https://www.ncbi.nlm.nih.gov/pubmed/" },
-                { name: "Open Access Journals", url: "https://doaj.org" }
-              ].map((resource, idx) => (
-                <a
-                  key={idx}
-                  href={resource.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={getContrastClass(
-                    "block p-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors",
-                    "block p-2 rounded-lg text-sm text-yellow-200 hover:bg-gray-800 transition-colors"
-                  )}
-                >
-                  <div className="flex items-center justify-between">
-                    <span>{resource.name}</span>
-                    <ExternalLink size={12} />
-                  </div>
-                </a>
-              ))}
-            </div>
+          {/* Research Dropdown */}
+          <div className={getContrastClass(
+            "bg-white/60 rounded-xl border border-gray-200",
+            "bg-gray-800/60 rounded-xl border border-yellow-400/50"
+          )}>
+            <button
+              onClick={() => toggleCategory('research')}
+              className={getContrastClass(
+                "w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 rounded-xl transition-colors",
+                "w-full flex items-center justify-between p-4 text-left hover:bg-gray-700 rounded-xl transition-colors"
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <span className={getContrastClass("font-medium text-gray-800", "font-medium text-yellow-300")}>
+                  🔍 Research
+                </span>
+                <span className={getContrastClass("text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full", "text-xs bg-gray-700 text-yellow-200 px-2 py-1 rounded-full")}>
+                  4 resources
+                </span>
+              </div>
+              {expandedCategories.research ? (
+                <ChevronDown size={16} className={getContrastClass("text-gray-600", "text-yellow-400")} />
+              ) : (
+                <ChevronRight size={16} className={getContrastClass("text-gray-600", "text-yellow-400")} />
+              )}
+            </button>
+            {expandedCategories.research && (
+              <div className="px-4 pb-4 space-y-2">
+                {[
+                  { name: "Google Scholar", url: "https://scholar.google.com" },
+                  { name: "arXiv Preprints", url: "https://arxiv.org" },
+                  { name: "PubMed", url: "https://www.ncbi.nlm.nih.gov/pubmed/" },
+                  { name: "Open Access Journals", url: "https://doaj.org" }
+                ].map((resource, idx) => (
+                  <a
+                    key={idx}
+                    href={resource.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={getContrastClass(
+                      "block p-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors",
+                      "block p-2 rounded-lg text-sm text-yellow-200 hover:bg-gray-800 transition-colors"
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span>{resource.name}</span>
+                      <ExternalLink size={12} />
+                    </div>
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Engineering Dropdown */}
+          <div className={getContrastClass(
+            "bg-white/60 rounded-xl border border-gray-200",
+            "bg-gray-800/60 rounded-xl border border-yellow-400/50"
+          )}>
+            <button
+              onClick={() => toggleCategory('engineering')}
+              className={getContrastClass(
+                "w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 rounded-xl transition-colors",
+                "w-full flex items-center justify-between p-4 text-left hover:bg-gray-700 rounded-xl transition-colors"
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <span className={getContrastClass("font-medium text-gray-800", "font-medium text-yellow-300")}>
+                  ⚙️ Engineering
+                </span>
+                <span className={getContrastClass("text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full", "text-xs bg-gray-700 text-yellow-200 px-2 py-1 rounded-full")}>
+                  3 resources
+                </span>
+              </div>
+              {expandedCategories.engineering ? (
+                <ChevronDown size={16} className={getContrastClass("text-gray-600", "text-yellow-400")} />
+              ) : (
+                <ChevronRight size={16} className={getContrastClass("text-gray-600", "text-yellow-400")} />
+              )}
+            </button>
+            {expandedCategories.engineering && (
+              <div className="px-4 pb-4 space-y-2">
+                {[
+                  { name: "Engineering ToolBox", url: "https://www.engineeringtoolbox.com" },
+                  { name: "Autodesk Education", url: "https://www.autodesk.com/education/edu-software" },
+                  { name: "SolidWorks Student", url: "https://www.solidworks.com/sw/education/" }
+                ].map((resource, idx) => (
+                  <a
+                    key={idx}
+                    href={resource.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={getContrastClass(
+                      "block p-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors",
+                      "block p-2 rounded-lg text-sm text-yellow-200 hover:bg-gray-800 transition-colors"
+                    )}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span>{resource.name}</span>
+                      <ExternalLink size={12} />
+                    </div>
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
           
           {/* App Version Footer */}

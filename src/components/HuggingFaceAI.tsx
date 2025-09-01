@@ -45,11 +45,14 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
       // Remove thinking/reasoning tags and content
       .replace(/<think>[\s\S]*?<\/think>/gi, '')
       .replace(/<thinking>[\s\S]*?<\/thinking>/gi, '')
-      .replace(/\*{3,}/g, '*')
+      // Remove all asterisk formatting
+      .replace(/\*{1,}/g, '')
+      // Remove markdown headers
       .replace(/^#{1,6}\s+/gm, '')
-      .replace(/#{2,}/g, '#')
+      // Remove markdown links (keep text only)
       .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-      .replace(/_{3,}/g, '_')
+      // Remove underscores
+      .replace(/_{1,}/g, '')
       .replace(/\r\n/g, '\n')
       .replace(/\r/g, '\n');
 
@@ -115,6 +118,46 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
       .trim();
 
     return result;
+  };
+
+  const formatResponseWithStyling = (text, role) => {
+    if (!text || typeof text !== 'string') return '';
+
+    // First apply the basic formatting
+    const cleanedText = formatAIResponse(text);
+    
+    // Split into lines and apply styling
+    const lines = cleanedText.split('\n');
+    let formattedHtml = '';
+    
+    lines.forEach((line, index) => {
+      const trimmedLine = line.trim();
+      
+      if (trimmedLine === '') {
+        formattedHtml += '<br>';
+        return;
+      }
+      
+      // Detect topic headers (lines that end with colon and are likely titles)
+      if (trimmedLine.endsWith(':') && trimmedLine.length > 5 && trimmedLine.length < 80 && 
+          !trimmedLine.includes('.') && !trimmedLine.includes('?')) {
+        formattedHtml += `<div class="font-semibold text-blue-600 dark:text-blue-400 mt-4 mb-2 text-lg">${trimmedLine}</div>`;
+      }
+      // Detect numbered lists
+      else if (/^\d+\.\s/.test(trimmedLine)) {
+        formattedHtml += `<div class="mt-2 mb-1 font-medium text-gray-800 dark:text-gray-200">${trimmedLine}</div>`;
+      }
+      // Detect bullet points
+      else if (/^[-•]\s/.test(trimmedLine)) {
+        formattedHtml += `<div class="ml-4 mt-1 text-gray-700 dark:text-gray-300">${trimmedLine}</div>`;
+      }
+      // Regular paragraphs
+      else {
+        formattedHtml += `<div class="mt-2 text-gray-800 dark:text-gray-100 leading-relaxed">${trimmedLine}</div>`;
+      }
+    });
+    
+    return formattedHtml;
   };
 
   const handleSubmit = async () => {
@@ -573,7 +616,15 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
                     ? 'bg-blue-500 text-white rounded-br-md'
                     : getContrastClass('bg-gray-100 text-gray-800 rounded-bl-md', 'bg-gray-700 text-gray-100 rounded-bl-md')
                 }`}>
-                  <div className="whitespace-pre-wrap">{message.content}</div>
+                  <div className="whitespace-pre-wrap">
+                    {message.role === 'assistant' ? (
+                      <div dangerouslySetInnerHTML={{ 
+                        __html: formatResponseWithStyling(message.content, message.role === 'user' ? 'user' : 'assistant') 
+                      }} />
+                    ) : (
+                      message.content
+                    )}
+                  </div>
                   <div className="text-xs opacity-70 mt-2">
                     {message.timestamp.toLocaleTimeString()}
                   </div>

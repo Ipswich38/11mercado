@@ -4,13 +4,6 @@ import Groq from 'groq-sdk';
 const apiKey = import.meta.env.VITE_GROQ_API_KEY;
 const isGroqConfigured = apiKey && apiKey !== 'your-groq-api-key-here';
 
-// Debug logging for production troubleshooting
-console.log('Groq Configuration Debug:', {
-  hasApiKey: !!apiKey,
-  keyLength: apiKey?.length || 0,
-  keyPrefix: apiKey ? apiKey.substring(0, 8) + '...' : 'none',
-  isConfigured: isGroqConfigured
-});
 
 
 let groq = null;

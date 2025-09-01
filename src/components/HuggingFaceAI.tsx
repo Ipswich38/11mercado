@@ -270,52 +270,65 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentInput = inputText;
     setInputText('');
     setIsLoading(true);
 
     try {
       let aiResponse = '';
       
-      // Try to get AI response from Groq first
-      try {
-        if (groq && isGroqConfigured) {
+      // Use Groq exclusively for all queries
+      if (groq && isGroqConfigured) {
+        // Determine appropriate system prompt based on query type
+        const isSimpleGreeting = /^(hi|hello|hey|good morning|good afternoon|good evening|thanks|thank you|bye|goodbye)$/i.test(currentInput.trim());
+        const isSTEMQuery = /\b(math|science|physics|chemistry|biology|engineering|research|study|calculate|equation|molecule|energy|force|algebra|geometry|calculus|technology|programming|data|analysis)\b/i.test(currentInput.toLowerCase());
+        
+        let systemPrompt = '';
+        let temperature = 0.3;
+        let maxTokens = 800;
+
+        if (isSimpleGreeting) {
+          systemPrompt = 'You are Research and STEM-GPT v3.0, a friendly AI assistant specializing in STEM education. For simple greetings and casual conversation, respond naturally and warmly while mentioning your expertise in STEM subjects. Keep responses conversational and brief for basic interactions.';
+          temperature = 0.7;
+          maxTokens = 150;
+        } else if (isSTEMQuery) {
+          systemPrompt = 'You are Research and STEM-GPT v3.0, an advanced educational AI assistant with enhanced capabilities. Provide comprehensive, insightful explanations about STEM topics and research methodology. Your v3.0 features include: deeper subject analysis, interdisciplinary connections, practical application guidance, adaptive learning recommendations, and career pathway insights. Focus on helping students develop critical thinking and connect theoretical concepts to real-world applications. Provide multiple learning pathways and suggest next steps for continued exploration. Write in clean, engaging paragraphs with clear structure and practical examples.';
+        } else {
+          systemPrompt = 'You are Research and STEM-GPT v3.0, an educational AI assistant. For general questions, provide helpful responses while gently steering the conversation toward STEM topics if appropriate. Keep responses informative but concise for non-STEM queries, and offer to help with mathematics, science, engineering, technology, or research methodology.';
+          temperature = 0.5;
+          maxTokens = 400;
+        }
+
+        try {
           const response = await groq.chat.completions.create({
             messages: [
-              {
-                role: 'system',
-                content: 'You are Research and STEM-GPT v3.0, an advanced educational AI assistant with enhanced capabilities. Provide comprehensive, insightful explanations about STEM topics and research methodology. Your v3.0 features include: deeper subject analysis, interdisciplinary connections, practical application guidance, adaptive learning recommendations, and career pathway insights. Focus on helping students develop critical thinking and connect theoretical concepts to real-world applications. Provide multiple learning pathways and suggest next steps for continued exploration. Write in clean, engaging paragraphs with clear structure and practical examples.'
-              },
-              {
-                role: 'user',
-                content: inputText
-              }
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: currentInput }
             ],
             model: 'llama3-70b-8192',
-            temperature: 0.3,
-            max_tokens: 800
+            temperature: temperature,
+            max_tokens: maxTokens,
+            stream: false
           });
 
-          const rawResponse = response.choices[0]?.message?.content || '';
-          aiResponse = formatAIResponse(rawResponse);
+          aiResponse = response.choices[0]?.message?.content || '';
+        } catch (apiError) {
+          console.error('Groq API error:', apiError);
+          // Provide appropriate fallback based on query type
+          if (isSimpleGreeting) {
+            aiResponse = "Hello! I'm Research and STEM-GPT v3.0, your AI assistant for STEM education. I'm here to help with mathematics, science, engineering, technology, and research methodology. What would you like to explore today?";
+          } else {
+            aiResponse = "I'm experiencing some technical difficulties with my AI service right now. Please try again in a moment. I'm here to help with STEM subjects and research methodology!";
+          }
         }
-      } catch (apiError) {
-        console.log('Groq API not available, using fallback response');
-      }
-
-      // Create comprehensive response
-      let fullResponse = '';
-      
-      if (aiResponse && aiResponse.trim().length > 10) {
-        fullResponse = aiResponse;
       } else {
-        // Enhanced fallback responses with actual educational content
-        fullResponse = generateEducationalResponse(inputText);
+        aiResponse = "I'm not properly configured right now. Please check back later for STEM education assistance!";
       }
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: fullResponse,
+        content: formatAIResponse(aiResponse),
         timestamp: new Date()
       };
 

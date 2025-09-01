@@ -158,15 +158,21 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
           maxTokens = 1500;
         }
 
+        console.log('🔄 Making Groq API request with:', {
+          model: 'llama3-8b-8192',
+          temperature,
+          maxTokens,
+          messagesCount: 2
+        });
+
         const response = await groq.chat.completions.create({
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: currentInput }
           ],
-          model: 'llama3-70b-8192',
+          model: 'llama3-8b-8192', // Changed to smaller, more reliable model
           temperature: temperature,
-          max_tokens: maxTokens,
-          stream: false
+          max_tokens: maxTokens
         });
 
         aiResponse = response.choices[0]?.message?.content || '';

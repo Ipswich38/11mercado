@@ -281,22 +281,24 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
       if (groq && isGroqConfigured) {
         // Determine appropriate system prompt based on query type
         const isSimpleGreeting = /^(hi|hello|hey|good morning|good afternoon|good evening|thanks|thank you|bye|goodbye)$/i.test(currentInput.trim());
-        const isSTEMQuery = /\b(math|science|physics|chemistry|biology|engineering|research|study|calculate|equation|molecule|energy|force|algebra|geometry|calculus|technology|programming|data|analysis)\b/i.test(currentInput.toLowerCase());
+        const isSTEMQuery = /\b(math|science|physics|chemistry|biology|engineering|research|study|calculate|equation|molecule|energy|force|algebra|geometry|calculus|technology|programming|data|analysis|learn|explain|what is|how do|how to|solve|formula|theory|principle|concept|method|process|experiment|lab|laboratory|diagram|graph|chart|statistics|probability|logic|proof|theorem|hypothesis|variable|function|derivative|integral|electron|atom|neutron|proton|reaction|compound|element|organism|ecosystem|evolution|genetics|dna|rna|protein|metabolism|photosynthesis|respiration|mitosis|meiosis|kinetic|potential|velocity|acceleration|momentum|thermodynamics|entropy|wave|frequency|wavelength|electromagnetic|radiation|nuclear|quantum|relativity|circuit|voltage|current|resistance|capacitance|inductance|semiconductor|transistor|microprocessor|algorithm|database|network|software|hardware|artificial intelligence|machine learning|robotics|automation|nanotechnology|biotechnology|renewable energy|sustainability|climate|environment|pollution)\b/i.test(currentInput.toLowerCase());
         
         let systemPrompt = '';
         let temperature = 0.3;
-        let maxTokens = 800;
+        let maxTokens = 1200; // Increased default for educational content
 
         if (isSimpleGreeting) {
           systemPrompt = 'You are Research and STEM-GPT v3.0, a friendly AI assistant specializing in STEM education. For simple greetings and casual conversation, respond naturally and warmly while mentioning your expertise in STEM subjects. Keep responses conversational and brief for basic interactions.';
           temperature = 0.7;
           maxTokens = 150;
         } else if (isSTEMQuery) {
-          systemPrompt = 'You are Research and STEM-GPT v3.0, an advanced educational AI assistant with enhanced capabilities. Provide comprehensive, insightful explanations about STEM topics and research methodology. Your v3.0 features include: deeper subject analysis, interdisciplinary connections, practical application guidance, adaptive learning recommendations, and career pathway insights. Focus on helping students develop critical thinking and connect theoretical concepts to real-world applications. Provide multiple learning pathways and suggest next steps for continued exploration. Write in clean, engaging paragraphs with clear structure and practical examples.';
+          systemPrompt = 'You are Research and STEM-GPT v3.0, an advanced educational AI assistant with enhanced capabilities. This is a STEM education app where students expect high-quality, comprehensive responses. Provide thorough, insightful explanations about STEM topics and research methodology. Your v3.0 features include: deeper subject analysis, interdisciplinary connections, practical application guidance, adaptive learning recommendations, and career pathway insights. Focus on helping students develop critical thinking and connect theoretical concepts to real-world applications. Provide multiple learning pathways, detailed examples, step-by-step explanations when appropriate, and suggest next steps for continued exploration. Write in clean, engaging paragraphs with clear structure and extensive practical examples. Students are relying on you for quality educational content, so be comprehensive and thorough.';
+          temperature = 0.2; // Lower temperature for more focused educational content
+          maxTokens = 1500; // Much more generous for STEM content
         } else {
-          systemPrompt = 'You are Research and STEM-GPT v3.0, an educational AI assistant. For general questions, provide helpful responses while gently steering the conversation toward STEM topics if appropriate. Keep responses informative but concise for non-STEM queries, and offer to help with mathematics, science, engineering, technology, or research methodology.';
-          temperature = 0.5;
-          maxTokens = 400;
+          systemPrompt = 'You are Research and STEM-GPT v3.0, an educational AI assistant specializing in STEM subjects. For general questions, provide helpful responses while relating them to STEM concepts when possible. Remember this is a STEM education platform, so students may be asking general questions that could connect to scientific or mathematical principles. Be educational and informative, and offer to help with mathematics, science, engineering, technology, or research methodology.';
+          temperature = 0.4;
+          maxTokens = 600; // More generous for educational context
         }
 
         try {

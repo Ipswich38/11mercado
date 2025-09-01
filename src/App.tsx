@@ -30,7 +30,7 @@ import AdminMonitor from './components/AdminMonitor';
 import { useAdminSession } from './utils/adminSessionManager';
 import UPCATQuizGenerator from './components/UPCATQuizGenerator';
 import AIScientificCalculator from './components/AIScientificCalculator';
-import HuggingFaceAI from './components/HuggingFaceAI';
+import STEMChatAI from './components/STEMChatAI';
 import Legal from './components/Legal';
 import PTASecretaryDashboard from './components/PTASecretaryDashboard';
 import MiniTutorial from './components/MiniTutorial';
@@ -567,7 +567,7 @@ export default function MobileApp() {
           onClose={() => setActiveApp('stem-tools')}
         />;
       case 'ai-assistant':
-        return <HuggingFaceAI 
+        return <STEMChatAI 
           getContrastClass={getContrastClass}
           onClose={() => setActiveApp('stem-tools')}
         />;

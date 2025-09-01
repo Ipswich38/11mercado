@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Loader2, TrendingUp, BarChart3, PieChart, Calculator, Brain, History, X, HelpCircle } from 'lucide-react';
 import { evaluate, parse, simplify } from 'mathjs';
+import groq, { isGroqConfigured } from '../utils/groqClient';
 
 interface CalculationHistory {
   id: string;
@@ -200,59 +201,75 @@ export default function AIScientificCalculator({ getContrastClass, onClose }) {
   };
 
   const generateAIAnalysis = async (expr: string, result: string) => {
-    // Simulate AI analysis generation
-    const analysisPrompts = {
-      trigonometric: {
-        explanation: `This calculation involves trigonometric functions. The result ${result} represents the ${expr.includes('sin') ? 'sine' : expr.includes('cos') ? 'cosine' : 'tangent'} value.`,
-        concepts: ['Trigonometry', 'Unit Circle', 'Angle Measurement'],
-        nextSteps: ['Try different angle values', 'Explore inverse functions', 'Practice with real-world applications'],
-        difficulty: 'intermediate' as const
-      },
-      logarithmic: {
-        explanation: `This logarithmic calculation gives us ${result}. Logarithms help us solve exponential equations and understand growth patterns.`,
-        concepts: ['Logarithms', 'Exponential Functions', 'Mathematical Inverse'],
-        nextSteps: ['Explore different bases', 'Try exponential form', 'Practice with scientific notation'],
-        difficulty: 'advanced' as const
-      },
-      algebraic: {
-        explanation: `This algebraic expression evaluates to ${result}. Understanding order of operations and mathematical relationships is key.`,
-        concepts: ['Order of Operations', 'Algebraic Manipulation', 'Mathematical Relationships'],
-        nextSteps: ['Try simplifying step by step', 'Explore similar expressions', 'Practice with variables'],
-        difficulty: 'basic' as const
-      },
-      basic: {
-        explanation: `The calculation ${expr} equals ${result}. This demonstrates fundamental arithmetic operations.`,
-        concepts: ['Basic Arithmetic', 'Number Operations', 'Mathematical Precision'],
-        nextSteps: ['Try more complex expressions', 'Explore scientific notation', 'Practice mental math'],
-        difficulty: 'basic' as const
+    try {
+      if (!groq || !isGroqConfigured) {
+        console.error('Groq AI not configured');
+        return;
       }
-    };
 
-    // Determine the type of calculation
-    let analysisType = 'basic';
-    if (expr.includes('sin') || expr.includes('cos') || expr.includes('tan')) {
-      analysisType = 'trigonometric';
-    } else if (expr.includes('log') || expr.includes('ln')) {
-      analysisType = 'logarithmic';
-    } else if (expr.includes('^') || expr.includes('sqrt') || expr.includes('*') || expr.includes('/')) {
-      analysisType = 'algebraic';
+      const prompt = `As an AI math tutor, analyze this calculation for a student:
+
+Expression: ${expr}
+Result: ${result}
+
+Please provide:
+1. A clear explanation of what this calculation means and the mathematical concepts involved
+2. 3-5 key mathematical concepts demonstrated (as a comma-separated list)  
+3. 3-4 practical next steps for learning (as a comma-separated list)
+4. Difficulty level: basic, intermediate, or advanced
+
+Format your response as:
+EXPLANATION: [your explanation here]
+CONCEPTS: [concept1, concept2, concept3, ...]
+NEXT_STEPS: [step1, step2, step3, ...]  
+DIFFICULTY: [basic/intermediate/advanced]
+VISUALIZATION: [graph/table/diagram/none]`;
+
+      const response = await groq.chat.completions.create({
+        messages: [
+          { role: 'system', content: 'You are an expert mathematics tutor who provides clear, educational explanations of mathematical calculations. Focus on helping students understand concepts and providing actionable learning guidance.' },
+          { role: 'user', content: prompt }
+        ],
+        model: 'deepseek-r1-distill-llama-70b',
+        temperature: 0.3,
+        max_tokens: 800
+      });
+
+      const aiContent = response.choices[0]?.message?.content || '';
+      
+      // Parse the AI response
+      const explanationMatch = aiContent.match(/EXPLANATION:\s*(.+?)(?=CONCEPTS:|$)/s);
+      const conceptsMatch = aiContent.match(/CONCEPTS:\s*(.+?)(?=NEXT_STEPS:|$)/s);
+      const nextStepsMatch = aiContent.match(/NEXT_STEPS:\s*(.+?)(?=DIFFICULTY:|$)/s);
+      const difficultyMatch = aiContent.match(/DIFFICULTY:\s*(.+?)(?=VISUALIZATION:|$)/s);
+      const visualizationMatch = aiContent.match(/VISUALIZATION:\s*(.+?)$/s);
+
+      const analysis: AIAnalysisResponse = {
+        explanation: explanationMatch?.[1]?.trim() || `This calculation ${expr} equals ${result}. Let me help you understand the mathematical concepts involved.`,
+        concepts: conceptsMatch?.[1]?.split(',').map(c => c.trim()).filter(c => c.length > 0) || ['Mathematical Operations'],
+        nextSteps: nextStepsMatch?.[1]?.split(',').map(s => s.trim()).filter(s => s.length > 0) || ['Practice similar problems'],
+        difficulty: (difficultyMatch?.[1]?.trim().toLowerCase() as 'basic' | 'intermediate' | 'advanced') || 'basic',
+        visualization: visualizationMatch?.[1]?.trim().toLowerCase().includes('graph') ? 'graph' : 
+                     visualizationMatch?.[1]?.trim().toLowerCase().includes('table') ? 'table' :
+                     visualizationMatch?.[1]?.trim().toLowerCase().includes('diagram') ? 'diagram' : null
+      };
+
+      setCurrentAnalysis(analysis);
+      setShowAnalysis(true);
+
+    } catch (error) {
+      console.error('AI analysis error:', error);
+      
+      // Fallback to basic analysis
+      setCurrentAnalysis({
+        explanation: `The calculation ${expr} equals ${result}. This demonstrates mathematical computation and problem-solving skills.`,
+        concepts: ['Mathematical Operations', 'Problem Solving'],
+        nextSteps: ['Practice similar calculations', 'Explore related concepts', 'Try more complex problems'],
+        difficulty: 'basic',
+        visualization: null
+      });
+      setShowAnalysis(true);
     }
-
-    const analysis = analysisPrompts[analysisType];
-    
-    // Add visualization suggestion based on function type
-    let visualization = null;
-    if (expr.includes('sin') || expr.includes('cos') || expr.includes('tan')) {
-      visualization = 'graph';
-    } else if (expr.includes('log') || expr.includes('ln')) {
-      visualization = 'graph';
-    }
-
-    setCurrentAnalysis({
-      ...analysis,
-      visualization
-    });
-    setShowAnalysis(true);
   };
 
   const renderVisualization = () => {

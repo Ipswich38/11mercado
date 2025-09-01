@@ -319,7 +319,14 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
 
           aiResponse = response.choices[0]?.message?.content || '';
         } catch (apiError) {
-          console.error('Groq API error:', apiError);
+          console.error('Groq API error details:', {
+            error: apiError,
+            message: apiError.message,
+            status: apiError.status,
+            response: apiError.response,
+            apiKeyConfigured: isGroqConfigured,
+            groqClient: !!groq
+          });
           
           // Provide educational fallbacks based on query type
           if (isSimpleGreeting) {

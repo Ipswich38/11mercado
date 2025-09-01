@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, Send, Bot, User, BookOpen, X, Menu, ExternalLink, ChevronDown, ChevronRight } from 'lucide-react';
-import Groq from 'groq-sdk';
+import groq, { isGroqConfigured } from '../utils/groqClient';
 
 interface Message {
   id: string;
@@ -30,11 +30,7 @@ export default function STEMChatAI({ getContrastClass, onClose }) {
   });
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Initialize Groq client
-  const groq = new Groq({
-    apiKey: import.meta.env.VITE_GROQ_API_KEY,
-    dangerouslyAllowBrowser: true
-  });
+  // Use centralized Groq client
 
   useEffect(() => {
     scrollToBottom();
@@ -60,6 +56,10 @@ export default function STEMChatAI({ getContrastClass, onClose }) {
     setIsLoading(true);
 
     try {
+      if (!groq || !isGroqConfigured) {
+        throw new Error('Groq client not configured');
+      }
+
       const response = await groq.chat.completions.create({
         messages: [
           {

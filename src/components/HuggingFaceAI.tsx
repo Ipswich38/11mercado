@@ -241,6 +241,10 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
       return `🤖 Comprehensive Physics Framework:\n\nPhysics provides the fundamental principles governing all natural phenomena, from quantum mechanics at the atomic scale to cosmological processes in distant galaxies. This science reveals the underlying unity of seemingly diverse natural events.\n\nClassical mechanics describes motion through Newton's laws, connecting force, mass, and acceleration. Energy conservation principles explain how systems transfer and transform energy without loss. Wave phenomena, including sound and light, demonstrate how energy travels through space and matter.\n\nModern physics applications include medical imaging technologies like MRI and CT scans. Semiconductor physics enables computer technology and renewable energy systems. Quantum mechanics principles drive emerging technologies like quantum computing and advanced materials science.\n\nExploration pathways: Study thermodynamics to understand energy flow in systems. Investigate electromagnetism for understanding modern technology. Explore relativity and quantum mechanics to grasp the universe's fundamental nature at extreme scales.`;
     }
     
+    if (lowerQuestion.includes('sports science') || lowerQuestion.includes('sport science') || lowerQuestion.includes('kinesiology') || lowerQuestion.includes('exercise science')) {
+      return `🤖 Sports Science and Human Performance Analysis:\n\nSports science integrates multiple scientific disciplines to optimize athletic performance, prevent injuries, and enhance human movement capabilities. This interdisciplinary field combines biomechanics, physiology, psychology, and nutrition to understand the complex factors affecting sports performance.\n\nBiomechanical analysis examines movement patterns, force production, and efficiency in athletic activities. Exercise physiology studies how the body adapts to training stimuli, including cardiovascular adaptations, muscle fiber recruitment, and metabolic responses. Sports psychology addresses mental preparation, motivation, and performance under pressure.\n\nPractical applications include performance analysis using motion capture technology, designing training programs based on physiological principles, and developing injury prevention strategies. Nutritional science optimizes fueling strategies for different sports and recovery protocols.\n\nCareer pathways: Exercise physiologist, biomechanics researcher, strength and conditioning coach, sports nutritionist, or sports psychologist. Advanced study areas include motor control, sports medicine, and performance analytics using wearable technology.`;
+    }
+    
     if (lowerQuestion.includes('biology') || lowerQuestion.includes('cell') || lowerQuestion.includes('life')) {
       return `🤖 Biological Systems Analysis:\n\nBiology illuminates the remarkable complexity and interconnectedness of living systems, from molecular machinery within cells to global ecosystem dynamics. This science reveals life's fundamental principles while informing medical treatments and environmental conservation.\n\nCellular biology demonstrates how molecular components organize into functional living units. DNA's information storage and protein synthesis create the molecular basis of heredity. Metabolic pathways show how organisms extract energy from nutrients and build essential molecules.\n\nEcological principles explain species interactions and environmental balance. Evolution provides the theoretical framework for understanding biological diversity and adaptation. Medical applications include understanding disease mechanisms and developing targeted treatments.\n\nAdvanced directions: Study genetics and molecular biology for understanding heredity mechanisms. Explore ecology and evolution for environmental and conservation applications. Investigate bioengineering to apply biological principles for technological solutions.`;
     }
@@ -316,11 +320,15 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
           aiResponse = response.choices[0]?.message?.content || '';
         } catch (apiError) {
           console.error('Groq API error:', apiError);
-          // Provide appropriate fallback based on query type
+          
+          // Provide educational fallbacks based on query type
           if (isSimpleGreeting) {
             aiResponse = "Hello! I'm Research and STEM-GPT v3.0, your AI assistant for STEM education. I'm here to help with mathematics, science, engineering, technology, and research methodology. What would you like to explore today?";
+          } else if (isSTEMQuery) {
+            // For STEM queries, encourage user to try again since we should have comprehensive coverage
+            aiResponse = "I'm experiencing a temporary connection issue with my AI service. Please try asking your STEM question again - I have comprehensive knowledge across all areas of Science, Technology, Engineering, and Mathematics, including topics like sports science, biochemistry, astrophysics, materials engineering, computer science, environmental science, and much more. Your question deserves a detailed, expert response!";
           } else {
-            aiResponse = "I'm experiencing some technical difficulties with my AI service right now. Please try again in a moment. I'm here to help with STEM subjects and research methodology!";
+            aiResponse = "I'm experiencing some technical difficulties with my AI service right now. Please try rephrasing your question or ask about a specific STEM topic like mathematics, science, engineering, or technology.";
           }
         }
       } else {

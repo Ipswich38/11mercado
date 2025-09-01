@@ -619,7 +619,7 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
                   <div className="whitespace-pre-wrap">
                     {message.role === 'assistant' ? (
                       <div dangerouslySetInnerHTML={{ 
-                        __html: formatResponseWithStyling(message.content, message.role === 'user' ? 'user' : 'assistant') 
+                        __html: formatResponseWithStyling(message.content, message.role) 
                       }} />
                     ) : (
                       message.content

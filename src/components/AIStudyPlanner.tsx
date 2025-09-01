@@ -131,7 +131,7 @@ Focus on evidence-based learning techniques and practical applications.`;
           },
           { role: 'user', content: prompt }
         ],
-        model: 'llama3-70b-8192',
+        model: 'deepseek-r1-distill-llama-70b',
         temperature: 0.4,
         max_tokens: 1500,
         stream: false
@@ -235,7 +235,7 @@ Give actionable advice for optimizing their learning journey.`;
           },
           { role: 'user', content: prompt }
         ],
-        model: 'llama3-70b-8192',
+        model: 'deepseek-r1-distill-llama-70b',
         temperature: 0.3,
         max_tokens: 1000,
         stream: false

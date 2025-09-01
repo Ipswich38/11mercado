@@ -197,7 +197,7 @@ Make questions challenging but fair, requiring analytical thinking and comprehen
       
       const response = await groq.chat.completions.create({
         messages: [{ role: 'user', content: prompt }],
-        model: 'llama3-70b-8192',
+        model: 'deepseek-r1-distill-llama-70b',
         temperature: 0.7,
         max_tokens: 4000,
         stream: false
@@ -308,7 +308,7 @@ Keep it encouraging and educational.`;
       
       const response = await groq.chat.completions.create({
         messages: [{ role: 'user', content: analysisPrompt }],
-        model: 'llama3-8b-8192',
+        model: 'deepseek-r1-distill-llama-70b',
         temperature: 0.3,
         max_tokens: 500,
         stream: false

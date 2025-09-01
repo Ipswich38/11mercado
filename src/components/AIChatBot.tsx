@@ -78,7 +78,7 @@ export default function AIChatBot({ getContrastClass, onClose }: AIChatBotProps)
     }
     
     // Use more advanced model for complex queries
-    const modelChoice = queryType === 'complex' ? 'llama3-70b-8192' : 'llama3-8b-8192';
+    const modelChoice = queryType === 'complex' ? 'deepseek-r1-distill-llama-70b' : 'deepseek-r1-distill-llama-70b';
     
     const response = await groq.chat.completions.create({
       messages: [

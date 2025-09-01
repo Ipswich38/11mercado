@@ -288,7 +288,7 @@ Make it professional, organized, and suitable for official PTA records. Focus on
             content: prompt
           }
         ],
-        model: 'llama3-70b-8192',
+        model: 'deepseek-r1-distill-llama-70b',
         temperature: 0.3,
         max_tokens: 1000
       });
@@ -400,7 +400,7 @@ Make it professional, organized, and suitable for official PTA records. Focus on
             content: userPrompt
           }
         ],
-        model: 'llama3-70b-8192',
+        model: 'deepseek-r1-distill-llama-70b',
         temperature: 0.3,
         max_tokens: 1000
       });

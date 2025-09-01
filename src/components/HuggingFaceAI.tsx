@@ -132,6 +132,15 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
     try {
       let aiResponse = '';
       
+      // Debug logging for production
+      console.log('API Debug Info:', {
+        hasGroqClient: !!groq,
+        isConfigured: isGroqConfigured,
+        apiKeyExists: !!import.meta.env.VITE_GROQ_API_KEY,
+        apiKeyLength: import.meta.env.VITE_GROQ_API_KEY?.length || 0,
+        env: import.meta.env.MODE
+      });
+      
       if (groq && isGroqConfigured) {
         const isSimpleGreeting = /^(hi|hello|hey|good morning|good afternoon|good evening|thanks|thank you|bye|goodbye)$/i.test(currentInput.trim());
         
@@ -161,7 +170,9 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
         });
 
         aiResponse = response.choices[0]?.message?.content || '';
+        console.log('✅ Groq API Success:', { responseLength: aiResponse.length });
       } else {
+        console.error('❌ Groq client not configured:', { groq: !!groq, isConfigured: isGroqConfigured });
         aiResponse = "I'm not properly configured right now. Please check back later for STEM education assistance!";
       }
 
@@ -175,7 +186,13 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
       setMessages(prev => [...prev, assistantMessage]);
       
     } catch (error) {
-      console.error('Error:', error);
+      console.error('🚨 Groq API Error Details:', {
+        error: error,
+        message: error?.message,
+        status: error?.status,
+        name: error?.name,
+        stack: error?.stack?.substring(0, 200)
+      });
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',

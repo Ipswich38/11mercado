@@ -411,7 +411,7 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
               )}
             </button>
             {expandedCategories.mathematics && (
-              <div className="px-4 pb-4 space-y-2">
+              <div className="px-4 pb-4 space-y-2" onClick={(e) => e.stopPropagation()}>
                 {[
                   { name: "Khan Academy Math", url: "https://www.khanacademy.org/math" },
                   { name: "OpenStax Math", url: "https://openstax.org/subjects/math" },
@@ -428,9 +428,10 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
                     target="_blank"
                     rel="noopener noreferrer"
                     className={getContrastClass(
-                      "block p-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors",
-                      "block p-2 rounded-lg text-sm text-yellow-200 hover:bg-gray-800 transition-colors"
+                      "block p-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer",
+                      "block p-2 rounded-lg text-sm text-yellow-200 hover:bg-gray-800 transition-colors cursor-pointer"
                     )}
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <div className="flex items-center justify-between">
                       <span>{resource.name}</span>
@@ -469,7 +470,7 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
               )}
             </button>
             {expandedCategories.science && (
-              <div className="px-4 pb-4 space-y-2">
+              <div className="px-4 pb-4 space-y-2" onClick={(e) => e.stopPropagation()}>
                 {[
                   { name: "PhET Simulations", url: "https://phet.colorado.edu" },
                   { name: "NASA Education", url: "https://www.nasa.gov/audience/foreducators/" },
@@ -486,9 +487,10 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
                     target="_blank"
                     rel="noopener noreferrer"
                     className={getContrastClass(
-                      "block p-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors",
-                      "block p-2 rounded-lg text-sm text-yellow-200 hover:bg-gray-800 transition-colors"
+                      "block p-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer",
+                      "block p-2 rounded-lg text-sm text-yellow-200 hover:bg-gray-800 transition-colors cursor-pointer"
                     )}
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <div className="flex items-center justify-between">
                       <span>{resource.name}</span>
@@ -527,7 +529,7 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
               )}
             </button>
             {expandedCategories.technology && (
-              <div className="px-4 pb-4 space-y-2">
+              <div className="px-4 pb-4 space-y-2" onClick={(e) => e.stopPropagation()}>
                 {[
                   { name: "FreeCodeCamp", url: "https://www.freecodecamp.org" },
                   { name: "MIT OpenCourseWare", url: "https://ocw.mit.edu" },
@@ -540,9 +542,10 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
                     target="_blank"
                     rel="noopener noreferrer"
                     className={getContrastClass(
-                      "block p-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors",
-                      "block p-2 rounded-lg text-sm text-yellow-200 hover:bg-gray-800 transition-colors"
+                      "block p-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer",
+                      "block p-2 rounded-lg text-sm text-yellow-200 hover:bg-gray-800 transition-colors cursor-pointer"
                     )}
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <div className="flex items-center justify-between">
                       <span>{resource.name}</span>
@@ -581,7 +584,7 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
               )}
             </button>
             {expandedCategories.research && (
-              <div className="px-4 pb-4 space-y-2">
+              <div className="px-4 pb-4 space-y-2" onClick={(e) => e.stopPropagation()}>
                 {[
                   { name: "Google Scholar", url: "https://scholar.google.com" },
                   { name: "arXiv Preprints", url: "https://arxiv.org" },
@@ -594,9 +597,10 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
                     target="_blank"
                     rel="noopener noreferrer"
                     className={getContrastClass(
-                      "block p-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors",
-                      "block p-2 rounded-lg text-sm text-yellow-200 hover:bg-gray-800 transition-colors"
+                      "block p-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer",
+                      "block p-2 rounded-lg text-sm text-yellow-200 hover:bg-gray-800 transition-colors cursor-pointer"
                     )}
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <div className="flex items-center justify-between">
                       <span>{resource.name}</span>
@@ -635,7 +639,7 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
               )}
             </button>
             {expandedCategories.engineering && (
-              <div className="px-4 pb-4 space-y-2">
+              <div className="px-4 pb-4 space-y-2" onClick={(e) => e.stopPropagation()}>
                 {[
                   { name: "Engineering ToolBox", url: "https://www.engineeringtoolbox.com" },
                   { name: "Autodesk Education", url: "https://www.autodesk.com/education/edu-software" },
@@ -647,9 +651,10 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
                     target="_blank"
                     rel="noopener noreferrer"
                     className={getContrastClass(
-                      "block p-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors",
-                      "block p-2 rounded-lg text-sm text-yellow-200 hover:bg-gray-800 transition-colors"
+                      "block p-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer",
+                      "block p-2 rounded-lg text-sm text-yellow-200 hover:bg-gray-800 transition-colors cursor-pointer"
                     )}
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <div className="flex items-center justify-between">
                       <span>{resource.name}</span>
@@ -682,13 +687,7 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
                 "text-xs text-gray-600",
                 "text-xs text-yellow-200"
               )}>
-                Version 3.0.0 • Enhanced AI Learning Platform
-              </div>
-              <div className={getContrastClass(
-                "text-xs text-blue-600 mt-1",
-                "text-xs text-yellow-300 mt-1"
-              )}>
-                🚀 ChatGPT-Style Interface • 🧠 Advanced AI Intelligence
+                Version 3.0.0
               </div>
             </div>
           </div>
@@ -721,17 +720,11 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
             <Bot size={24} className={getContrastClass("text-gray-700", "text-yellow-400")} />
             <div>
               <h1 className={getContrastClass(
-                "text-lg font-semibold text-gray-900",
-                "text-lg font-semibold text-yellow-400"
+                "text-lg md:text-xl font-semibold text-gray-900",
+                "text-lg md:text-xl font-semibold text-yellow-400"
               )}>
-                Research and STEM-GPT v3.0
+                <span className="hidden sm:inline">Research and </span>STEM-GPT
               </h1>
-              <p className={getContrastClass(
-                "text-sm text-gray-600",
-                "text-sm text-yellow-200"
-              )}>
-                Enhanced AI for STEM learning and research
-              </p>
             </div>
           </div>
           
@@ -831,7 +824,7 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
                   "w-full p-3 border border-gray-300 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
                   "w-full p-3 border border-gray-600 bg-gray-900 text-yellow-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-yellow-400"
                 )}
-                rows={Math.min(Math.max(inputText.split('\n').length, 1), 6)}
+                rows={Math.min(Math.max(inputText.split('\n').length, 2), 6)}
                 disabled={isLoading}
               />
             </div>

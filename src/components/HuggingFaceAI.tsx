@@ -159,7 +159,7 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
         }
 
         console.log('🔄 Making Groq API request with:', {
-          model: 'llama3-8b-8192',
+          model: 'mixtral-8x7b-32768',
           temperature,
           maxTokens,
           messagesCount: 2
@@ -170,7 +170,7 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
             { role: 'system', content: systemPrompt },
             { role: 'user', content: currentInput }
           ],
-          model: 'llama3-8b-8192', // Changed to smaller, more reliable model
+          model: 'mixtral-8x7b-32768', // Mixtral is still active and great for STEM
           temperature: temperature,
           max_tokens: maxTokens
         });

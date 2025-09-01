@@ -159,7 +159,7 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
         }
 
         console.log('🔄 Making Groq API request with:', {
-          model: 'mixtral-8x7b-32768',
+          model: 'deepseek-r1-distill-llama-70b',
           temperature,
           maxTokens,
           messagesCount: 2
@@ -170,7 +170,7 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
             { role: 'system', content: systemPrompt },
             { role: 'user', content: currentInput }
           ],
-          model: 'mixtral-8x7b-32768', // Mixtral is still active and great for STEM
+          model: 'deepseek-r1-distill-llama-70b', // DeepSeek R1 - excellent for STEM reasoning
           temperature: temperature,
           max_tokens: maxTokens
         });

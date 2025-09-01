@@ -141,19 +141,23 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
       // Detect topic headers (lines that end with colon and are likely titles)
       if (trimmedLine.endsWith(':') && trimmedLine.length > 5 && trimmedLine.length < 80 && 
           !trimmedLine.includes('.') && !trimmedLine.includes('?')) {
-        formattedHtml += `<div class="font-semibold text-blue-600 dark:text-blue-400 mt-4 mb-2 text-lg">${trimmedLine}</div>`;
+        const headerClass = getContrastClass("font-semibold text-blue-600 mt-4 mb-2 text-lg", "font-semibold text-yellow-400 mt-4 mb-2 text-lg");
+        formattedHtml += `<div class="${headerClass}">${trimmedLine}</div>`;
       }
       // Detect numbered lists
       else if (/^\d+\.\s/.test(trimmedLine)) {
-        formattedHtml += `<div class="mt-2 mb-1 font-medium text-gray-800 dark:text-gray-200">${trimmedLine}</div>`;
+        const listClass = getContrastClass("mt-2 mb-1 font-medium text-gray-800", "mt-2 mb-1 font-medium text-yellow-300");
+        formattedHtml += `<div class="${listClass}">${trimmedLine}</div>`;
       }
       // Detect bullet points
       else if (/^[-•]\s/.test(trimmedLine)) {
-        formattedHtml += `<div class="ml-4 mt-1 text-gray-700 dark:text-gray-300">${trimmedLine}</div>`;
+        const bulletClass = getContrastClass("ml-4 mt-1 text-gray-700", "ml-4 mt-1 text-yellow-200");
+        formattedHtml += `<div class="${bulletClass}">${trimmedLine}</div>`;
       }
       // Regular paragraphs
       else {
-        formattedHtml += `<div class="mt-2 text-gray-800 dark:text-gray-100 leading-relaxed">${trimmedLine}</div>`;
+        const paragraphClass = getContrastClass("mt-2 text-gray-800 leading-relaxed", "mt-2 text-yellow-100 leading-relaxed");
+        formattedHtml += `<div class="${paragraphClass}">${trimmedLine}</div>`;
       }
     });
     

@@ -42,6 +42,9 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
     if (!text || typeof text !== 'string') return '';
 
     let cleaned = text
+      // Remove thinking/reasoning tags and content
+      .replace(/<think>[\s\S]*?<\/think>/gi, '')
+      .replace(/<thinking>[\s\S]*?<\/thinking>/gi, '')
       .replace(/\*{3,}/g, '*')
       .replace(/^#{1,6}\s+/gm, '')
       .replace(/#{2,}/g, '#')
@@ -149,11 +152,11 @@ export default function HuggingFaceAI({ getContrastClass, onClose }) {
         let maxTokens = 1200;
 
         if (isSimpleGreeting) {
-          systemPrompt = 'You are Research and STEM-GPT v3.0, a friendly AI assistant specializing in STEM education. For simple greetings, respond naturally and warmly while mentioning your expertise in STEM subjects. Keep responses conversational and brief.';
+          systemPrompt = 'You are Research and STEM-GPT v3.0, a friendly AI assistant specializing in STEM education. For simple greetings, respond naturally and warmly while mentioning your expertise in STEM subjects. Keep responses conversational and brief. IMPORTANT: Do not include any internal reasoning, thinking process, or <think> tags in your response - provide only the final, polished answer directly to the user.';
           temperature = 0.7;
           maxTokens = 150;
         } else {
-          systemPrompt = 'You are Research and STEM-GPT v3.0, an advanced educational AI assistant. Provide comprehensive, insightful explanations about STEM topics and research methodology. Focus on helping students develop critical thinking and connect theoretical concepts to real-world applications. Write in clean, engaging paragraphs with clear structure and practical examples.';
+          systemPrompt = 'You are Research and STEM-GPT v3.0, an advanced educational AI assistant. Provide comprehensive, insightful explanations about STEM topics and research methodology. Focus on helping students develop critical thinking and connect theoretical concepts to real-world applications. Write in clean, engaging paragraphs with clear structure and practical examples. IMPORTANT: Do not include any internal reasoning, thinking process, or <think> tags in your response - provide only the final, polished educational content directly to the user.';
           temperature = 0.2;
           maxTokens = 1500;
         }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Check, X, Search, Download, Calendar, Users, MessageSquare } from 'lucide-react';
+import { Check, X, Search, Download, Calendar, Users, MessageSquare, Phone, Settings } from 'lucide-react';
+import { sendAttendanceNotification, sendBulkAttendanceNotifications, testSMSConfiguration } from '../utils/smsService';
 
 const AttendanceTracker = () => {
   const [students, setStudents] = useState([
@@ -58,6 +59,14 @@ const AttendanceTracker = () => {
   const [passcodeError, setPasscodeError] = useState("");
   const [currentDate, setCurrentDate] = useState("");
   const [smsLog, setSmsLog] = useState([]);
+  const [showPhoneManager, setShowPhoneManager] = useState(false);
+  const [showSMSSettings, setShowSMSSettings] = useState(false);
+  const [editingPhone, setEditingPhone] = useState({ studentId: null, phone: '' });
+  const [smsConfig, setSmsConfig] = useState({
+    isEnabled: true,
+    autoSendPresent: true,
+    autoSendAbsent: true
+  });
 
   useEffect(() => {
     const today = new Date();

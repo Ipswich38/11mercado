@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, Target, Calendar, RefreshCw } from 'lucide-react';
 import { getAllDonationsFromCentralDB } from '../utils/centralizedDatabase';
+import { loadAccurateDonationData, calculateAccurateTotals } from '../utils/csvDataLoader';
 
 export default function DonationTiles({ donationDrives, getContrastClass }) {
   const [centralizedTotal, setCentralizedTotal] = useState(0);
@@ -11,10 +12,29 @@ export default function DonationTiles({ donationDrives, getContrastClass }) {
   const loadCentralizedData = async () => {
     setIsLoading(true);
     try {
-      console.log('🔄 DonationTiles: Loading centralized data...');
+      console.log('🔄 DonationTiles: Loading accurate CSV data as source of truth...');
+      
+      // Use the accurate CSV data as primary source
+      const csvDonations = await loadAccurateDonationData();
+      
+      if (csvDonations && csvDonations.length > 0) {
+        console.log('✅ DonationTiles: Using accurate CSV data');
+        const { totalAmount, totalGeneralSPTA, totalMercadoPTA } = calculateAccurateTotals(csvDonations);
+        
+        setCentralizedTotal(totalAmount);
+        setGeneralSPTA(totalGeneralSPTA);
+        setMercadoPTA(totalMercadoPTA);
+        
+        console.log(`💰 DonationTiles loaded accurate data: ₱${totalAmount} total`);
+        console.log(`📊 Accurate Breakdown: General SPTA ₱${totalGeneralSPTA}, 11Mercado PTA ₱${totalMercadoPTA}`);
+        return;
+      }
+      
+      // Fallback to Supabase data if CSV is not available
+      console.log('⚠️ DonationTiles: CSV data not available, falling back to Supabase...');
       const donations = await getAllDonationsFromCentralDB();
       
-      console.log('📊 DonationTiles: Received donations data:', {
+      console.log('📊 DonationTiles: Received Supabase donations data:', {
         donations: donations,
         isArray: Array.isArray(donations),
         length: donations?.length,
@@ -90,10 +110,10 @@ export default function DonationTiles({ donationDrives, getContrastClass }) {
       setGeneralSPTA(generalTotal);
       setMercadoPTA(mercadoTotal);
       
-      console.log(`💰 DonationTiles loaded ₱${total} from ${donations.length} donations`);
+      console.log(`💰 DonationTiles loaded ₱${total} from ${donations.length} donations (Supabase fallback)`);
       console.log(`📊 Breakdown: General SPTA ₱${generalTotal}, 11Mercado PTA ₱${mercadoTotal}`);
     } catch (error) {
-      console.error('Error loading centralized data in DonationTiles:', error);
+      console.error('Error loading donation data in DonationTiles:', error);
       // Set safe defaults on error
       setCentralizedTotal(0);
       setGeneralSPTA(0);

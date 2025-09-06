@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient';
+import { loadAccurateDonationData } from './csvDataLoader';
 
 // Centralized Donation Management System
 // This replaces localStorage with a proper centralized database
@@ -272,6 +273,17 @@ class CentralizedDatabase {
   // Get all donations from centralized database
   async getAllDonations() {
     try {
+      // First priority: Use accurate CSV data as source of truth
+      console.log('🔄 CentralizedDB: Attempting to load accurate CSV data...');
+      
+      const csvDonations = await loadAccurateDonationData();
+      if (csvDonations && csvDonations.length > 0) {
+        console.log('✅ CentralizedDB: Using accurate CSV data as source of truth');
+        return csvDonations;
+      }
+      
+      // Second priority: Supabase data
+      console.log('⚠️ CentralizedDB: CSV data not available, falling back to Supabase...');
       if (this.isOnline) {
         const { data, error } = await supabase
           .from('donations')
@@ -279,7 +291,7 @@ class CentralizedDatabase {
           .order('created_at', { ascending: false });
 
         if (error) {
-          console.error('Error fetching donations:', error);
+          console.error('Error fetching donations from Supabase:', error);
           // Fallback to localStorage
           try {
             return typeof localStorage !== 'undefined' 

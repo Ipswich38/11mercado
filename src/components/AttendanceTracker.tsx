@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Check, X, Search, Download, Calendar, Users, MessageSquare, Phone, Settings } from 'lucide-react';
 import { sendAttendanceNotification, sendBulkAttendanceNotifications, testSMSConfiguration } from '../utils/smsService';
+import ParentPhoneManager from './ParentPhoneManager';
 
 const AttendanceTracker = () => {
   const [students, setStudents] = useState([
@@ -171,6 +172,14 @@ const AttendanceTracker = () => {
     return { present, absent, pending };
   };
 
+  const updateStudentPhone = (studentId, parentPhone) => {
+    setStudents(students.map(student =>
+      student.id === studentId 
+        ? { ...student, parentPhone: parentPhone }
+        : student
+    ));
+  };
+
   const stats = getStats();
 
   return (
@@ -189,12 +198,21 @@ const AttendanceTracker = () => {
                 {currentDate}
               </p>
             </div>
-            <button
-              onClick={resetAttendance}
-              className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
-            >
-              Reset All
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowPhoneManager(true)}
+                className="bg-[#017374] text-white px-4 py-2 rounded-lg hover:bg-[#015454] transition-colors flex items-center gap-2"
+              >
+                <Phone size={16} />
+                Manage Parent Phones
+              </button>
+              <button
+                onClick={resetAttendance}
+                className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                Reset All
+              </button>
+            </div>
           </div>
 
           {/* Stats */}
@@ -433,6 +451,15 @@ const AttendanceTracker = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Parent Phone Manager Modal */}
+      {showPhoneManager && (
+        <ParentPhoneManager
+          students={students}
+          onUpdateStudent={updateStudentPhone}
+          onClose={() => setShowPhoneManager(false)}
+        />
       )}
     </div>
   );

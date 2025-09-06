@@ -13,8 +13,7 @@ const SMS_CONFIG = {
   // Option 2: Globe Labs (Direct Globe integration)
   globeLabs: {
     apiUrl: 'https://devapi.globelabs.com.ph/sms/v1/outbound',
-    accessToken: import.meta.env?.VITE_GLOBE_ACCESS_TOKEN || process.env.REACT_APP_GLOBE_ACCESS_TOKEN || '',
-    shortCode: import.meta.env?.VITE_GLOBE_SHORT_CODE || process.env.REACT_APP_GLOBE_SHORT_CODE || ''
+    accessToken: import.meta.env?.VITE_GLOBE_ACCESS_TOKEN || process.env.REACT_APP_GLOBE_ACCESS_TOKEN || ''
   },
   
   // Your Globe number (for sender ID)
@@ -67,11 +66,23 @@ export const sendSMSViaGlobeLabs = async (phoneNumber, message) => {
   try {
     console.log('📱 Sending SMS via Globe Labs to:', phoneNumber);
     
-    if (!SMS_CONFIG.globeLabs.accessToken || !SMS_CONFIG.globeLabs.shortCode) {
-      throw new Error('Globe Labs credentials not configured');
+    // Get access token for this specific phone number from database
+    const { getAccessTokenForNumber } = await import('./globeWebhook.js');
+    const accessToken = await getAccessTokenForNumber(phoneNumber);
+    
+    if (!accessToken) {
+      console.log('⚠️ No active subscription found for:', phoneNumber);
+      return { 
+        success: false, 
+        provider: 'globe-labs', 
+        error: 'Parent has not subscribed to SMS notifications yet. They need to text the keyword to subscribe.' 
+      };
     }
     
-    const response = await fetch(`${SMS_CONFIG.globeLabs.apiUrl}/${SMS_CONFIG.globeLabs.shortCode}/requests`, {
+    // Globe Labs SMS API endpoint with access token as query parameter
+    const apiUrl = `https://devapi.globelabs.com.ph/sms/v1/outbound/messages?access_token=${accessToken}`;
+    
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -79,15 +90,13 @@ export const sendSMSViaGlobeLabs = async (phoneNumber, message) => {
       body: JSON.stringify({
         outboundSMSMessageRequest: {
           clientCorrelator: Date.now().toString(),
-          senderAddress: SMS_CONFIG.globeLabs.shortCode,
+          senderAddress: "21581234", // Globe Labs sender address
           outboundSMSTextMessage: {
             message: message
           },
           address: phoneNumber
         }
-      }),
-      // Add access token as query parameter for Globe Labs
-      url: `${SMS_CONFIG.globeLabs.apiUrl}/${SMS_CONFIG.globeLabs.shortCode}/requests?access_token=${SMS_CONFIG.globeLabs.accessToken}`
+      })
     });
     
     const result = await response.json();

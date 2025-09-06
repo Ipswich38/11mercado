@@ -89,8 +89,8 @@ export const calculateAccurateTotals = (donations) => {
     const allocation = d.allocation?.generalSPTA || 0;
     
     // If donation amount is negative, make allocation negative too
-    if (amount < 0 && allocation > 0) {
-      return sum - allocation;
+    if (amount < 0) {
+      return sum - Math.abs(allocation); // Always subtract the absolute allocation value
     }
     return sum + allocation;
   }, 0);
@@ -99,9 +99,9 @@ export const calculateAccurateTotals = (donations) => {
     const amount = parseFloat(d.amount) || 0;
     const allocation = d.allocation?.mercadoPTA || 0;
     
-    // If donation amount is negative, make allocation negative too
-    if (amount < 0 && allocation > 0) {
-      return sum - allocation;
+    // If donation amount is negative, make allocation negative too  
+    if (amount < 0) {
+      return sum - Math.abs(allocation); // Always subtract the absolute allocation value
     }
     return sum + allocation;
   }, 0);

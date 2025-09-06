@@ -1,12 +1,71 @@
-import React from 'react';
-import { ChevronRight, ExternalLink } from 'lucide-react';
+import React, { useState } from 'react';
+import { ChevronRight, ExternalLink, Users, Calendar, X } from 'lucide-react';
+import AttendanceTracker from './AttendanceTracker';
 
 export default function STEMTools({ aiSTEMTools, stemLinks, getContrastClass, onToolSelect }) {
+  const [showAttendanceTracker, setShowAttendanceTracker] = useState(false);
+  
   const handleLinkClick = (url) => {
     window.open(url, '_blank');
   };
+  
+  if (showAttendanceTracker) {
+    return (
+      <div className="fixed inset-0 z-50 bg-white">
+        <div className="absolute top-4 right-4 z-60">
+          <button
+            onClick={() => setShowAttendanceTracker(false)}
+            className="bg-gray-500 hover:bg-gray-600 text-white p-2 rounded-lg transition-colors"
+          >
+            <X size={24} />
+          </button>
+        </div>
+        <AttendanceTracker />
+      </div>
+    );
+  }
+  
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-4 space-y-4">      
+      {/* Learner's Daily Attendance Tracker */}
+      <div className={getContrastClass(
+        "bg-gradient-to-r from-blue-500 to-indigo-600 p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 active:scale-95",
+        "bg-gray-900 p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 active:scale-95 border-2 border-yellow-400"
+      )}
+      onClick={() => setShowAttendanceTracker(true)}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <div className="text-4xl">👥</div>
+          <div className="bg-white/20 px-3 py-1 rounded-full">
+            <span className="text-white text-xs font-medium">SCHOOL TOOLS</span>
+          </div>
+        </div>
+        
+        <h3 className="text-white font-bold text-xl mb-2">
+          Learner's Daily Attendance Tracker
+        </h3>
+        
+        <p className="text-white/90 text-sm mb-4">
+          Track student attendance with secure passcode verification and automated parent notifications via SMS
+        </p>
+        
+        <div className="flex flex-wrap gap-2 mb-4">
+          <span className="bg-white/20 text-white text-xs px-2 py-1 rounded-lg">
+            📋 Attendance Management
+          </span>
+          <span className="bg-white/20 text-white text-xs px-2 py-1 rounded-lg">
+            🔐 Secure Verification
+          </span>
+          <span className="bg-white/20 text-white text-xs px-2 py-1 rounded-lg">
+            📱 SMS Notifications
+          </span>
+        </div>
+        
+        <div className="flex items-center justify-between">
+          <span className="text-white/80 text-sm">Tap to access attendance tracker</span>
+          <ChevronRight className="text-white" size={20} />
+        </div>
+      </div>
       <div className={getContrastClass(
         "bg-white/60 backdrop-blur-md rounded-3xl p-6 shadow-xl border border-white/20",
         "bg-gray-900 rounded-3xl p-6 shadow-xl border-2 border-yellow-400"

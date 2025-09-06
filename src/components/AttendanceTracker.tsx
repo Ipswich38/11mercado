@@ -219,68 +219,69 @@ const AttendanceTracker = () => {
 
         {/* Student List */}
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Student Name</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Parent Phone</th>
-                  <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Present</th>
-                  <th className="px-4 py-3 text-center text-sm font-semibold text-gray-700">Absent</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {filteredStudents.map((student) => (
-                  <tr key={student.id} className={`
-                    ${student.status === 'present' ? 'bg-green-50' : ''}
-                    ${student.status === 'absent' ? 'bg-red-50' : ''}
-                    hover:bg-gray-50 transition-colors
-                  `}>
-                    <td className="px-4 py-3">
-                      <div className="font-medium text-gray-900">{student.name}</div>
-                      {student.status === 'absent' && student.reason && (
-                        <div className="text-sm text-red-600 mt-1">Reason: {student.reason}</div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-gray-700">{student.parentPhone || "Not provided"}</td>
-                    <td className="px-4 py-3 text-center">
-                      <button
-                        onClick={() => openPasscodeModal(student, 'present')}
-                        disabled={student.status !== null}
-                        className={`
-                          w-12 h-12 rounded-full flex items-center justify-center transition-all
-                          ${student.status === 'present' 
-                            ? 'bg-green-500 text-white' 
-                            : student.status === 'absent'
-                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                            : 'bg-gray-200 hover:bg-green-100 text-gray-600 hover:text-green-600'
-                          }
-                        `}
-                      >
-                        <Check size={20} />
-                      </button>
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <button
-                        onClick={() => openPasscodeModal(student, 'absent')}
-                        disabled={student.status !== null}
-                        className={`
-                          w-12 h-12 rounded-full flex items-center justify-center transition-all
-                          ${student.status === 'absent' 
-                            ? 'bg-red-500 text-white' 
-                            : student.status === 'present'
-                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                            : 'bg-gray-200 hover:bg-red-100 text-gray-600 hover:text-red-600'
-                          }
-                        `}
-                      >
-                        <X size={20} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          {/* Fixed Header */}
+          <div className="bg-gray-50 border-b">
+            <div className="px-4 py-3 grid grid-cols-12 gap-4">
+              <div className="col-span-5 text-left text-sm font-semibold text-gray-700">Student Name</div>
+              <div className="col-span-3 text-left text-sm font-semibold text-gray-700">Parent Phone</div>
+              <div className="col-span-2 text-center text-sm font-semibold text-gray-700">Present</div>
+              <div className="col-span-2 text-center text-sm font-semibold text-gray-700">Absent</div>
+            </div>
+          </div>
+          {/* Scrollable Student List */}
+          <div className="max-h-96 overflow-y-auto">
+            <div className="divide-y divide-gray-200">
+              {filteredStudents.map((student) => (
+                <div key={student.id} className={`
+                  px-4 py-3 grid grid-cols-12 gap-4 items-center transition-colors
+                  ${student.status === 'present' ? 'bg-green-50' : ''}
+                  ${student.status === 'absent' ? 'bg-red-50' : ''}
+                  hover:bg-gray-50
+                `}>
+                  <div className="col-span-5">
+                    <div className="font-medium text-gray-900">{student.name}</div>
+                    {student.status === 'absent' && student.reason && (
+                      <div className="text-sm text-red-600 mt-1">Reason: {student.reason}</div>
+                    )}
+                  </div>
+                  <div className="col-span-3 text-gray-700">{student.parentPhone || "Not provided"}</div>
+                  <div className="col-span-2 text-center">
+                    <button
+                      onClick={() => openPasscodeModal(student, 'present')}
+                      disabled={student.status !== null}
+                      className={`
+                        w-12 h-12 rounded-full flex items-center justify-center transition-all mx-auto
+                        ${student.status === 'present' 
+                          ? 'bg-green-500 text-white' 
+                          : student.status === 'absent'
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          : 'bg-gray-200 hover:bg-green-100 text-gray-600 hover:text-green-600'
+                        }
+                      `}
+                    >
+                      <Check size={20} />
+                    </button>
+                  </div>
+                  <div className="col-span-2 text-center">
+                    <button
+                      onClick={() => openPasscodeModal(student, 'absent')}
+                      disabled={student.status !== null}
+                      className={`
+                        w-12 h-12 rounded-full flex items-center justify-center transition-all mx-auto
+                        ${student.status === 'absent' 
+                          ? 'bg-red-500 text-white' 
+                          : student.status === 'present'
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          : 'bg-gray-200 hover:bg-red-100 text-gray-600 hover:text-red-600'
+                        }
+                      `}
+                    >
+                      <X size={20} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 

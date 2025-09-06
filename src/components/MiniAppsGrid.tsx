@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Calculator, Cloud, Upload, Users, UserCheck, ExternalLink, TrendingUp, BookOpen, Mail, FolderPlus, Shield, HelpCircle } from 'lucide-react';
+import { Calculator, Cloud, Upload, Users, UserCheck, ExternalLink, TrendingUp, BookOpen, Mail, FolderPlus, Shield, HelpCircle, ChevronRight, X } from 'lucide-react';
 import { getDonationStatsFromCentralDB } from '../utils/centralizedDatabase';
+import AttendanceTracker from './AttendanceTracker';
 
 export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastClass, onShowTutorial, userFirstName }) {
   const [donationStats, setDonationStats] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showAttendanceTracker, setShowAttendanceTracker] = useState(false);
   
   useEffect(() => {
     loadDonationStats();
@@ -32,6 +34,22 @@ export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastC
     };
   }, []);
   
+  if (showAttendanceTracker) {
+    return (
+      <div className="fixed inset-0 z-50 bg-white">
+        <div className="absolute top-4 right-4 z-60">
+          <button
+            onClick={() => setShowAttendanceTracker(false)}
+            className="bg-gray-500 hover:bg-gray-600 text-white p-2 rounded-lg transition-colors"
+          >
+            <X size={24} />
+          </button>
+        </div>
+        <AttendanceTracker />
+      </div>
+    );
+  }
+
   const loadDonationStats = async () => {
     try {
       console.log('📊 Loading donation stats for home screen...');
@@ -153,6 +171,45 @@ export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastC
           "mt-3 text-xs text-yellow-300 bg-gray-800 border border-yellow-400 rounded-lg px-3 py-2"
         )}>
           ⚡ Secure access with session management • AI-powered tools available
+        </div>
+      </div>
+
+      {/* Learner's Daily Attendance Tracker - Full Width */}
+      <div className="mb-4">
+        <div className="relative">
+          <div
+            onClick={() => setShowAttendanceTracker(true)}
+            className={getContrastClass(
+              `bg-gradient-to-br from-blue-500/90 to-indigo-600/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border border-white/20`,
+              `bg-gray-900/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border-2 border-yellow-400/50`
+            )}
+          >
+            <div className="text-white mb-4">
+              <Users size={24} />
+            </div>
+            <h3 className="text-white font-semibold text-lg mb-2 leading-tight">
+              Learner's Daily Attendance Tracker
+            </h3>
+            <p className="text-white/80 text-sm mb-3">
+              Track student attendance with secure verification
+            </p>
+            <div className="flex items-center justify-between">
+              <div className="text-white/60 text-xs">
+                43 Students • SMS Notifications
+              </div>
+              <ChevronRight className="text-white/80" size={16} />
+            </div>
+          </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onShowTutorial('attendance-tracker');
+            }}
+            className="absolute top-4 right-4 p-2 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors"
+            title="Show Tutorial"
+          >
+            <HelpCircle size={16} className="text-white" />
+          </button>
         </div>
       </div>
 

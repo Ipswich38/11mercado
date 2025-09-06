@@ -220,8 +220,8 @@ export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastC
           <div
             onClick={() => onAppSelect('stem-tools')}
             className={getContrastClass(
-              `bg-gradient-to-br from-[#EF7722] to-[#D2691E] backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border border-white/20`,
-              `bg-gray-900/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border-2 border-[#EF7722]/50`
+              `bg-gradient-to-br from-success-500 to-success-600 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border border-white/20`,
+              `bg-gray-900/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border-2 border-success-500/50`
             )}
           >
             <div className="text-white mb-4">

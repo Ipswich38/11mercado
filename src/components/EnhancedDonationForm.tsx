@@ -1168,10 +1168,20 @@ For any inquiries, please contact us at 11mercado.pta@gmail.com
                 )}>
                   <div className="flex items-center justify-between mb-2">
                     <label className={getContrastClass("text-gray-700 font-medium", "text-yellow-400 font-medium")}>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-2">
                         General SPTA (P395)
                         <div className="relative group">
-                          <Info size={14} className={getContrastClass("text-gray-400 hover:text-blue-500 cursor-help", "text-yellow-400 hover:text-yellow-300 cursor-help")} />
+                          <button
+                            type="button"
+                            className={`text-xs px-2 py-1 rounded text-white transition-colors ${
+                              getContrastClass(
+                                'bg-blue-500 hover:bg-blue-600',
+                                'bg-yellow-600 hover:bg-yellow-700'
+                              )
+                            }`}
+                          >
+                            Breakdown
+                          </button>
                           <div className="absolute bottom-full left-0 mb-2 hidden group-hover:block bg-black text-white text-xs rounded p-3 w-72 z-10 shadow-lg">
                             <div className="text-xs">
                               <div className="font-semibold mb-2 text-yellow-300">P395 Reference Breakdown:</div>

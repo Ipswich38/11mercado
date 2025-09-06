@@ -540,10 +540,20 @@ export default function NewDonationForm({ getContrastClass, onClose, onDonationS
                 <div className="space-y-2">
                   <div>
                     <label className={getContrastClass("block text-xs text-gray-600", "block text-xs text-yellow-300")}>
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-2">
                         General SPTA (P395)
                         <div className="relative group">
-                          <Info size={12} className={getContrastClass("text-gray-400 hover:text-blue-500 cursor-help", "text-yellow-400 hover:text-yellow-300 cursor-help")} />
+                          <button
+                            type="button"
+                            className={`text-xs px-2 py-1 rounded text-white transition-colors ${
+                              getContrastClass(
+                                'bg-blue-500 hover:bg-blue-600',
+                                'bg-yellow-600 hover:bg-yellow-700'
+                              )
+                            }`}
+                          >
+                            Breakdown
+                          </button>
                           <div className="absolute bottom-full left-0 mb-1 hidden group-hover:block bg-black text-white text-xs rounded p-3 w-64 z-10 shadow-lg">
                             <div className="text-xs">
                               <div className="font-semibold mb-2 text-yellow-300">P395 Reference Breakdown:</div>

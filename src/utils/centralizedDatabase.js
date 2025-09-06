@@ -356,11 +356,25 @@ class CentralizedDatabase {
         }, 0),
         totalGeneralSPTA: donations.reduce((sum, d) => {
           const allocation = d.allocation || {};
-          return sum + (allocation.generalSPTA || allocation.general_spta || 0);
+          const amount = parseFloat(d?.amount) || 0;
+          const allocationAmount = allocation.generalSPTA || allocation.general_spta || 0;
+          
+          // If donation amount is negative, make allocation negative too
+          if (amount < 0 && allocationAmount > 0) {
+            return sum - allocationAmount;
+          }
+          return sum + allocationAmount;
         }, 0),
         totalMercadoPTA: donations.reduce((sum, d) => {
           const allocation = d.allocation || {};
-          return sum + (allocation.mercadoPTA || allocation.mercado_pta || 0);
+          const amount = parseFloat(d?.amount) || 0;
+          const allocationAmount = allocation.mercadoPTA || allocation.mercado_pta || 0;
+          
+          // If donation amount is negative, make allocation negative too
+          if (amount < 0 && allocationAmount > 0) {
+            return sum - allocationAmount;
+          }
+          return sum + allocationAmount;
         }, 0),
         donationModes: {
           cash: donations.filter(d => d.donation_mode === 'cash').length,

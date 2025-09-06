@@ -109,8 +109,16 @@ export default function AdminDashboard({ getContrastClass, onClose, onShowTutori
         setDonationStats({
           totalDonations: safeDonations.length,
           totalAmount: safeDonations.reduce((sum, d) => sum + (parseFloat(d?.amount) || 0), 0),
-          totalGeneralSPTA: safeDonations.reduce((sum, d) => sum + (d?.allocation?.generalSPTA || 0), 0),
-          totalMercadoPTA: safeDonations.reduce((sum, d) => sum + (d?.allocation?.mercadoPTA || 0), 0)
+          totalGeneralSPTA: safeDonations.reduce((sum, d) => {
+            const amount = parseFloat(d?.amount) || 0;
+            const allocation = d?.allocation?.generalSPTA || 0;
+            return amount < 0 && allocation > 0 ? sum - allocation : sum + allocation;
+          }, 0),
+          totalMercadoPTA: safeDonations.reduce((sum, d) => {
+            const amount = parseFloat(d?.amount) || 0;
+            const allocation = d?.allocation?.mercadoPTA || 0;
+            return amount < 0 && allocation > 0 ? sum - allocation : sum + allocation;
+          }, 0)
         });
         console.log(`📦 Using localStorage fallback: ${safeDonations.length} donations`);
       } catch (fallbackError) {
@@ -714,7 +722,11 @@ What would you like to know about?`;
                         </h3>
                       </div>
                       <div className={getContrastClass("text-2xl font-bold text-gray-900", "text-2xl font-bold text-blue-400")}>
-                        ₱{donationStats ? donationStats.totalGeneralSPTA.toLocaleString() : centralizedDonations.reduce((sum, d) => sum + (d.allocation?.generalSPTA || 0), 0).toLocaleString()}
+                        ₱{donationStats ? donationStats.totalGeneralSPTA.toLocaleString() : centralizedDonations.reduce((sum, d) => {
+                          const amount = parseFloat(d?.amount) || 0;
+                          const allocation = d.allocation?.generalSPTA || 0;
+                          return amount < 0 && allocation > 0 ? sum - allocation : sum + allocation;
+                        }, 0).toLocaleString()}
                       </div>
                       <div className={getContrastClass("text-sm text-gray-500", "text-sm text-yellow-300")}>
                         Allocated funds
@@ -732,7 +744,11 @@ What would you like to know about?`;
                         </h3>
                       </div>
                       <div className={getContrastClass("text-2xl font-bold text-gray-900", "text-2xl font-bold text-purple-400")}>
-                        ₱{donationStats ? donationStats.totalMercadoPTA.toLocaleString() : centralizedDonations.reduce((sum, d) => sum + (d.allocation?.mercadoPTA || 0), 0).toLocaleString()}
+                        ₱{donationStats ? donationStats.totalMercadoPTA.toLocaleString() : centralizedDonations.reduce((sum, d) => {
+                          const amount = parseFloat(d?.amount) || 0;
+                          const allocation = d.allocation?.mercadoPTA || 0;
+                          return amount < 0 && allocation > 0 ? sum - allocation : sum + allocation;
+                        }, 0).toLocaleString()}
                       </div>
                       <div className={getContrastClass("text-sm text-gray-500", "text-sm text-yellow-300")}>
                         Allocated funds

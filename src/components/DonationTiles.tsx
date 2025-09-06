@@ -56,7 +56,15 @@ export default function DonationTiles({ donationDrives, getContrastClass }) {
       
       const generalTotal = donations.reduce((sum, d) => {
         try {
-          return sum + ((d?.allocation?.generalSPTA || d?.allocation?.general_spta) || 0);
+          const amount = parseFloat(d?.amount) || 0;
+          const allocation = (d?.allocation?.generalSPTA || d?.allocation?.general_spta) || 0;
+          
+          // If amount is negative, make allocation negative too
+          if (amount < 0 && allocation > 0) {
+            return sum - allocation;
+          }
+          // If amount is positive or zero, use allocation as-is
+          return sum + allocation;
         } catch (e) {
           return sum;
         }
@@ -64,7 +72,15 @@ export default function DonationTiles({ donationDrives, getContrastClass }) {
       
       const mercadoTotal = donations.reduce((sum, d) => {
         try {
-          return sum + ((d?.allocation?.mercadoPTA || d?.allocation?.mercado_pta) || 0);
+          const amount = parseFloat(d?.amount) || 0;
+          const allocation = (d?.allocation?.mercadoPTA || d?.allocation?.mercado_pta) || 0;
+          
+          // If amount is negative, make allocation negative too
+          if (amount < 0 && allocation > 0) {
+            return sum - allocation;
+          }
+          // If amount is positive or zero, use allocation as-is
+          return sum + allocation;
         } catch (e) {
           return sum;
         }

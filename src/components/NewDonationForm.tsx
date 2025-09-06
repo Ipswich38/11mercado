@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { X, Upload, CheckCircle, AlertCircle, Smartphone, Edit, Star } from 'lucide-react';
+import { X, Upload, CheckCircle, AlertCircle, Smartphone, Edit, Star, Info, ChevronDown } from 'lucide-react';
 import { centralizedDB } from '../utils/centralizedDatabase';
 
 interface NewDonationFormProps {
@@ -539,7 +539,28 @@ export default function NewDonationForm({ getContrastClass, onClose, onDonationS
                 
                 <div className="space-y-2">
                   <div>
-                    <label className={getContrastClass("block text-xs text-gray-600", "block text-xs text-yellow-300")}>General SPTA:</label>
+                    <label className={getContrastClass("block text-xs text-gray-600", "block text-xs text-yellow-300")}>
+                      <div className="flex items-center gap-1">
+                        General SPTA (P395)
+                        <div className="relative group">
+                          <Info size={12} className={getContrastClass("text-gray-400 hover:text-blue-500 cursor-help", "text-yellow-400 hover:text-yellow-300 cursor-help")} />
+                          <div className="absolute bottom-full left-0 mb-1 hidden group-hover:block bg-black text-white text-xs rounded p-3 w-64 z-10 shadow-lg">
+                            <div className="text-xs">
+                              <div className="font-semibold mb-2 text-yellow-300">P395 Reference Breakdown:</div>
+                              <div>• Philippine Red Cross: ₱50</div>
+                              <div>• PTA Membership Dues: ₱150</div>
+                              <div>• BSP/GSP: ₱50</div>
+                              <div>• School Publication: ₱90</div>
+                              <div>• Anti-TB Fund Drive: ₱5</div>
+                              <div>• Learners Organizations: Variable</div>
+                              <div className="mt-2 pt-2 border-t border-gray-500 text-gray-300 text-xs leading-relaxed">
+                                <strong>Note:</strong> These amounts are for reference only. All contributions remain completely voluntary. You may allocate any amount according to your trust and support.
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </label>
                     <div className="relative">
                       <span className={getContrastClass("absolute left-2 top-2 text-gray-500 text-sm", "absolute left-2 top-2 text-yellow-300 text-sm")}>₱</span>
                       <input

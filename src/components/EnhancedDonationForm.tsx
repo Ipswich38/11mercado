@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Upload, Calendar, Clock, User, CreditCard, Banknote, Gift, Camera, Download, Edit3, CheckCircle, PenTool, FileText, DollarSign } from 'lucide-react';
+import { Upload, Calendar, Clock, User, CreditCard, Banknote, Gift, Camera, Download, Edit3, CheckCircle, PenTool, FileText, DollarSign, Info } from 'lucide-react';
 import { centralizedDB } from '../utils/centralizedDatabase';
 
 interface DonationAllocation {
@@ -671,7 +671,7 @@ DONATION DETAILS:
 - Items: ${acknowledgementData.items || 'N/A'}
 
 DONATION ALLOCATION:
-- General SPTA: ₱${acknowledgementData.allocation?.generalSPTA || 0}
+- General SPTA (P395): ₱${acknowledgementData.allocation?.generalSPTA || 0}
 - 11Mercado PTA Projects: ₱${acknowledgementData.allocation?.mercadoPTA || 0}
 
 ATTACHMENTS:
@@ -759,7 +759,7 @@ For any inquiries, please contact us at 11mercado.pta@gmail.com
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <div className={getContrastClass("text-blue-600 text-sm", "text-blue-300 text-sm")}>
-                        General SPTA
+                        General SPTA (P395)
                       </div>
                       <div className={getContrastClass("text-blue-900 font-bold", "text-blue-200 font-bold")}>
                         ₱{acknowledgementData.allocation.generalSPTA}
@@ -1168,7 +1168,26 @@ For any inquiries, please contact us at 11mercado.pta@gmail.com
                 )}>
                   <div className="flex items-center justify-between mb-2">
                     <label className={getContrastClass("text-gray-700 font-medium", "text-yellow-400 font-medium")}>
-                      General SPTA
+                      <div className="flex items-center gap-1">
+                        General SPTA (P395)
+                        <div className="relative group">
+                          <Info size={14} className={getContrastClass("text-gray-400 hover:text-blue-500 cursor-help", "text-yellow-400 hover:text-yellow-300 cursor-help")} />
+                          <div className="absolute bottom-full left-0 mb-2 hidden group-hover:block bg-black text-white text-xs rounded p-3 w-72 z-10 shadow-lg">
+                            <div className="text-xs">
+                              <div className="font-semibold mb-2 text-yellow-300">P395 Reference Breakdown:</div>
+                              <div>• Philippine Red Cross: ₱50</div>
+                              <div>• PTA Membership Dues: ₱150</div>
+                              <div>• BSP/GSP: ₱50</div>
+                              <div>• School Publication: ₱90</div>
+                              <div>• Anti-TB Fund Drive: ₱5</div>
+                              <div>• Learners Organizations: Variable</div>
+                              <div className="mt-3 pt-2 border-t border-gray-500 text-gray-300 text-xs leading-relaxed">
+                                <strong className="text-yellow-300">Important Note:</strong> These amounts are provided for reference only. All contributions remain completely voluntary, and you may allocate any amount according to your trust and support for our school programs.
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </label>
                     <DollarSign size={16} className={getContrastClass("text-gray-500", "text-yellow-300")} />
                   </div>

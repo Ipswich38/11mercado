@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calculator, Cloud, Upload, Users, UserCheck, ExternalLink, TrendingUp, BookOpen, Mail, FolderPlus, Shield, HelpCircle, ChevronRight, X, CheckCircle } from 'lucide-react';
+import { Calculator, Cloud, Upload, Users, UserCheck, ExternalLink, TrendingUp, BookOpen, Mail, FolderPlus, Shield, HelpCircle, ChevronRight, X, CheckCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { getDonationStatsFromCentralDB } from '../utils/centralizedDatabase';
 import AttendanceTracker from './AttendanceTracker';
 
@@ -7,6 +7,7 @@ export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastC
   const [donationStats, setDonationStats] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showAttendanceTracker, setShowAttendanceTracker] = useState(false);
+  const [showQualityReport, setShowQualityReport] = useState(false);
   
   useEffect(() => {
     loadDonationStats();
@@ -292,17 +293,47 @@ export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastC
             )}
           </div>
           
-          {/* Data Integrity Indicators */}
+          {/* Data Quality Report - Collapsible */}
           {totalDonations > 0 && (
-            <div className="flex items-center justify-center gap-3 pt-3 border-t border-white/20">
-              <div className="flex items-center gap-1">
-                <Shield size={12} className="text-white/80" />
-                <span className="text-xs text-white/80">Duplicate Detection Active</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <CheckCircle size={12} className="text-white/80" />
-                <span className="text-xs text-white/80">Data Verified Sep 2025</span>
-              </div>
+            <div className="pt-3 border-t border-white/20">
+              <button
+                onClick={() => setShowQualityReport(!showQualityReport)}
+                className="w-full flex items-center justify-center gap-2 text-xs text-white/80 hover:text-white/100 transition-colors py-1"
+              >
+                <Shield size={12} />
+                <span>System Quality Report</span>
+                {showQualityReport ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+              </button>
+              
+              {showQualityReport && (
+                <div className="mt-3 bg-white/10 rounded-lg p-3 text-xs text-white/90">
+                  <div className="mb-2">
+                    <div className="flex items-center gap-2 mb-1">
+                      <CheckCircle size={12} className="text-green-400" />
+                      <span className="font-medium">System Status: All Good</span>
+                    </div>
+                    <p className="text-white/75 leading-relaxed">
+                      Our new app had a small issue where one parent's donation was counted 3 times instead of once. 
+                      We found and fixed this quickly. Your money is safe and all numbers are now correct.
+                    </p>
+                  </div>
+                  
+                  <div className="mb-2">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Shield size={12} className="text-blue-400" />
+                      <span className="font-medium">Protection Added</span>
+                    </div>
+                    <p className="text-white/75 leading-relaxed">
+                      We now check for duplicate receipts automatically. If someone tries to upload the same receipt twice, 
+                      the system will catch it and protect our funds.
+                    </p>
+                  </div>
+                  
+                  <div className="text-center text-white/60 text-xs pt-2 border-t border-white/20">
+                    Last verified: September 2025 • All funds secured
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

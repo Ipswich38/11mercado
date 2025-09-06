@@ -1,14 +1,22 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Supabase configuration
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || 'https://npsrxmdtzyebwetzynvf.supabase.co'
-const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wc3J4bWR0enllYndldHp5bnZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU5OTc1NTgsImV4cCI6MjA3MTU3MzU1OH0.IOmXTlFCz53kqlchApbFZp6_lJlfTeGJSqel7j8f2NQ'
+// Supabase configuration - Support both REACT_APP and VITE prefixes
+const supabaseUrl = import.meta.env?.VITE_SUPABASE_URL 
+  || process.env.REACT_APP_SUPABASE_URL 
+  || 'https://npsrxmdtzyebwetzynvf.supabase.co'
+  
+const supabaseAnonKey = import.meta.env?.VITE_SUPABASE_ANON_KEY 
+  || process.env.REACT_APP_SUPABASE_ANON_KEY 
+  || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wc3J4bWR0enllYndldHp5bnZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU5OTc1NTgsImV4cCI6MjA3MTU3MzU1OH0.IOmXTlFCz53kqlchApbFZp6_lJlfTeGJSqel7j8f2NQ'
 
 console.log('🔧 Supabase Config:', { 
   url: supabaseUrl,
   keyLength: supabaseAnonKey.length,
-  hasEnvUrl: !!process.env.REACT_APP_SUPABASE_URL,
-  hasEnvKey: !!process.env.REACT_APP_SUPABASE_ANON_KEY
+  hasViteUrl: !!import.meta.env?.VITE_SUPABASE_URL,
+  hasViteKey: !!import.meta.env?.VITE_SUPABASE_ANON_KEY,
+  hasReactUrl: !!process.env.REACT_APP_SUPABASE_URL,
+  hasReactKey: !!process.env.REACT_APP_SUPABASE_ANON_KEY,
+  usingFallback: !import.meta.env?.VITE_SUPABASE_URL && !process.env.REACT_APP_SUPABASE_URL
 });
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)

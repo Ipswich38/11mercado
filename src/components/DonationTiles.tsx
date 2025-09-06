@@ -11,10 +11,18 @@ export default function DonationTiles({ donationDrives, getContrastClass }) {
   const loadCentralizedData = async () => {
     setIsLoading(true);
     try {
+      console.log('🔄 DonationTiles: Loading centralized data...');
       const donations = await getAllDonationsFromCentralDB();
       
+      console.log('📊 DonationTiles: Received donations data:', {
+        donations: donations,
+        isArray: Array.isArray(donations),
+        length: donations?.length,
+        firstDonation: donations?.[0]
+      });
+      
       if (!donations || !Array.isArray(donations)) {
-        console.warn('No valid donations data received');
+        console.warn('❌ DonationTiles: No valid donations data received');
         setCentralizedTotal(0);
         setGeneralSPTA(0);
         setMercadoPTA(0);

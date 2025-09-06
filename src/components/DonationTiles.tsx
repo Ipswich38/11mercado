@@ -184,10 +184,49 @@ export default function DonationTiles({ donationDrives, getContrastClass }) {
             ₱{totalRaised.toLocaleString()}
           </div>
           <div className={getContrastClass(
-            "text-title-medium text-white/90",
-            "text-title-medium text-surface-200"
+            "text-title-medium text-white/90 mb-4",
+            "text-title-medium text-surface-200 mb-4"
           )}>
             Total Raised
+          </div>
+          
+          {/* Allocation Breakdown */}
+          <div className="grid grid-cols-2 gap-4 mt-4">
+            <div className={getContrastClass(
+              "bg-white/10 rounded-material-lg p-4",
+              "bg-surface-700/30 rounded-material-lg p-4"
+            )}>
+              <div className={getContrastClass(
+                "text-title-large text-white mb-1",
+                "text-title-large text-surface-100 mb-1"
+              )}>
+                ₱{generalSPTA.toLocaleString()}
+              </div>
+              <div className={getContrastClass(
+                "text-body-medium text-white/80",
+                "text-body-medium text-surface-300"
+              )}>
+                General SPTA
+              </div>
+            </div>
+            
+            <div className={getContrastClass(
+              "bg-white/10 rounded-material-lg p-4",
+              "bg-surface-700/30 rounded-material-lg p-4"
+            )}>
+              <div className={getContrastClass(
+                "text-title-large text-white mb-1",
+                "text-title-large text-surface-100 mb-1"
+              )}>
+                ₱{mercadoPTA.toLocaleString()}
+              </div>
+              <div className={getContrastClass(
+                "text-body-medium text-white/80",
+                "text-body-medium text-surface-300"
+              )}>
+                11Mercado PTA
+              </div>
+            </div>
           </div>
         </div>
       </div>

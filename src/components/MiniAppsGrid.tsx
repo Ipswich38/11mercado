@@ -344,8 +344,8 @@ export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastC
         <div
           onClick={() => onAppSelect('weather')}
           className={getContrastClass(
-            `bg-gradient-to-br from-[#6B7280] to-[#4B5563] backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border border-white/20`,
-            `bg-gray-900/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border-2 border-[#6B7280]/50`
+            `bg-gradient-to-br from-[#017374] to-[#015a5a] backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border border-white/20`,
+            `bg-gray-900/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border-2 border-[#017374]/50`
           )}
         >
           <div className="text-white mb-4">
@@ -400,8 +400,8 @@ export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastC
         <div
           onClick={() => onAppSelect('projects')}
           className={getContrastClass(
-            "card-elevated bg-gradient-to-br from-[#6B7280] to-[#4B5563] p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98]",
-            "glass-dark bg-gradient-to-br from-[#6B7280] to-[#4B5563] p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98] border border-surface-700"
+            "card-elevated bg-gradient-to-br from-[#017374] to-[#015a5a] p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98]",
+            "glass-dark bg-gradient-to-br from-[#017374] to-[#015a5a] p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98] border border-surface-700"
           )}
         >
           <div className="text-white mb-4">
@@ -421,8 +421,8 @@ export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastC
         <div
           onClick={() => onAppSelect('officers')}
           className={getContrastClass(
-            "card-elevated bg-gradient-to-br from-[#6B7280] to-[#4B5563] p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98]",
-            "glass-dark bg-gradient-to-br from-[#6B7280] to-[#4B5563] p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98] border border-surface-700"
+            "card-elevated bg-gradient-to-br from-[#017374] to-[#015a5a] p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98]",
+            "glass-dark bg-gradient-to-br from-[#017374] to-[#015a5a] p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98] border border-surface-700"
           )}
         >
           <div className="text-white mb-4">
@@ -466,8 +466,8 @@ export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastC
           <div
             onClick={() => onAppSelect('community')}
             className={getContrastClass(
-              "card-elevated bg-gradient-to-br from-warning-500 to-warning-600 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98]",
-              "glass-dark bg-gradient-to-br from-warning-600 to-error-600 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98] border border-surface-700"
+              "card-elevated bg-gradient-to-br from-[#017374] to-[#015a5a] p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98]",
+              "glass-dark bg-gradient-to-br from-[#017374] to-[#015a5a] p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98] border border-surface-700"
             )}
           >
             <div className="text-white mb-4">
@@ -500,8 +500,8 @@ export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastC
         <div
           onClick={() => onAppSelect('contact-us')}
           className={getContrastClass(
-            "card-elevated bg-gradient-to-br from-[#6B7280] to-[#4B5563] p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98]",
-            "glass-dark bg-gradient-to-br from-[#6B7280] to-[#4B5563] p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98] border border-surface-700"
+            "card-elevated bg-gradient-to-br from-[#017374] to-[#015a5a] p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98]",
+            "glass-dark bg-gradient-to-br from-[#017374] to-[#015a5a] p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98] border border-surface-700"
           )}
         >
           <div className="text-white mb-4">
@@ -521,8 +521,8 @@ export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastC
         <div
           onClick={() => onAppSelect('legal')}
           className={getContrastClass(
-            "card-elevated bg-gradient-to-br from-surface-600 to-surface-700 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98]",
-            "glass-dark bg-gradient-to-br from-surface-700 to-surface-800 p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98] border border-surface-700"
+            "card-elevated bg-gradient-to-br from-[#017374] to-[#015a5a] p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98]",
+            "glass-dark bg-gradient-to-br from-[#017374] to-[#015a5a] p-6 cursor-pointer state-layer transform transition-all hover:scale-[1.02] hover:shadow-material-lg active:scale-[0.98] border border-surface-700"
           )}
         >
           <div className="text-white mb-4">

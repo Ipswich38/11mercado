@@ -382,38 +382,123 @@ export default function EnhancedDonationForm({ getContrastClass, onClose, onDona
         if (data.receipt) {
           console.log('🔄 Converting receipt to base64...');
           try {
-            const receiptData = await fileToBase64(data.receipt);
-            attachmentFile = receiptData;
-            attachmentFilename = data.receipt.name;
-            console.log('✅ Receipt conversion successful, size:', receiptData.length);
+            // Check file size before processing (5MB limit for mobile)
+            const fileSizeMB = data.receipt.size / 1024 / 1024;
+            console.log(`📏 Receipt file size: ${fileSizeMB.toFixed(2)}MB`);
+            
+            if (fileSizeMB > 5) {
+              console.warn('⚠️ Receipt file too large, compressing...');
+              // For large files, create a compressed version
+              const canvas = document.createElement('canvas');
+              const ctx = canvas.getContext('2d');
+              const img = new Image();
+              
+              await new Promise((resolve, reject) => {
+                img.onload = () => {
+                  // Calculate new dimensions (max 1024px width)
+                  const maxWidth = 1024;
+                  const ratio = Math.min(maxWidth / img.width, maxWidth / img.height);
+                  canvas.width = img.width * ratio;
+                  canvas.height = img.height * ratio;
+                  
+                  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                  canvas.toBlob(async (compressedBlob) => {
+                    if (compressedBlob) {
+                      const compressedFile = new File([compressedBlob], data.receipt.name, { type: 'image/jpeg' });
+                      console.log(`✅ Compressed ${fileSizeMB.toFixed(2)}MB → ${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`);
+                      const receiptData = await fileToBase64(compressedFile);
+                      attachmentFile = receiptData;
+                      attachmentFilename = compressedFile.name;
+                      resolve(receiptData);
+                    } else {
+                      reject(new Error('Compression failed'));
+                    }
+                  }, 'image/jpeg', 0.7);
+                };
+                img.onerror = reject;
+                img.src = URL.createObjectURL(data.receipt);
+              });
+            } else {
+              const receiptData = await fileToBase64(data.receipt);
+              attachmentFile = receiptData;
+              attachmentFilename = data.receipt.name;
+            }
+            
+            console.log('✅ Receipt conversion successful, final size:', attachmentFile.length);
             
             // Local backup
             fileStorage[`${data.referenceNumber}_receipt`] = {
-              data: receiptData,
-            name: data.receipt.name,
-            type: data.receipt.type,
-            size: data.receipt.size,
-            timestamp: new Date().toISOString()
-          };
-          console.log(`Stored receipt file for ${data.referenceNumber}: ${data.receipt.name}`);
+              data: attachmentFile,
+              name: attachmentFilename,
+              type: data.receipt.type,
+              size: attachmentFile.length,
+              timestamp: new Date().toISOString()
+            };
+            console.log(`Stored receipt file for ${data.referenceNumber}: ${attachmentFilename}`);
           } catch (fileError) {
             console.error('❌ Receipt file conversion failed:', fileError);
-            throw new Error('Failed to process receipt file: ' + fileError.message);
+            // Don't throw error, continue without attachment but log the issue
+            console.warn('⚠️ Continuing without receipt attachment due to processing error');
+            attachmentFile = null;
+            attachmentFilename = null;
           }
         } else if (data.photo) {
-          const photoData = await fileToBase64(data.photo);
-          attachmentFile = photoData;
-          attachmentFilename = data.photo.name;
-          
-          // Local backup
-          fileStorage[`${data.referenceNumber}_photo`] = {
-            data: photoData,
-            name: data.photo.name,
-            type: data.photo.type,
-            size: data.photo.size,
-            timestamp: new Date().toISOString()
-          };
-          console.log(`Stored photo file for ${data.referenceNumber}: ${data.photo.name}`);
+          try {
+            // Check file size for photo as well
+            const fileSizeMB = data.photo.size / 1024 / 1024;
+            console.log(`📏 Photo file size: ${fileSizeMB.toFixed(2)}MB`);
+            
+            if (fileSizeMB > 5) {
+              console.warn('⚠️ Photo file too large, compressing...');
+              // Similar compression logic for photos
+              const canvas = document.createElement('canvas');
+              const ctx = canvas.getContext('2d');
+              const img = new Image();
+              
+              await new Promise((resolve, reject) => {
+                img.onload = () => {
+                  const maxWidth = 1024;
+                  const ratio = Math.min(maxWidth / img.width, maxWidth / img.height);
+                  canvas.width = img.width * ratio;
+                  canvas.height = img.height * ratio;
+                  
+                  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                  canvas.toBlob(async (compressedBlob) => {
+                    if (compressedBlob) {
+                      const compressedFile = new File([compressedBlob], data.photo.name, { type: 'image/jpeg' });
+                      const photoData = await fileToBase64(compressedFile);
+                      attachmentFile = photoData;
+                      attachmentFilename = compressedFile.name;
+                      resolve(photoData);
+                    } else {
+                      reject(new Error('Photo compression failed'));
+                    }
+                  }, 'image/jpeg', 0.7);
+                };
+                img.onerror = reject;
+                img.src = URL.createObjectURL(data.photo);
+              });
+            } else {
+              const photoData = await fileToBase64(data.photo);
+              attachmentFile = photoData;
+              attachmentFilename = data.photo.name;
+            }
+            
+            // Local backup
+            fileStorage[`${data.referenceNumber}_photo`] = {
+              data: attachmentFile,
+              name: attachmentFilename,
+              type: data.photo.type,
+              size: attachmentFile.length,
+              timestamp: new Date().toISOString()
+            };
+            console.log(`Stored photo file for ${data.referenceNumber}: ${attachmentFilename}`);
+          } catch (fileError) {
+            console.error('❌ Photo file conversion failed:', fileError);
+            console.warn('⚠️ Continuing without photo attachment due to processing error');
+            attachmentFile = null;
+            attachmentFilename = null;
+          }
         }
         
         localStorage.setItem('donationFiles', JSON.stringify(fileStorage));
@@ -499,6 +584,34 @@ export default function EnhancedDonationForm({ getContrastClass, onClose, onDona
       } else {
         console.error('❌ Failed to submit to centralized database:', result);
         
+        // Handle duplicate receipt detection
+        if (result?.error === 'duplicate_receipt') {
+          console.error('🚫 DUPLICATE RECEIPT BLOCKED:', result.duplicateInfo);
+          alert(result.message || 'Duplicate receipt detected. Please contact the Treasurer if this is an error.');
+          
+          // Create a special notification for the treasurer
+          const treasurerAlert = {
+            type: 'duplicate_receipt_blocked',
+            timestamp: new Date().toISOString(),
+            newSubmission: {
+              parentName: enhancedData.parentName,
+              studentName: enhancedData.studentName,
+              amount: enhancedData.amount,
+              referenceNumber: enhancedData.referenceNumber
+            },
+            duplicateOf: result.duplicateInfo,
+            similarity: result.duplicateInfo?.similarity
+          };
+          
+          // Store treasurer notification in localStorage for admin to review
+          const treasurerNotifications = JSON.parse(localStorage.getItem('treasurerNotifications') || '[]');
+          treasurerNotifications.push(treasurerAlert);
+          localStorage.setItem('treasurerNotifications', JSON.stringify(treasurerNotifications));
+          
+          console.log('📬 Treasurer notification created for duplicate receipt');
+          return false; // Block the submission
+        }
+        
         // More specific error message for mobile users
         const isMobile = /Mobi|Android/i.test(navigator.userAgent);
         const errorMessage = isMobile 
@@ -507,17 +620,20 @@ export default function EnhancedDonationForm({ getContrastClass, onClose, onDona
         
         alert(errorMessage);
         
-        // Fallback to localStorage only
-        const existingEntries = JSON.parse(localStorage.getItem('donationEntries') || '[]');
-        existingEntries.push({
-          ...enhancedData, 
-          supabaseError: result?.error || 'Unknown error',
-          mobileFallback: isMobile,
-          errorTimestamp: new Date().toISOString()
-        });
-        localStorage.setItem('donationEntries', JSON.stringify(existingEntries));
+        // Fallback to localStorage only (only for non-duplicate errors)
+        if (result?.error !== 'duplicate_receipt') {
+          const existingEntries = JSON.parse(localStorage.getItem('donationEntries') || '[]');
+          existingEntries.push({
+            ...enhancedData, 
+            supabaseError: result?.error || 'Unknown error',
+            mobileFallback: isMobile,
+            errorTimestamp: new Date().toISOString()
+          });
+          localStorage.setItem('donationEntries', JSON.stringify(existingEntries));
+          
+          console.log('📦 Stored in localStorage as fallback due to Supabase error');
+        }
         
-        console.log('📦 Stored in localStorage as fallback due to Supabase error');
         console.log('🔍 Error details for debugging:', {
           error: result?.error,
           isMobile,

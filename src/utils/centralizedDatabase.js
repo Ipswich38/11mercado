@@ -73,9 +73,101 @@ class CentralizedDatabase {
     }
   }
 
+  // Check for duplicate receipt submissions
+  async checkForDuplicateReceipt(attachmentFile, parentName) {
+    try {
+      if (!attachmentFile) return { isDuplicate: false };
+
+      // Create a simple hash of the image data for comparison
+      const imageHash = btoa(attachmentFile.slice(0, 1000)); // Hash first 1000 chars
+      
+      if (this.isOnline) {
+        // Check database for similar receipts
+        const { data, error } = await supabase
+          .from('donations')
+          .select('reference_number, parent_name, attachment_file, created_at')
+          .not('attachment_file', 'is', null);
+
+        if (error) {
+          console.warn('Could not check for duplicates:', error);
+          return { isDuplicate: false };
+        }
+
+        // Check for exact or similar matches
+        for (const existingDonation of data || []) {
+          if (existingDonation.attachment_file) {
+            const existingHash = btoa(existingDonation.attachment_file.slice(0, 1000));
+            
+            // Check if hashes are very similar (90% match)
+            const similarity = this.calculateStringSimilarity(imageHash, existingHash);
+            
+            if (similarity > 0.9) {
+              return {
+                isDuplicate: true,
+                duplicateInfo: {
+                  referenceNumber: existingDonation.reference_number,
+                  parentName: existingDonation.parent_name,
+                  submissionDate: existingDonation.created_at,
+                  similarity: similarity
+                }
+              };
+            }
+          }
+        }
+      }
+
+      return { isDuplicate: false };
+    } catch (error) {
+      console.error('Error checking for duplicate receipt:', error);
+      return { isDuplicate: false };
+    }
+  }
+
+  // Calculate string similarity for duplicate detection
+  calculateStringSimilarity(str1, str2) {
+    if (str1 === str2) return 1;
+    
+    const len1 = str1.length;
+    const len2 = str2.length;
+    const maxLen = Math.max(len1, len2);
+    
+    if (maxLen === 0) return 1;
+    
+    // Simple character match percentage
+    let matches = 0;
+    const minLen = Math.min(len1, len2);
+    
+    for (let i = 0; i < minLen; i++) {
+      if (str1[i] === str2[i]) matches++;
+    }
+    
+    return matches / maxLen;
+  }
+
   // Submit donation to centralized database
   async submitDonation(donationData) {
     try {
+      // Check for duplicate receipt first
+      if (donationData.attachmentFile) {
+        console.log('🔍 Checking for duplicate receipt...');
+        const duplicateCheck = await this.checkForDuplicateReceipt(
+          donationData.attachmentFile, 
+          donationData.parentName
+        );
+        
+        if (duplicateCheck.isDuplicate) {
+          const dupInfo = duplicateCheck.duplicateInfo;
+          console.error('🚫 DUPLICATE RECEIPT DETECTED:', dupInfo);
+          
+          return {
+            success: false,
+            error: 'duplicate_receipt',
+            duplicateInfo: dupInfo,
+            message: `⚠️ DUPLICATE RECEIPT DETECTED!\n\nThis receipt was already submitted by "${dupInfo.parentName}" on ${new Date(dupInfo.submissionDate).toLocaleDateString()}.\n\nReference: ${dupInfo.referenceNumber}\nSimilarity: ${(dupInfo.similarity * 100).toFixed(1)}%\n\nIf this is an error, please contact the Treasurer for assistance.`
+          };
+        }
+      }
+
       // Handle image uploads first
       let receiptImageUrl = null;
       let receiptImagePath = null;
@@ -240,9 +332,36 @@ class CentralizedDatabase {
       
       const stats = {
         totalDonations: donations.length,
-        totalAmount: donations.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0),
-        totalGeneralSPTA: donations.reduce((sum, d) => sum + (d.allocation?.generalSPTA || 0), 0),
-        totalMercadoPTA: donations.reduce((sum, d) => sum + (d.allocation?.mercadoPTA || 0), 0),
+        totalAmount: donations.reduce((sum, d) => {
+          try {
+            let amount = d?.amount;
+            if (typeof amount === 'string') {
+              amount = parseFloat(amount);
+            } else if (typeof amount === 'number') {
+              amount = amount;
+            } else {
+              amount = 0;
+            }
+            
+            if (isNaN(amount) || !isFinite(amount)) {
+              console.warn(`Invalid amount in stats calculation:`, d?.reference_number, amount);
+              return sum;
+            }
+            
+            return sum + amount;
+          } catch (e) {
+            console.warn(`Error in stats amount calculation:`, d?.reference_number, e);
+            return sum;
+          }
+        }, 0),
+        totalGeneralSPTA: donations.reduce((sum, d) => {
+          const allocation = d.allocation || {};
+          return sum + (allocation.generalSPTA || allocation.general_spta || 0);
+        }, 0),
+        totalMercadoPTA: donations.reduce((sum, d) => {
+          const allocation = d.allocation || {};
+          return sum + (allocation.mercadoPTA || allocation.mercado_pta || 0);
+        }, 0),
         donationModes: {
           cash: donations.filter(d => d.donation_mode === 'cash').length,
           ewallet: donations.filter(d => d.donation_mode === 'e-wallet').length,

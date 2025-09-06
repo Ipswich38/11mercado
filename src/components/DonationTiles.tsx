@@ -23,8 +23,25 @@ export default function DonationTiles({ donationDrives, getContrastClass }) {
       
       const total = donations.reduce((sum, d) => {
         try {
-          return sum + (parseFloat(d?.amount) || 0);
+          // Handle both string and number amounts from different sources
+          let amount = d?.amount;
+          if (typeof amount === 'string') {
+            amount = parseFloat(amount);
+          } else if (typeof amount === 'number') {
+            amount = amount;
+          } else {
+            amount = 0;
+          }
+          
+          // Ensure we have a valid number
+          if (isNaN(amount) || !isFinite(amount)) {
+            console.warn(`Invalid amount found in donation:`, d?.reference_number, amount);
+            return sum;
+          }
+          
+          return sum + amount;
         } catch (e) {
+          console.warn(`Error processing amount for donation:`, d?.reference_number, e);
           return sum;
         }
       }, 0);

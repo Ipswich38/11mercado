@@ -41,6 +41,7 @@ export default function AdminDashboard({ getContrastClass, onClose, onShowTutori
   const [filterType, setFilterType] = useState('all');
   const [centralizedDonations, setCentralizedDonations] = useState([]);
   const [donationStats, setDonationStats] = useState(null);
+  const [treasurerNotifications, setTreasurerNotifications] = useState([]);
   
   const {
     getAdminStats,
@@ -61,6 +62,10 @@ export default function AdminDashboard({ getContrastClass, onClose, onShowTutori
       setStats(getAdminStats());
       setSessions(getAllSessions());
       setErrors(getAllErrors());
+      
+      // Load treasurer notifications for duplicate receipts
+      const notifications = JSON.parse(localStorage.getItem('treasurerNotifications') || '[]');
+      setTreasurerNotifications(notifications);
     } catch (error) {
       console.error('Error loading admin data:', error);
     }
@@ -291,6 +296,7 @@ What would you like to know about?`;
     { id: 'errors', name: 'Error Logs', icon: AlertTriangle },
     { id: 'activities', name: 'Activities', icon: Activity },
     { id: 'donations', name: 'Donation Tracking', icon: FileSpreadsheet },
+    { id: 'treasurer', name: 'Treasurer Alerts', icon: AlertTriangle },
     { id: 'receipts', name: 'Receipt Recovery', icon: Receipt },
     { id: 'datasync', name: 'Data Sync & Consolidation', icon: Database }
   ];
@@ -375,6 +381,11 @@ What would you like to know about?`;
                     {tab.id === 'errors' && stats?.unresolvedErrors > 0 && (
                       <span className="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">
                         {stats.unresolvedErrors}
+                      </span>
+                    )}
+                    {tab.id === 'treasurer' && treasurerNotifications.length > 0 && (
+                      <span className="ml-auto bg-orange-500 text-white text-xs px-2 py-1 rounded-full">
+                        {treasurerNotifications.length}
                       </span>
                     )}
                   </button>
@@ -797,6 +808,199 @@ What would you like to know about?`;
                           </div>
                         )}
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {selectedTab === 'treasurer' && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h2 className={getContrastClass("text-xl font-semibold text-gray-900", "text-xl font-semibold text-yellow-400")}>
+                      Treasurer Alerts
+                    </h2>
+                    <button
+                      onClick={() => {
+                        localStorage.removeItem('treasurerNotifications');
+                        setTreasurerNotifications([]);
+                      }}
+                      className={getContrastClass(
+                        "px-4 py-2 rounded-xl bg-red-600 text-white hover:bg-red-700 transition-colors flex items-center gap-2",
+                        "px-4 py-2 rounded-xl bg-red-400 text-black hover:bg-red-300 transition-colors flex items-center gap-2"
+                      )}
+                    >
+                      <X size={16} />
+                      Clear All Alerts
+                    </button>
+                  </div>
+
+                  {treasurerNotifications.length === 0 ? (
+                    <div className={getContrastClass(
+                      "bg-white/70 backdrop-blur-md rounded-2xl p-8 border border-white/30 text-center",
+                      "bg-gray-800/70 backdrop-blur-md rounded-2xl p-8 border border-yellow-400/30 text-center"
+                    )}>
+                      <AlertTriangle size={48} className={getContrastClass("mx-auto mb-4 text-gray-400", "mx-auto mb-4 text-yellow-400")} />
+                      <h3 className={getContrastClass("text-lg font-semibold text-gray-900 mb-2", "text-lg font-semibold text-yellow-400 mb-2")}>
+                        No Duplicate Receipt Alerts
+                      </h3>
+                      <p className={getContrastClass("text-gray-600", "text-gray-300")}>
+                        When users attempt to submit duplicate receipts, you'll be notified here.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {treasurerNotifications.map((notification, index) => (
+                        <div
+                          key={index}
+                          className={getContrastClass(
+                            "bg-red-50 border border-red-200 rounded-xl p-6",
+                            "bg-red-900/20 border border-red-400 rounded-xl p-6"
+                          )}
+                        >
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                              <AlertTriangle className="text-red-500" size={24} />
+                              <div>
+                                <h3 className={getContrastClass("font-semibold text-red-800", "font-semibold text-red-400")}>
+                                  Duplicate Receipt Submission Blocked
+                                </h3>
+                                <p className={getContrastClass("text-sm text-red-600", "text-sm text-red-300")}>
+                                  {new Date(notification.timestamp).toLocaleString()}
+                                </p>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => {
+                                const updated = treasurerNotifications.filter((_, i) => i !== index);
+                                setTreasurerNotifications(updated);
+                                localStorage.setItem('treasurerNotifications', JSON.stringify(updated));
+                              }}
+                              className={getContrastClass(
+                                "p-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition-colors",
+                                "p-2 rounded-lg bg-red-800 text-red-400 hover:bg-red-700 transition-colors"
+                              )}
+                              title="Dismiss Alert"
+                            >
+                              <X size={16} />
+                            </button>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className={getContrastClass(
+                              "bg-white rounded-lg p-4 border border-red-200",
+                              "bg-gray-800 rounded-lg p-4 border border-red-400"
+                            )}>
+                              <h4 className={getContrastClass("font-medium text-gray-900 mb-3", "font-medium text-yellow-400 mb-3")}>
+                                Attempted Submission
+                              </h4>
+                              <div className="space-y-2 text-sm">
+                                <div>
+                                  <span className={getContrastClass("font-medium text-gray-700", "font-medium text-yellow-200")}>Parent:</span>
+                                  <span className={getContrastClass("ml-2 text-gray-900", "ml-2 text-yellow-100")}>
+                                    {notification.attemptedSubmission.parentName}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className={getContrastClass("font-medium text-gray-700", "font-medium text-yellow-200")}>Student:</span>
+                                  <span className={getContrastClass("ml-2 text-gray-900", "ml-2 text-yellow-100")}>
+                                    {notification.attemptedSubmission.studentName || 'Not specified'}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className={getContrastClass("font-medium text-gray-700", "font-medium text-yellow-200")}>Amount:</span>
+                                  <span className={getContrastClass("ml-2 text-gray-900", "ml-2 text-yellow-100")}>
+                                    ₱{notification.attemptedSubmission.amount}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className={getContrastClass("font-medium text-gray-700", "font-medium text-yellow-200")}>Mode:</span>
+                                  <span className={getContrastClass("ml-2 text-gray-900", "ml-2 text-yellow-100")}>
+                                    {notification.attemptedSubmission.donationMode}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className={getContrastClass("font-medium text-gray-700", "font-medium text-yellow-200")}>Similarity:</span>
+                                  <span className={getContrastClass("ml-2 text-gray-900 font-medium", "ml-2 text-red-400 font-medium")}>
+                                    {(notification.similarity * 100).toFixed(1)}%
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className={getContrastClass(
+                              "bg-white rounded-lg p-4 border border-red-200",
+                              "bg-gray-800 rounded-lg p-4 border border-red-400"
+                            )}>
+                              <h4 className={getContrastClass("font-medium text-gray-900 mb-3", "font-medium text-yellow-400 mb-3")}>
+                                Original Submission
+                              </h4>
+                              <div className="space-y-2 text-sm">
+                                <div>
+                                  <span className={getContrastClass("font-medium text-gray-700", "font-medium text-yellow-200")}>Parent:</span>
+                                  <span className={getContrastClass("ml-2 text-gray-900", "ml-2 text-yellow-100")}>
+                                    {notification.originalSubmission.parent_name || notification.originalSubmission.parentName}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className={getContrastClass("font-medium text-gray-700", "font-medium text-yellow-200")}>Student:</span>
+                                  <span className={getContrastClass("ml-2 text-gray-900", "ml-2 text-yellow-100")}>
+                                    {notification.originalSubmission.student_name || notification.originalSubmission.studentName || 'Not specified'}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className={getContrastClass("font-medium text-gray-700", "font-medium text-yellow-200")}>Amount:</span>
+                                  <span className={getContrastClass("ml-2 text-gray-900", "ml-2 text-yellow-100")}>
+                                    ₱{notification.originalSubmission.amount}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className={getContrastClass("font-medium text-gray-700", "font-medium text-yellow-200")}>Reference:</span>
+                                  <span className={getContrastClass("ml-2 text-gray-900", "ml-2 text-yellow-100")}>
+                                    {notification.originalSubmission.reference_number || notification.originalSubmission.referenceNumber}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className={getContrastClass("font-medium text-gray-700", "font-medium text-yellow-200")}>Date:</span>
+                                  <span className={getContrastClass("ml-2 text-gray-900", "ml-2 text-yellow-100")}>
+                                    {notification.originalSubmission.submission_date || notification.originalSubmission.submissionDate}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className={getContrastClass(
+                            "bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4",
+                            "bg-yellow-900/20 border border-yellow-400 rounded-lg p-4 mt-4"
+                          )}>
+                            <div className="flex items-center gap-2 mb-2">
+                              <AlertTriangle className="text-yellow-600" size={16} />
+                              <span className={getContrastClass("font-medium text-yellow-800", "font-medium text-yellow-400")}>
+                                Action Required
+                              </span>
+                            </div>
+                            <p className={getContrastClass("text-sm text-yellow-700", "text-sm text-yellow-200")}>
+                              Please verify if this is a legitimate duplicate submission or a genuine error. 
+                              Contact the parent if necessary to clarify the situation. The submission has been blocked to prevent double-counting.
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className={getContrastClass(
+                    "bg-blue-50 border border-blue-200 rounded-xl p-4",
+                    "bg-gray-800 border border-yellow-400 rounded-xl p-4"
+                  )}>
+                    <h4 className={getContrastClass("font-semibold text-blue-800 mb-2", "font-semibold text-yellow-400 mb-2")}>
+                      About Duplicate Detection
+                    </h4>
+                    <ul className={getContrastClass("text-sm text-blue-700 space-y-1", "text-sm text-yellow-200 space-y-1")}>
+                      <li>• The system compares receipt images using image similarity analysis</li>
+                      <li>• Submissions with 90%+ similarity are automatically blocked</li>
+                      <li>• All blocked attempts are logged here for treasurer review</li>
+                      <li>• This prevents the "Elaine Baldos triplicate" incident type scenarios</li>
+                    </ul>
                   </div>
                 </div>
               )}

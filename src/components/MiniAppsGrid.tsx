@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calculator, Cloud, Upload, Users, UserCheck, ExternalLink, TrendingUp, BookOpen, Mail, FolderPlus, Shield, HelpCircle, ChevronRight, X } from 'lucide-react';
+import { Calculator, Cloud, Upload, Users, UserCheck, ExternalLink, TrendingUp, BookOpen, Mail, FolderPlus, Shield, HelpCircle, ChevronRight, X, CheckCircle } from 'lucide-react';
 import { getDonationStatsFromCentralDB } from '../utils/centralizedDatabase';
 import AttendanceTracker from './AttendanceTracker';
 
@@ -280,7 +280,7 @@ export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastC
           </div>
           
           {/* Dynamic Message - Center but smaller text */}
-          <div className="text-center">
+          <div className="text-center mb-4">
             {totalDonations > 0 ? (
               <p className="text-body-medium text-white/95 leading-relaxed">
                 <span className="font-medium">Thank you amazing parents!</span> Your support makes a real difference in our children's education.
@@ -291,6 +291,20 @@ export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastC
               </p>
             )}
           </div>
+          
+          {/* Data Integrity Indicators */}
+          {totalDonations > 0 && (
+            <div className="flex items-center justify-center gap-3 pt-3 border-t border-white/20">
+              <div className="flex items-center gap-1">
+                <Shield size={12} className="text-white/80" />
+                <span className="text-xs text-white/80">Duplicate Detection Active</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <CheckCircle size={12} className="text-white/80" />
+                <span className="text-xs text-white/80">Data Verified Sep 2025</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

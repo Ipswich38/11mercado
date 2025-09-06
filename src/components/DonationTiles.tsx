@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, Target, Calendar, RefreshCw } from 'lucide-react';
+import { TrendingUp, Target, Calendar, RefreshCw, Shield, CheckCircle } from 'lucide-react';
 import { getAllDonationsFromCentralDB } from '../utils/centralizedDatabase';
 import { loadAccurateDonationData, calculateAccurateTotals } from '../utils/csvDataLoader';
 
@@ -233,14 +233,29 @@ export default function DonationTiles({ donationDrives, getContrastClass }) {
 
       {totalRaised > 0 && (
         <div className={getContrastClass(
-          "card-elevated p-6 text-center",
-          "glass-dark rounded-material-xl p-6 text-center border border-surface-700"
+          "card-elevated p-6",
+          "glass-dark rounded-material-xl p-6 border border-surface-700"
         )}>
           <div className={getContrastClass(
-            "text-body-large text-surface-600",
-            "text-body-large text-surface-300"
+            "text-body-large text-surface-600 text-center mb-4",
+            "text-body-large text-surface-300 text-center mb-4"
           )}>
             Thank you to all our generous donors who are supporting 11Mercado SPTA initiatives
+          </div>
+          
+          {/* Data Integrity Footer */}
+          <div className={getContrastClass(
+            "flex items-center justify-center gap-3 pt-4 border-t border-surface-200/20 text-surface-500",
+            "flex items-center justify-center gap-3 pt-4 border-t border-surface-600/30 text-surface-400"
+          )}>
+            <div className="flex items-center gap-2">
+              <Shield size={14} className={getContrastClass("text-success-600", "text-success-400")} />
+              <span className="text-body-small">Duplicate Detection Active</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <CheckCircle size={14} className={getContrastClass("text-success-600", "text-success-400")} />
+              <span className="text-body-small">Data Verified Sep 2025</span>
+            </div>
           </div>
         </div>
       )}

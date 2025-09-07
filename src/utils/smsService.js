@@ -236,7 +236,7 @@ export const sendAttendanceNotification = async (studentName, status, parentPhon
     }
     
     // Send SMS using your Globe unlimited plan via preferred provider
-    const result = await sendSMS(parentPhone, message, 'semaphore');
+    const result = await sendSMS(parentPhone, message, 'globe-direct');
     
     if (result.success) {
       console.log(`✅ Attendance notification sent for ${studentName}`);

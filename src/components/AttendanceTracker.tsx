@@ -221,6 +221,24 @@ const AttendanceTracker = () => {
                 Test SMS
               </button>
               <button
+                onClick={async () => {
+                  const testPhone = prompt('Enter your phone number (09XXXXXXXXX):');
+                  const lastname = prompt('Enter student lastname (e.g., ACAIN):');
+                  if (testPhone && lastname) {
+                    const { addTestSubscription } = await import('../utils/testSmsSystem');
+                    const result = await addTestSubscription(testPhone, lastname.toUpperCase());
+                    alert(result.success ? 
+                      `✅ Test subscription added! Check Parent Phone Manager` : 
+                      `❌ Failed: ${result.error}`
+                    );
+                  }
+                }}
+                className="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors flex items-center gap-2"
+              >
+                <Users size={16} />
+                Add Test Parent
+              </button>
+              <button
                 onClick={resetAttendance}
                 className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
               >

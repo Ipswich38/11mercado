@@ -39,6 +39,19 @@ export default async function handler(req, res) {
         standardPhone = '+' + standardPhone;
       }
       
+      // Extract student lastname from message (if provided)
+      let studentLastname = null;
+      let registrationMessage = 'Registration successful! Contact PTA to link your child.';
+      
+      if (webhookData.message) {
+        // Expected format: "JOIN DELA CRUZ" or "JOIN DELGADO"
+        const messageParts = webhookData.message.trim().toUpperCase().split(' ');
+        if (messageParts.length >= 2 && messageParts[0] === 'JOIN') {
+          studentLastname = messageParts.slice(1).join(' '); // Handle multi-word surnames
+          registrationMessage = `Registration for ${studentLastname} family successful! PTA will link your child's attendance notifications.`;
+        }
+      }
+      
       // Store subscription in database
       const { data, error } = await supabase
         .from('sms_subscriptions')
@@ -49,7 +62,8 @@ export default async function handler(req, res) {
           status: 'active',
           subscribed_at: new Date().toISOString(),
           app_id: webhookData.app_id || '',
-          webhook_data: webhookData
+          webhook_data: webhookData,
+          student_lastname: studentLastname
         }, {
           onConflict: 'phone_number'
         });

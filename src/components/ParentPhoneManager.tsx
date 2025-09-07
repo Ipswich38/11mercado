@@ -252,10 +252,18 @@ const ParentPhoneManager: React.FC<ParentPhoneManagerProps> = ({
                   {activeSubscriptions.map((subscription) => {
                     const linkedStudent = students.find(s => s.parentPhone === subscription.phone_number);
                     
+                    // Try to match student by lastname if not already linked
+                    const suggestedStudent = !linkedStudent && subscription.student_lastname 
+                      ? students.find(s => s.name.toUpperCase().includes(subscription.student_lastname.toUpperCase()))
+                      : null;
+                    
                     return (
                       <div 
                         key={subscription.id}
-                        className={`p-3 border-b hover:bg-gray-50 ${!linkedStudent ? 'bg-red-50' : 'bg-green-50'}`}
+                        className={`p-3 border-b hover:bg-gray-50 ${
+                          linkedStudent ? 'bg-green-50' : 
+                          suggestedStudent ? 'bg-yellow-50' : 'bg-red-50'
+                        }`}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
@@ -264,19 +272,40 @@ const ParentPhoneManager: React.FC<ParentPhoneManagerProps> = ({
                               <span className="font-medium">{subscription.phone_number}</span>
                               {linkedStudent ? (
                                 <CheckCircle className="w-4 h-4 text-green-600" />
+                              ) : suggestedStudent ? (
+                                <AlertCircle className="w-4 h-4 text-yellow-600" />
                               ) : (
                                 <AlertCircle className="w-4 h-4 text-red-500" />
                               )}
                             </div>
+                            
+                            {/* Student lastname from registration */}
+                            {subscription.student_lastname && (
+                              <div className="text-xs font-medium text-blue-600 mt-1">
+                                Registered for: {subscription.student_lastname}
+                              </div>
+                            )}
+                            
                             {linkedStudent ? (
                               <div className="text-sm text-green-600 mt-1">
-                                Linked to: {linkedStudent.name}
+                                ✅ Linked to: {linkedStudent.name}
+                              </div>
+                            ) : suggestedStudent ? (
+                              <div className="text-sm text-yellow-600 mt-1">
+                                💡 Suggested: {suggestedStudent.name}
+                                <button
+                                  onClick={() => onUpdateStudent(suggestedStudent.id, subscription.phone_number)}
+                                  className="ml-2 px-1 py-0.5 bg-yellow-500 text-white text-xs rounded hover:bg-yellow-600"
+                                >
+                                  Link This
+                                </button>
                               </div>
                             ) : (
                               <div className="text-sm text-red-600 mt-1">
-                                Not linked to any student
+                                ❌ Not linked to any student
                               </div>
                             )}
+                            
                             <div className="text-xs text-gray-500">
                               Subscribed: {new Date(subscription.subscribed_at).toLocaleDateString()}
                             </div>

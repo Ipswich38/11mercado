@@ -8,10 +8,15 @@
 ## 🚀 **How to Register (Parents)**
 
 ### **Step 1: Send Registration SMS**
-From your Globe mobile phone, send this text message:
+From your Globe mobile phone, send this text message with your child's **LASTNAME**:
 
-**Text Message:** `JOIN 11MERCADO`  
+**Text Message:** `JOIN [YOUR CHILD'S LASTNAME]`  
 **Send to:** `21666946` (Globe/TM users) or `225646946` (other networks)
+
+**Examples:**
+- If your child is "DELA CRUZ, MARIA", text: `JOIN DELA CRUZ`
+- If your child is "SANTOS, JUAN", text: `JOIN SANTOS`
+- If your child is "REYES, ANNA", text: `JOIN REYES`
 
 ### **Step 2: Confirm Subscription**
 You'll receive a confirmation message from Globe Labs asking you to confirm. Simply reply `YES` to activate.
@@ -114,6 +119,6 @@ Once confirmed, you'll receive a welcome message from 11Mercado PTA confirming y
 
 ---
 
-**📱 Ready to get started? Text `JOIN 11MERCADO` to `21666946` now!**
+**📱 Ready to get started? Text `JOIN [YOUR CHILD'S LASTNAME]` to `21666946` now!**
 
 *This SMS system is a breakthrough innovation developed by the Grade 11 Mercado section to enhance parent-school communication and ensure student safety.*

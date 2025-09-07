@@ -11,7 +11,8 @@ CREATE TABLE IF NOT EXISTS sms_subscriptions (
   unsubscribed_at TIMESTAMP WITH TIME ZONE NULL,
   app_id VARCHAR(50),
   webhook_data JSONB,
-  student_id UUID REFERENCES students(id) NULL, -- Link to student record when available
+  student_lastname VARCHAR(100), -- Parent provides student's lastname during registration
+  student_id UUID NULL, -- Link to student record when available
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

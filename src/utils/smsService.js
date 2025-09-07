@@ -180,6 +180,8 @@ export const sendSMS = async (phoneNumber, message, preferredProvider = 'semapho
     let result;
     if (preferredProvider === 'globe-labs') {
       result = await sendSMSViaGlobeLabs(standardPhone, message);
+    } else if (preferredProvider === 'globe-direct') {
+      result = await sendSMSViaGlobeNumber(standardPhone, message);
     } else {
       result = await sendSMSViaSemaphore(standardPhone, message);
     }
@@ -189,9 +191,11 @@ export const sendSMS = async (phoneNumber, message, preferredProvider = 'semapho
       console.log('⚠️ Primary SMS provider failed, trying fallback...');
       
       if (preferredProvider === 'globe-labs') {
+        result = await sendSMSViaGlobeNumber(standardPhone, message);
+      } else if (preferredProvider === 'globe-direct') {
         result = await sendSMSViaSemaphore(standardPhone, message);
       } else {
-        result = await sendSMSViaGlobeLabs(standardPhone, message);
+        result = await sendSMSViaGlobeNumber(standardPhone, message);
       }
     }
     

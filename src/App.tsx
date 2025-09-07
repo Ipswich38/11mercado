@@ -850,14 +850,6 @@ export default function MobileApp() {
           className="hidden"
         />
 
-        {/* Real-time User Counter - shows for all users */}
-        <RealTimeUserCounter 
-          getContrastClass={getContrastClass}
-          showDetails={false}
-          compact={true}
-          position="bottom-left"
-        />
-
         {/* Floating Chatbot Bubble - shows on all pages except when chat is open */}
         {activeApp !== 'pta-chat' && (
           <ChatBotBubbleWithPreview getContrastClass={getContrastClass} />

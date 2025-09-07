@@ -118,11 +118,13 @@ const AttendanceTracker = () => {
     if (student.parentPhone) {
       try {
         console.log('📱 Sending attendance SMS for:', student.name, 'to:', student.parentPhone);
+        console.log('📱 Debug: About to call sendAttendanceNotification');
         const result = await sendAttendanceNotification(
           student.name,
           'present',
           student.parentPhone
         );
+        console.log('📱 Debug: SMS result:', result);
         
         const smsMessage = {
           id: Date.now(),
@@ -409,6 +411,60 @@ const AttendanceTracker = () => {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+
+        {/* SMS Registration Instructions */}
+        <div className="bg-blue-50 rounded-xl shadow-lg border border-blue-200 p-6 mt-6">
+          <h3 className="text-lg font-semibold text-blue-800 mb-4 flex items-center gap-2">
+            <Phone className="w-5 h-5 text-blue-600" />
+            📱 Parent SMS Registration Required
+          </h3>
+          <div className="space-y-4">
+            <div className="bg-white rounded-lg p-4 border border-blue-100">
+              <h4 className="font-semibold text-blue-800 mb-2">📲 Option 1: Text Registration (Easy & Fast)</h4>
+              <div className="text-sm text-gray-700 space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded font-mono text-xs">Step 1</span>
+                  <span>Text <code className="bg-gray-100 px-2 py-1 rounded font-mono">INFO</code> to <strong className="text-blue-600">21666946</strong></span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded font-mono text-xs">Step 2</span>
+                  <span>Reply <code className="bg-gray-100 px-2 py-1 rounded font-mono">YES</code> to the welcome message</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="bg-green-100 text-green-800 px-2 py-1 rounded font-mono text-xs">Done!</span>
+                  <span>You're now registered for attendance SMS alerts</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white rounded-lg p-4 border border-blue-100">
+              <h4 className="font-semibold text-blue-800 mb-2">🌐 Option 2: Web Registration</h4>
+              <div className="text-sm text-gray-700 space-y-2">
+                <p>Click here to register online: 
+                  <a 
+                    href="http://developer.globelabs.com.ph/dialog/oauth/7yqjCjo59nuXkT8zbri5KGuyRyadC7Eo" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="ml-2 text-blue-600 underline hover:text-blue-700 font-medium"
+                  >
+                    Globe Labs Registration →
+                  </a>
+                </p>
+                <p className="text-xs text-gray-500">Enter your mobile number and follow the confirmation steps</p>
+              </div>
+            </div>
+            
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+              <div className="flex items-start gap-2">
+                <span className="text-yellow-600 font-bold">⚠️</span>
+                <div className="text-sm text-yellow-800">
+                  <p className="font-medium mb-1">Important: Complete Registration First</p>
+                  <p>Parents must register via SMS or web before receiving attendance notifications. After registration, use the "Add Parent (SMS Opt-In)" button below to link your phone to your child's name.</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

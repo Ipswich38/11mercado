@@ -235,8 +235,8 @@ export const sendAttendanceNotification = async (studentName, status, parentPhon
       return { success: false, error: 'Invalid attendance status' };
     }
     
-    // Send SMS using your Globe unlimited plan via preferred provider
-    const result = await sendSMS(parentPhone, message, 'globe-direct');
+    // Send SMS using Globe Labs API (real SMS) or fallback to simulation
+    const result = await sendSMS(parentPhone, message, 'globe-labs');
     
     if (result.success) {
       console.log(`✅ Attendance notification sent for ${studentName}`);

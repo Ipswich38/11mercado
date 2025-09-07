@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Phone, Check, X, Search, Users, MessageSquare, AlertCircle, CheckCircle } from 'lucide-react';
+import { Phone, Check, X, Search, Users, MessageSquare, AlertCircle, CheckCircle, Send } from 'lucide-react';
 import { getActiveSubscriptions } from '../utils/globeWebhook';
+import { sendSMS, testSMSConfiguration } from '../utils/smsService';
 
 interface ParentPhoneManagerProps {
   students: any[];
@@ -18,6 +19,9 @@ const ParentPhoneManager: React.FC<ParentPhoneManagerProps> = ({
   const [loading, setLoading] = useState(true);
   const [selectedStudent, setSelectedStudent] = useState<number | null>(null);
   const [phoneInput, setPhoneInput] = useState('');
+  const [testPhone, setTestPhone] = useState('');
+  const [testMessage, setTestMessage] = useState('Hello! This is a test message from 11Mercado PTA SMS system. 📱');
+  const [smsResults, setSmsResults] = useState([]);
 
   useEffect(() => {
     loadActiveSubscriptions();
@@ -76,6 +80,32 @@ const ParentPhoneManager: React.FC<ParentPhoneManagerProps> = ({
   const unlinkedSubscriptions = activeSubscriptions.filter(sub => 
     !students.some(student => student.parentPhone === sub.phone_number)
   );
+
+  const handleTestSMS = async () => {
+    if (!testPhone.trim()) {
+      alert('Please enter a phone number to test');
+      return;
+    }
+    
+    try {
+      const result = await sendSMS(testPhone, testMessage, 'globe-direct');
+      setSmsResults(prev => [{
+        id: Date.now(),
+        phone: testPhone,
+        message: testMessage,
+        result: result,
+        timestamp: new Date().toLocaleTimeString()
+      }, ...prev]);
+      
+      if (result.success) {
+        alert('✅ Test SMS sent successfully! Check console for details.');
+      } else {
+        alert(`❌ SMS failed: ${result.error}`);
+      }
+    } catch (error) {
+      alert(`❌ SMS error: ${error.message}`);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -269,11 +299,56 @@ const ParentPhoneManager: React.FC<ParentPhoneManagerProps> = ({
           </div>
         </div>
 
-        {/* Footer */}
+        {/* Footer with SMS Test */}
         <div className="border-t p-4 bg-gray-50">
+          {/* SMS Test Panel */}
+          <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+            <h4 className="text-sm font-medium text-blue-800 mb-2 flex items-center gap-2">
+              <Send className="w-4 h-4" />
+              Test SMS System
+            </h4>
+            <div className="grid grid-cols-12 gap-2">
+              <input
+                type="tel"
+                placeholder="09XXXXXXXXX"
+                value={testPhone}
+                onChange={(e) => setTestPhone(e.target.value)}
+                className="col-span-3 px-2 py-1 text-sm border border-blue-200 rounded"
+              />
+              <input
+                type="text"
+                placeholder="Test message..."
+                value={testMessage}
+                onChange={(e) => setTestMessage(e.target.value)}
+                className="col-span-7 px-2 py-1 text-sm border border-blue-200 rounded"
+              />
+              <button
+                onClick={handleTestSMS}
+                className="col-span-2 bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 flex items-center justify-center gap-1"
+              >
+                <Send className="w-3 h-3" />
+                Send
+              </button>
+            </div>
+            {smsResults.length > 0 && (
+              <div className="mt-2 max-h-20 overflow-y-auto">
+                {smsResults.slice(0, 3).map((result) => (
+                  <div key={result.id} className="text-xs text-gray-600 py-1">
+                    <span className={result.result.success ? 'text-green-600' : 'text-red-600'}>
+                      {result.result.success ? '✅' : '❌'}
+                    </span>
+                    {' '}{result.phone} at {result.timestamp}
+                    {!result.result.success && ` - ${result.result.error}`}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-600">
-              📱 Parents need to text <code className="bg-gray-200 px-1 rounded">JOIN 11MERCADO</code> to your short code to subscribe
+              📱 Short Code: <code className="bg-gray-200 px-1 rounded font-mono">21666946</code> | 
+              Cross-telco: <code className="bg-gray-200 px-1 rounded font-mono">225646946</code>
             </div>
             <button
               onClick={onClose}

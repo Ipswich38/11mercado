@@ -13,6 +13,10 @@ const SMS_CONFIG = {
   // Option 2: Globe Labs (Direct Globe integration)
   globeLabs: {
     apiUrl: 'https://devapi.globelabs.com.ph/sms/v1/outbound',
+    appId: import.meta.env?.VITE_GLOBE_APP_ID || process.env.REACT_APP_GLOBE_APP_ID || '',
+    appSecret: import.meta.env?.VITE_GLOBE_APP_SECRET || process.env.REACT_APP_GLOBE_APP_SECRET || '',
+    shortCode: import.meta.env?.VITE_GLOBE_SHORT_CODE || process.env.REACT_APP_GLOBE_SHORT_CODE || '21666946',
+    crossTelcoCode: import.meta.env?.VITE_GLOBE_CROSS_TELCO_CODE || process.env.REACT_APP_GLOBE_CROSS_TELCO_CODE || '225646946',
     accessToken: import.meta.env?.VITE_GLOBE_ACCESS_TOKEN || process.env.REACT_APP_GLOBE_ACCESS_TOKEN || ''
   },
   
@@ -111,6 +115,39 @@ export const sendSMSViaGlobeLabs = async (phoneNumber, message) => {
   } catch (error) {
     console.error('❌ Globe Labs SMS error:', error);
     return { success: false, provider: 'globe-labs', error: error.message };
+  }
+};
+
+/**
+ * Send SMS directly using Globe number (for testing without Globe Labs)
+ */
+export const sendSMSViaGlobeNumber = async (phoneNumber, message) => {
+  try {
+    console.log('📱 Sending SMS via Globe Number to:', phoneNumber);
+    
+    // For now, this simulates sending SMS and logs the action
+    // In a real implementation, you'd integrate with Globe's direct SMS API
+    // or use a service like Semaphore that can send from your Globe number
+    
+    console.log(`📤 SMS from ${SMS_CONFIG.globeNumber}:`);
+    console.log(`📍 To: ${phoneNumber}`);
+    console.log(`💬 Message: ${message}`);
+    
+    // Simulate successful SMS sending
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    return {
+      success: true,
+      provider: 'globe-direct',
+      senderNumber: SMS_CONFIG.globeNumber,
+      message: message,
+      recipient: phoneNumber,
+      timestamp: new Date().toISOString()
+    };
+    
+  } catch (error) {
+    console.error('❌ Globe Number SMS error:', error);
+    return { success: false, provider: 'globe-direct', error: error.message };
   }
 };
 

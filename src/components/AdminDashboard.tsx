@@ -27,6 +27,7 @@ import {
 import { useAdminSession } from '../utils/adminSessionManager';
 import { consolidateAllData, exportDataForDebug } from '../utils/dataSync';
 import { centralizedDB, getAllDonationsFromCentralDB, getDonationStatsFromCentralDB } from '../utils/centralizedDatabase';
+import RealTimeUserCounter from './RealTimeUserCounter';
 
 export default function AdminDashboard({ getContrastClass, onClose, onShowTutorial, onNavigate }) {
   const [stats, setStats] = useState(null);
@@ -359,6 +360,16 @@ What would you like to know about?`;
               <X size={16} />
             </button>
           </div>
+        </div>
+        
+        {/* Real-time User Counter - Fixed Position */}
+        <div className="absolute top-4 left-4 z-10">
+          <RealTimeUserCounter 
+            getContrastClass={getContrastClass}
+            showDetails={true}
+            compact={false}
+            position="inline"
+          />
         </div>
 
         <div className="flex flex-1 overflow-hidden">

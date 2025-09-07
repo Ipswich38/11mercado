@@ -28,6 +28,8 @@ import { ChatBotBubbleWithPreview } from './components/ChatBotBubble';
 import UserLimitGate from './components/UserLimitGate';
 import AdminMonitor from './components/AdminMonitor';
 import { useAdminSession } from './utils/adminSessionManager';
+import { useRealTimeSync } from './utils/realTimeSync';
+import RealTimeUserCounter from './components/RealTimeUserCounter';
 import UPCATQuizGenerator from './components/UPCATQuizGenerator';
 import AIScientificCalculator from './components/AIScientificCalculator';
 import HuggingFaceAI from './components/HuggingFaceAI';
@@ -74,6 +76,17 @@ export default function MobileApp() {
     updateActivity, 
     logActivity 
   } = useAdminSession();
+  
+  // Real-time sync for live updates
+  const {
+    onSessionUpdate,
+    onUserCountUpdate,
+    onDonationUpdate,
+    onSystemUpdate,
+    forceSync,
+    getUserCount,
+    updateUserCount
+  } = useRealTimeSync();
 
   // New AI STEM Tools
   const [aiSTEMTools] = useState([
@@ -272,25 +285,82 @@ export default function MobileApp() {
     }
   }, [updateActivity]);
 
-  // Periodically update user activity to keep session alive
+  // Enhanced session management with real-time sync
   React.useEffect(() => {
     if (currentSessionId && isLoggedIn) {
       const activityInterval = setInterval(() => {
-        updateActivity(currentSessionId);
+        const isActive = updateActivity(currentSessionId);
+        if (!isActive) {
+          // Session expired, force logout
+          setNotificationMessage('Your session has expired due to inactivity. Please log in again.');
+          setNotificationType('error');
+          setShowNotification(true);
+          handleLogout();
+        }
       }, 60000); // Update every minute
       
       return () => clearInterval(activityInterval);
     }
   }, [currentSessionId, isLoggedIn, updateActivity]);
+  
+  // Listen for real-time updates
+  React.useEffect(() => {
+    // Session expiration listener
+    const handleSessionExpired = (event) => {
+      try {
+        const expiredData = JSON.parse(event.newValue || '{}');
+        if (expiredData.sessionId === currentSessionId) {
+          setNotificationMessage(expiredData.message);
+          setNotificationType('error');
+          setShowNotification(true);
+          handleLogout();
+        }
+      } catch (error) {
+        console.warn('Error handling session expiration:', error);
+      }
+    };
+    
+    // User count updates
+    const handleUserCountUpdate = (event) => {
+      // Force sync to get latest data
+      forceSync();
+    };
+    
+    // System updates (like new version)
+    onSystemUpdate((data) => {
+      if (data.requiresRefresh) {
+        setNotificationMessage(data.message + ' Refreshing in 5 seconds...');
+        setNotificationType('info');
+        setShowNotification(true);
+        setTimeout(() => {
+          window.location.reload();
+        }, 5000);
+      }
+    });
+    
+    // Setup listeners
+    window.addEventListener('storage', (event) => {
+      if (event.key === '11mercado_session_expired') {
+        handleSessionExpired(event);
+      }
+    });
+    
+    window.addEventListener('userCountUpdate', handleUserCountUpdate);
+    
+    return () => {
+      window.removeEventListener('storage', handleSessionExpired);
+      window.removeEventListener('userCountUpdate', handleUserCountUpdate);
+    };
+  }, [currentSessionId, onSystemUpdate, forceSync]);
 
   // Save donation drives to localStorage whenever they change
   React.useEffect(() => {
     localStorage.setItem('donationDrives', JSON.stringify(donationDrives));
   }, [donationDrives]);
 
-  // Initialize centralized database system
+  // Initialize centralized database system with real-time sync
   React.useEffect(() => {
-    console.log('Centralized database system initialized');
+    console.log('Centralized database system initialized with real-time sync');
     
     // Listen for sync events to update UI
     const handleDataSync = (event) => {
@@ -299,14 +369,25 @@ export default function MobileApp() {
         setDonationDrives(syncedData.donationDrives);
       }
       showNotificationMessage('Data synchronized across devices!', 'success');
+      
+      // Update real-time sync system
+      updateUserCount(getUserCount());
     };
+    
+    // Listen for donation updates
+    onDonationUpdate((data) => {
+      if (data.drives) {
+        setDonationDrives(data.drives);
+      }
+      showNotificationMessage('Donation data updated!', 'success');
+    });
     
     window.addEventListener('dataSync', handleDataSync);
     
     return () => {
       window.removeEventListener('dataSync', handleDataSync);
     };
-  }, []);
+  }, [onDonationUpdate, updateUserCount, getUserCount]);
 
   const [weather, setWeather] = useState({
     location: "San Jose del Monte, Bulacan",
@@ -767,6 +848,14 @@ export default function MobileApp() {
           type="file"
           accept=".pdf,.jpg,.jpeg,.png,.gif,.doc,.docx"
           className="hidden"
+        />
+
+        {/* Real-time User Counter - shows for all users */}
+        <RealTimeUserCounter 
+          getContrastClass={getContrastClass}
+          showDetails={false}
+          compact={true}
+          position="bottom-left"
         />
 
         {/* Floating Chatbot Bubble - shows on all pages except when chat is open */}

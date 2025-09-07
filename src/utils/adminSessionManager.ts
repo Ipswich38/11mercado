@@ -145,15 +145,47 @@ class AdminSessionManager {
     this.sessions.forEach((session, sessionId) => {
       if (now - session.lastActivity > this.SESSION_TIMEOUT) {
         expiredSessions.push(sessionId);
+        // Log session expiration
+        this.logActivity(sessionId, 'SESSION_EXPIRED', 
+          `Session expired for user ${session.firstName} after ${this.SESSION_TIMEOUT / 1000 / 60} minutes of inactivity`, 
+          'SessionManager', false, 'Session timeout');
       }
     });
 
+    // Notify expired sessions via localStorage for active tabs
     expiredSessions.forEach(sessionId => {
+      const session = this.sessions.get(sessionId);
+      if (session) {
+        // Broadcast session expiration to all tabs
+        try {
+          localStorage.setItem('11mercado_session_expired', JSON.stringify({
+            sessionId,
+            userId: session.userId,
+            timestamp: now,
+            message: 'Your session has expired due to inactivity. Please log in again.'
+          }));
+          setTimeout(() => {
+            localStorage.removeItem('11mercado_session_expired');
+          }, 5000);
+        } catch (error) {
+          console.warn('Failed to notify session expiration:', error);
+        }
+      }
       this.sessions.delete(sessionId);
     });
 
     if (expiredSessions.length > 0) {
       this.saveDataToStorage();
+      console.log(`🕒 Expired ${expiredSessions.length} inactive sessions`);
+      
+      // Update user count for all listening components
+      try {
+        window.dispatchEvent(new CustomEvent('userCountUpdate', {
+          detail: { count: this.sessions.size }
+        }));
+      } catch (error) {
+        console.warn('Failed to dispatch user count update:', error);
+      }
     }
   }
 
@@ -206,7 +238,20 @@ class AdminSessionManager {
   public updateActivity(sessionId: string): boolean {
     const session = this.sessions.get(sessionId);
     if (session) {
-      session.lastActivity = Date.now();
+      const now = Date.now();
+      // Check if session should be expired
+      if (now - session.lastActivity > this.SESSION_TIMEOUT) {
+        // Session has expired, remove it
+        this.sessions.delete(sessionId);
+        this.logActivity(sessionId, 'SESSION_EXPIRED', 
+          `Session expired for user ${session.firstName}`, 
+          'SessionManager', false, 'Session timeout during activity update');
+        this.saveDataToStorage();
+        return false;
+      }
+      
+      session.lastActivity = now;
+      this.logActivity(sessionId, 'ACTIVITY_UPDATE', 'User activity updated', 'SessionManager', true);
       this.saveDataToStorage();
       return true;
     }
@@ -282,6 +327,17 @@ class AdminSessionManager {
     
     if (this.sessions.delete(sessionId)) {
       this.saveDataToStorage();
+      
+      // Update user count for all listening components
+      try {
+        window.dispatchEvent(new CustomEvent('userCountUpdate', {
+          detail: { count: this.sessions.size }
+        }));
+      } catch (error) {
+        console.warn('Failed to dispatch user count update:', error);
+      }
+      
+      console.log(`📤 Session ${sessionId} released for user ${session?.firstName || 'Unknown'}`);
     }
   }
 

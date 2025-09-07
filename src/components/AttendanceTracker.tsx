@@ -207,6 +207,20 @@ const AttendanceTracker = () => {
                 Manage Parent Phones
               </button>
               <button
+                onClick={async () => {
+                  const testPhone = prompt('Enter phone number to test SMS (09XXXXXXXXX):');
+                  if (testPhone) {
+                    const { sendSMS } = await import('../utils/smsService');
+                    const result = await sendSMS(testPhone, 'Test SMS from 11Mercado PTA! 📱');
+                    alert(result.success ? '✅ SMS sent!' : `❌ Failed: ${result.error}`);
+                  }
+                }}
+                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
+              >
+                <MessageSquare size={16} />
+                Test SMS
+              </button>
+              <button
                 onClick={resetAttendance}
                 className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
               >

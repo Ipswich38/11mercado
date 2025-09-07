@@ -311,7 +311,7 @@ export default function NewDonationForm({ getContrastClass, onClose, onDonationS
               <p><span className="font-medium">Reference:</span> {successData.referenceNumber}</p>
               <p><span className="font-medium">Donor:</span> {successData.parentName}</p>
               <p><span className="font-medium">Amount:</span> ₱{successData.amount}</p>
-              <p><span className="font-medium">General SPTA:</span> ₱{successData.allocation.generalSPTA}</p>
+              <p><span className="font-medium">CSANSCI-VSCs:</span> ₱{successData.allocation.generalSPTA}</p>
               <p><span className="font-medium">11Mercado PTA:</span> ₱{successData.allocation.mercadoPTA}</p>
             </div>
             
@@ -541,28 +541,19 @@ export default function NewDonationForm({ getContrastClass, onClose, onDonationS
                   <div>
                     <label className={getContrastClass("block text-xs text-gray-600", "block text-xs text-yellow-300")}>
                       <div className="flex items-center gap-2">
-                        General SPTA (P395)
+                        CSANSCI-VSCs (P395)
                         <div className="relative group">
-                          <button
-                            type="button"
-                            className={`text-xs px-2 py-1 rounded text-white transition-colors ${
-                              getContrastClass(
-                                'bg-blue-500 hover:bg-blue-600',
-                                'bg-yellow-600 hover:bg-yellow-700'
-                              )
-                            }`}
-                          >
-                            Breakdown
-                          </button>
-                          <div className="absolute bottom-full left-0 mb-1 hidden group-hover:block bg-black text-white text-xs rounded p-3 w-64 z-10 shadow-lg">
+                          <Info size={14} className={getContrastClass("text-blue-500 hover:text-blue-600 cursor-help", "text-yellow-400 hover:text-yellow-300 cursor-help")} />
+                          <div className="absolute bottom-full left-0 mb-1 hidden group-hover:block bg-black text-white text-xs rounded p-3 w-72 z-10 shadow-lg">
                             <div className="text-xs">
-                              <div className="font-semibold mb-2 text-yellow-300">P395 Reference Breakdown:</div>
+                              <div className="font-semibold mb-2 text-yellow-300">DepEd-Authorized Voluntary School Contributions</div>
+                              <div className="mb-2 text-yellow-200">P395 Reference Breakdown:</div>
                               <div>• Philippine Red Cross: ₱50</div>
                               <div>• PTA Membership Dues: ₱150</div>
                               <div>• BSP/GSP: ₱50</div>
                               <div>• School Publication: ₱90</div>
                               <div>• Anti-TB Fund Drive: ₱5</div>
-                              <div>• Learners Organizations: Variable</div>
+                              <div>• Learners Organizations: ₱50</div>
                               <div className="mt-2 pt-2 border-t border-gray-500 text-gray-300 text-xs leading-relaxed">
                                 <strong>Note:</strong> These amounts are for reference only. All contributions remain completely voluntary. You may allocate any amount according to your trust and support.
                               </div>

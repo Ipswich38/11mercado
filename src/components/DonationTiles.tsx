@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, Target, Calendar, RefreshCw, Shield, CheckCircle } from 'lucide-react';
+import { TrendingUp, Target, Calendar, RefreshCw, Shield, CheckCircle, Info } from 'lucide-react';
 import { getAllDonationsFromCentralDB } from '../utils/centralizedDatabase';
 import { loadAccurateDonationData, calculateAccurateTotals } from '../utils/csvDataLoader';
 
@@ -191,22 +191,44 @@ export default function DonationTiles({ donationDrives, getContrastClass }) {
           </div>
           
           {/* Allocation Breakdown */}
-          <div className="grid grid-cols-2 gap-4 mt-4">
+          <div className="space-y-4 mt-6">
             <div className={getContrastClass(
               "bg-white/10 rounded-material-lg p-4",
               "bg-surface-700/30 rounded-material-lg p-4"
             )}>
-              <div className={getContrastClass(
-                "text-title-large text-white mb-1",
-                "text-title-large text-surface-100 mb-1"
-              )}>
-                ₱{generalSPTA.toLocaleString()}
-              </div>
-              <div className={getContrastClass(
-                "text-body-medium text-white/80",
-                "text-body-medium text-surface-300"
-              )}>
-                General SPTA
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className={getContrastClass(
+                    "text-body-medium text-white/80",
+                    "text-body-medium text-surface-300"
+                  )}>
+                    CSANSCI VSC / SPTA Membership
+                  </span>
+                  <div className="relative group">
+                    <Info size={16} className={getContrastClass("text-white/60 hover:text-white cursor-help", "text-surface-400 hover:text-surface-100 cursor-help")} />
+                    <div className="absolute bottom-full left-0 mb-2 hidden group-hover:block bg-black text-white text-xs rounded-lg p-3 w-72 z-10 shadow-lg">
+                      <div className="text-xs">
+                        <div className="font-semibold mb-2 text-yellow-300">DepEd-Authorized Voluntary School Contributions</div>
+                        <div className="mb-2 text-yellow-200">P395 Reference Breakdown:</div>
+                        <div>• Philippine Red Cross: ₱50</div>
+                        <div>• PTA Membership Dues: ₱150</div>
+                        <div>• BSP/GSP: ₱50</div>
+                        <div>• School Publication: ₱90</div>
+                        <div>• Anti-TB Fund Drive: ₱5</div>
+                        <div>• Learners Organizations: ₱50</div>
+                        <div className="mt-2 pt-2 border-t border-gray-500 text-gray-300 text-xs leading-relaxed">
+                          <strong>Note:</strong> All contributions are completely voluntary and may be allocated according to parent preference.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className={getContrastClass(
+                  "text-title-large text-white",
+                  "text-title-large text-surface-100"
+                )}>
+                  ₱{generalSPTA.toLocaleString()}
+                </div>
               </div>
             </div>
             
@@ -214,17 +236,39 @@ export default function DonationTiles({ donationDrives, getContrastClass }) {
               "bg-white/10 rounded-material-lg p-4",
               "bg-surface-700/30 rounded-material-lg p-4"
             )}>
-              <div className={getContrastClass(
-                "text-title-large text-white mb-1",
-                "text-title-large text-surface-100 mb-1"
-              )}>
-                ₱{mercadoPTA.toLocaleString()}
+              <div className="flex items-center justify-between">
+                <span className={getContrastClass(
+                  "text-body-medium text-white/80",
+                  "text-body-medium text-surface-300"
+                )}>
+                  11-MERCADO HRPTA FUNDS
+                </span>
+                <div className={getContrastClass(
+                  "text-title-large text-white",
+                  "text-title-large text-surface-100"
+                )}>
+                  ₱{mercadoPTA.toLocaleString()}
+                </div>
               </div>
-              <div className={getContrastClass(
-                "text-body-medium text-white/80",
-                "text-body-medium text-surface-300"
-              )}>
-                11Mercado PTA
+            </div>
+            
+            <div className={getContrastClass(
+              "bg-white/15 rounded-material-lg p-4 border border-white/20",
+              "bg-surface-600/40 rounded-material-lg p-4 border border-surface-500/30"
+            )}>
+              <div className="flex items-center justify-between">
+                <span className={getContrastClass(
+                  "text-body-large font-semibold text-white",
+                  "text-body-large font-semibold text-surface-100"
+                )}>
+                  TOTAL DONATIONS
+                </span>
+                <div className={getContrastClass(
+                  "text-display-small text-white font-bold",
+                  "text-display-small text-surface-100 font-bold"
+                )}>
+                  ₱{totalRaised.toLocaleString()}
+                </div>
               </div>
             </div>
           </div>

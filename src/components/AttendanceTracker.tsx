@@ -105,7 +105,7 @@ const AttendanceTracker = () => {
     }
   };
 
-  const markPresent = (studentId) => {
+  const markPresent = async (studentId) => {
     const student = students.find(s => s.id === studentId);
     
     setStudents(students.map(s =>
@@ -115,18 +115,52 @@ const AttendanceTracker = () => {
     ));
 
     // Send SMS notification for present status
-    const smsMessage = {
-      id: Date.now(),
-      studentName: student.name,
-      parentPhone: student.parentPhone,
-      status: 'present',
-      reason: '',
-      timestamp: new Date().toLocaleTimeString()
-    };
-    setSmsLog([smsMessage, ...smsLog]);
+    if (student.parentPhone) {
+      try {
+        console.log('📱 Sending attendance SMS for:', student.name, 'to:', student.parentPhone);
+        const result = await sendAttendanceNotification(
+          student.name,
+          'present',
+          student.parentPhone
+        );
+        
+        const smsMessage = {
+          id: Date.now(),
+          studentName: student.name,
+          parentPhone: student.parentPhone,
+          status: 'present',
+          reason: '',
+          timestamp: new Date().toLocaleTimeString(),
+          success: result.success,
+          error: result.error
+        };
+        setSmsLog([smsMessage, ...smsLog]);
+        
+        if (result.success) {
+          console.log('✅ Present SMS sent successfully');
+        } else {
+          console.error('❌ Present SMS failed:', result.error);
+        }
+      } catch (error) {
+        console.error('❌ Error sending present SMS:', error);
+      }
+    } else {
+      // No parent phone - just log without SMS
+      const smsMessage = {
+        id: Date.now(),
+        studentName: student.name,
+        parentPhone: 'No parent phone provided',
+        status: 'present',
+        reason: '',
+        timestamp: new Date().toLocaleTimeString(),
+        success: false,
+        error: 'No parent phone number'
+      };
+      setSmsLog([smsMessage, ...smsLog]);
+    }
   };
 
-  const markAbsent = () => {
+  const markAbsent = async () => {
     if (!absentReason.trim()) {
       alert("Please enter a reason for absence");
       return;
@@ -138,16 +172,51 @@ const AttendanceTracker = () => {
         : student
     ));
 
-    // Simulate SMS sending
-    const smsMessage = {
-      id: Date.now(),
-      studentName: selectedStudent.name,
-      parentPhone: selectedStudent.parentPhone,
-      status: 'absent',
-      reason: absentReason,
-      timestamp: new Date().toLocaleTimeString()
-    };
-    setSmsLog([smsMessage, ...smsLog]);
+    // Send SMS notification for absent status
+    if (selectedStudent.parentPhone) {
+      try {
+        console.log('📱 Sending absent SMS for:', selectedStudent.name, 'to:', selectedStudent.parentPhone);
+        const result = await sendAttendanceNotification(
+          selectedStudent.name,
+          'absent',
+          selectedStudent.parentPhone,
+          absentReason
+        );
+        
+        const smsMessage = {
+          id: Date.now(),
+          studentName: selectedStudent.name,
+          parentPhone: selectedStudent.parentPhone,
+          status: 'absent',
+          reason: absentReason,
+          timestamp: new Date().toLocaleTimeString(),
+          success: result.success,
+          error: result.error
+        };
+        setSmsLog([smsMessage, ...smsLog]);
+        
+        if (result.success) {
+          console.log('✅ Absent SMS sent successfully');
+        } else {
+          console.error('❌ Absent SMS failed:', result.error);
+        }
+      } catch (error) {
+        console.error('❌ Error sending absent SMS:', error);
+      }
+    } else {
+      // No parent phone - just log without SMS
+      const smsMessage = {
+        id: Date.now(),
+        studentName: selectedStudent.name,
+        parentPhone: 'No parent phone provided',
+        status: 'absent',
+        reason: absentReason,
+        timestamp: new Date().toLocaleTimeString(),
+        success: false,
+        error: 'No parent phone number'
+      };
+      setSmsLog([smsMessage, ...smsLog]);
+    }
 
     setShowAbsentModal(false);
     setSelectedStudent(null);
@@ -353,15 +422,22 @@ const AttendanceTracker = () => {
             </h3>
             <div className="space-y-3 max-h-60 overflow-y-auto">
               {smsLog.map((sms) => (
-                <div key={sms.id} className={`p-3 rounded-lg ${sms.status === 'present' ? 'bg-green-50' : 'bg-blue-50'}`}>
-                  <div className="font-medium text-gray-800">
-                    SMS sent to {sms.parentPhone || "Parent phone not provided"} at {sms.timestamp}
+                <div key={sms.id} className={`p-3 rounded-lg ${
+                  sms.success === false ? 'bg-red-50' : 
+                  sms.status === 'present' ? 'bg-green-50' : 'bg-blue-50'
+                }`}>
+                  <div className="font-medium text-gray-800 flex items-center gap-2">
+                    {sms.success === false ? '❌' : '✅'}
+                    SMS {sms.success === false ? 'FAILED' : 'sent'} to {sms.parentPhone || "Parent phone not provided"} at {sms.timestamp}
                   </div>
                   <div className="text-sm text-gray-600 mt-1">
-                    {sms.status === 'present' 
-                      ? `"${sms.studentName} is present at school today."`
-                      : `"${sms.studentName} is absent today. Reason: ${sms.reason}"`
-                    }
+                    {sms.success === false ? (
+                      <span className="text-red-600">Error: {sms.error}</span>
+                    ) : (
+                      sms.status === 'present' 
+                        ? `"11Mercado PTA Alert: ${sms.studentName} marked PRESENT today. Safe learning environment confirmed. ✅"`
+                        : `"11Mercado PTA Alert: ${sms.studentName} marked ABSENT today. Reason: ${sms.reason}. Please ensure student safety. ⚠️"`
+                    )}
                   </div>
                 </div>
               ))}

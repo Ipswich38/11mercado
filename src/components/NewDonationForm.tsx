@@ -375,16 +375,57 @@ export default function NewDonationForm({ getContrastClass, onClose, onDonationS
           
           <div className="flex gap-3">
             <button
-              onClick={() => {
+              onClick={async () => {
                 if (!editReferenceNumber.trim()) {
                   alert('Please enter a reference number');
                   return;
                 }
-                
-                // Simulate loading existing data (you would implement the actual loading logic here)
-                alert('Edit functionality will load the existing entry data based on the reference number. This feature requires backend integration to fetch and update existing records.');
-                setShowEditMode(false);
-                setEditReferenceNumber('');
+
+                try {
+                  // Import the centralized database
+                  const { centralizedDB } = await import('../utils/centralizedDatabase');
+                  
+                  // Get the entry from centralized database
+                  const entry = await centralizedDB.getDonationByReference(editReferenceNumber.trim());
+                  
+                  if (!entry) {
+                    alert('Reference number not found. Please check your reference number and try again.');
+                    return;
+                  }
+
+                  // Check if editing is within 24 hours
+                  const submissionTime = new Date(entry.created_at || entry.submissionDate + ' ' + entry.submissionTime);
+                  const now = new Date();
+                  const hoursDiff = (now.getTime() - submissionTime.getTime()) / (1000 * 60 * 60);
+
+                  if (hoursDiff > 24) {
+                    alert('Sorry, entries can only be edited within 24 hours of submission');
+                    return;
+                  }
+
+                  // Convert database format to form format
+                  const formDataEntry = {
+                    parentName: entry.parent_name || entry.parentName || '',
+                    studentName: entry.student_name || entry.studentName || '',
+                    donationMode: entry.donation_mode || entry.donationMode || 'ewallet',
+                    amount: entry.amount ? entry.amount.toString() : '',
+                    allocation: entry.allocation || { generalSPTA: 0, mercadoPTA: 0 },
+                    receipt: null, // Files can't be restored, user will need to re-upload if needed
+                    eSignature: entry.e_signature || entry.eSignature || '',
+                    agreementAccepted: true, // Assume they agreed when they originally submitted
+                    comments: entry.comments || ''
+                  };
+
+                  // Load the entry for editing
+                  setFormData(formDataEntry);
+                  setShowEditMode(false);
+                  setEditReferenceNumber('');
+                  
+                  alert('Entry loaded successfully! You can now edit the donation details. Note: You will need to re-upload any files if you want to change them.');
+                } catch (error) {
+                  console.error('Error loading entry for editing:', error);
+                  alert('Error loading entry. Please try again or contact support if the issue persists.');
+                }
               }}
               disabled={!editReferenceNumber.trim()}
               className={`flex-1 py-3 rounded-lg font-medium transition-colors ${

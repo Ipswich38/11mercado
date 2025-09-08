@@ -12,15 +12,33 @@ import {
   Calendar,
   Receipt,
   Eye,
-  X
+  X,
+  Edit3,
+  Trash2,
+  Plus
 } from 'lucide-react';
-import { getAllDonationsFromCentralDB, getDonationStatsFromCentralDB } from '../utils/centralizedDatabase';
+import { getAllDonationsFromCentralDB, getDonationStatsFromCentralDB, centralizedDB } from '../utils/centralizedDatabase';
+import SecureConfirmation from './SecureConfirmation';
 
 export default function FinancialOfficerDashboard({ getContrastClass, onLogout, userInfo }) {
   const [donations, setDonations] = useState([]);
   const [donationStats, setDonationStats] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedDonation, setSelectedDonation] = useState(null);
+  
+  // CRUD state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showSecureConfirm, setShowSecureConfirm] = useState(false);
+  const [editingDonation, setEditingDonation] = useState(null);
+  const [confirmAction, setConfirmAction] = useState(null);
+  const [editForm, setEditForm] = useState({
+    parentName: '',
+    studentName: '',
+    donationMode: 'ewallet',
+    amount: '',
+    eSignature: '',
+    allocation: { generalSPTA: 0, mercadoPTA: 0 }
+  });
 
   useEffect(() => {
     loadData();
@@ -176,6 +194,96 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
       console.error('Error exporting Excel:', error);
       alert('Error exporting data. Please try again.');
     }
+  };
+
+  // CRUD Operations
+  const handleEditDonation = (donation) => {
+    setEditingDonation(donation);
+    setEditForm({
+      parentName: donation.parent_name || '',
+      studentName: donation.student_name || '',
+      donationMode: donation.donation_mode || 'ewallet',
+      amount: donation.amount ? donation.amount.toString() : '',
+      eSignature: donation.e_signature || '',
+      allocation: donation.allocation || { generalSPTA: 0, mercadoPTA: 0 }
+    });
+    setShowEditModal(true);
+  };
+
+  const handleDeleteDonation = (donation) => {
+    setConfirmAction({
+      type: 'delete',
+      donation,
+      title: 'Delete Donation',
+      message: `Are you sure you want to permanently delete the donation from ${donation.parent_name}? This action cannot be undone and will affect financial records.`
+    });
+    setShowSecureConfirm(true);
+  };
+
+  const handleUpdateDonation = () => {
+    setConfirmAction({
+      type: 'update',
+      title: 'Update Donation',
+      message: `You are about to modify financial records for ${editingDonation?.parent_name}. This will change official donation data. Please ensure all information is accurate.`
+    });
+    setShowSecureConfirm(true);
+  };
+
+  const executeSecureAction = async () => {
+    try {
+      if (confirmAction?.type === 'delete') {
+        const result = await centralizedDB.deleteDonation(confirmAction.donation.reference_number);
+        if (result.success) {
+          alert('Donation deleted successfully');
+          loadData(); // Refresh data
+        } else {
+          alert('Error deleting donation: ' + result.error);
+        }
+      } else if (confirmAction?.type === 'update') {
+        const updatedData = {
+          parentName: editForm.parentName,
+          studentName: editForm.studentName,
+          donationMode: editForm.donationMode,
+          amount: editForm.amount,
+          eSignature: editForm.eSignature,
+          allocation: editForm.allocation
+        };
+        
+        const result = await centralizedDB.updateDonation(editingDonation.reference_number, updatedData);
+        if (result.success) {
+          alert('Donation updated successfully');
+          setShowEditModal(false);
+          setEditingDonation(null);
+          loadData(); // Refresh data
+        } else {
+          alert('Error updating donation: ' + result.error);
+        }
+      }
+    } catch (error) {
+      console.error('Error executing secure action:', error);
+      alert('An error occurred. Please try again.');
+    }
+    
+    setConfirmAction(null);
+    setShowSecureConfirm(false);
+  };
+
+  const handleEditFormChange = (field, value) => {
+    setEditForm(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleAllocationChange = (field, value) => {
+    const numValue = parseFloat(value) || 0;
+    setEditForm(prev => ({
+      ...prev,
+      allocation: {
+        ...prev.allocation,
+        [field]: numValue
+      }
+    }));
   };
 
   if (isLoading) {
@@ -433,12 +541,47 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
                       )}>
                         ₱{donation.amount?.toLocaleString() || '0'}
                       </div>
-                      <button className={getContrastClass(
-                        "text-xs text-blue-600 hover:text-blue-800",
-                        "text-xs text-yellow-400 hover:text-yellow-300"
-                      )}>
-                        <Eye size={14} />
-                      </button>
+                      <div className="flex items-center gap-2 mt-2">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedDonation(donation);
+                          }}
+                          className={getContrastClass(
+                            "text-xs text-blue-600 hover:text-blue-800 p-1",
+                            "text-xs text-yellow-400 hover:text-yellow-300 p-1"
+                          )}
+                          title="View Details"
+                        >
+                          <Eye size={14} />
+                        </button>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditDonation(donation);
+                          }}
+                          className={getContrastClass(
+                            "text-xs text-green-600 hover:text-green-800 p-1",
+                            "text-xs text-green-400 hover:text-green-300 p-1"
+                          )}
+                          title="Edit Donation"
+                        >
+                          <Edit3 size={14} />
+                        </button>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteDonation(donation);
+                          }}
+                          className={getContrastClass(
+                            "text-xs text-red-600 hover:text-red-800 p-1",
+                            "text-xs text-red-400 hover:text-red-300 p-1"
+                          )}
+                          title="Delete Donation"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -573,6 +716,180 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
           </div>
         </div>
       )}
+
+      {/* Edit Donation Modal */}
+      {showEditModal && editingDonation && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className={getContrastClass(
+            "bg-white rounded-2xl p-6 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto",
+            "bg-gray-900 rounded-2xl p-6 w-full max-w-lg shadow-2xl border-2 border-yellow-400 max-h-[90vh] overflow-y-auto"
+          )}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className={getContrastClass(
+                "text-lg font-semibold text-slate-900",
+                "text-lg font-semibold text-yellow-400"
+              )}>
+                Edit Donation
+              </h3>
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditingDonation(null);
+                }}
+                className={getContrastClass(
+                  "text-gray-500 hover:text-gray-700",
+                  "text-gray-400 hover:text-gray-200"
+                )}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className={getContrastClass("block text-sm font-medium text-gray-700 mb-2", "block text-sm font-medium text-yellow-400 mb-2")}>
+                  Parent/Guardian Name *
+                </label>
+                <input
+                  type="text"
+                  value={editForm.parentName}
+                  onChange={(e) => handleEditFormChange('parentName', e.target.value)}
+                  className={`w-full p-3 rounded-lg border ${getContrastClass('border-gray-300 bg-white text-gray-900', 'border-gray-600 bg-gray-900 text-yellow-200')} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                />
+              </div>
+
+              <div>
+                <label className={getContrastClass("block text-sm font-medium text-gray-700 mb-2", "block text-sm font-medium text-yellow-400 mb-2")}>
+                  Student Name *
+                </label>
+                <input
+                  type="text"
+                  value={editForm.studentName}
+                  onChange={(e) => handleEditFormChange('studentName', e.target.value)}
+                  className={`w-full p-3 rounded-lg border ${getContrastClass('border-gray-300 bg-white text-gray-900', 'border-gray-600 bg-gray-900 text-yellow-200')} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                />
+              </div>
+
+              <div>
+                <label className={getContrastClass("block text-sm font-medium text-gray-700 mb-2", "block text-sm font-medium text-yellow-400 mb-2")}>
+                  Donation Mode *
+                </label>
+                <select
+                  value={editForm.donationMode}
+                  onChange={(e) => handleEditFormChange('donationMode', e.target.value)}
+                  className={`w-full p-3 rounded-lg border ${getContrastClass('border-gray-300 bg-white text-gray-900', 'border-gray-600 bg-gray-900 text-yellow-200')} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                >
+                  <option value="ewallet">E-Wallet</option>
+                  <option value="bank">Bank Transfer</option>
+                  <option value="cash">Cash</option>
+                  <option value="inkind">In-Kind</option>
+                </select>
+              </div>
+
+              <div>
+                <label className={getContrastClass("block text-sm font-medium text-gray-700 mb-2", "block text-sm font-medium text-yellow-400 mb-2")}>
+                  Amount *
+                </label>
+                <div className="relative">
+                  <span className={getContrastClass("absolute left-3 top-3 text-gray-500", "absolute left-3 top-3 text-yellow-300")}>₱</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={editForm.amount}
+                    onChange={(e) => handleEditFormChange('amount', e.target.value)}
+                    className={`w-full pl-8 p-3 rounded-lg border ${getContrastClass('border-gray-300 bg-white text-gray-900', 'border-gray-600 bg-gray-900 text-yellow-200')} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className={getContrastClass("block text-sm font-medium text-gray-700 mb-2", "block text-sm font-medium text-yellow-400 mb-2")}>
+                  Allocation
+                </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className={getContrastClass("block text-xs text-gray-600 mb-1", "block text-xs text-yellow-300 mb-1")}>
+                      General SPTA
+                    </label>
+                    <div className="relative">
+                      <span className={getContrastClass("absolute left-2 top-2 text-gray-500 text-sm", "absolute left-2 top-2 text-yellow-300 text-sm")}>₱</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={editForm.allocation.generalSPTA}
+                        onChange={(e) => handleAllocationChange('generalSPTA', e.target.value)}
+                        className={`w-full pl-6 p-2 text-sm rounded border ${getContrastClass('border-gray-300 bg-white text-gray-900', 'border-gray-600 bg-gray-900 text-yellow-200')} focus:outline-none focus:ring-1 focus:ring-blue-500`}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={getContrastClass("block text-xs text-gray-600 mb-1", "block text-xs text-yellow-300 mb-1")}>
+                      11Mercado PTA
+                    </label>
+                    <div className="relative">
+                      <span className={getContrastClass("absolute left-2 top-2 text-gray-500 text-sm", "absolute left-2 top-2 text-yellow-300 text-sm")}>₱</span>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={editForm.allocation.mercadoPTA}
+                        onChange={(e) => handleAllocationChange('mercadoPTA', e.target.value)}
+                        className={`w-full pl-6 p-2 text-sm rounded border ${getContrastClass('border-gray-300 bg-white text-gray-900', 'border-gray-600 bg-gray-900 text-yellow-200')} focus:outline-none focus:ring-1 focus:ring-blue-500`}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className={getContrastClass("block text-sm font-medium text-gray-700 mb-2", "block text-sm font-medium text-yellow-400 mb-2")}>
+                  E-Signature *
+                </label>
+                <input
+                  type="text"
+                  value={editForm.eSignature}
+                  onChange={(e) => handleEditFormChange('eSignature', e.target.value)}
+                  className={`w-full p-3 rounded-lg border ${getContrastClass('border-gray-300 bg-white text-gray-900', 'border-gray-600 bg-gray-900 text-yellow-200')} focus:outline-none focus:ring-2 focus:ring-blue-500 font-cursive`}
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={handleUpdateDonation}
+                  className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
+                >
+                  Update Donation
+                </button>
+                <button
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditingDonation(null);
+                  }}
+                  className={getContrastClass(
+                    "px-4 py-3 rounded-lg font-medium bg-gray-500 hover:bg-gray-600 text-white",
+                    "px-4 py-3 rounded-lg font-medium bg-gray-700 border border-yellow-400 hover:bg-gray-600 text-yellow-400"
+                  )}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Secure Confirmation Modal */}
+      <SecureConfirmation
+        isOpen={showSecureConfirm}
+        onClose={() => {
+          setShowSecureConfirm(false);
+          setConfirmAction(null);
+        }}
+        onConfirm={executeSecureAction}
+        title={confirmAction?.title || ''}
+        message={confirmAction?.message || ''}
+        actionType={confirmAction?.type || 'update'}
+        getContrastClass={getContrastClass}
+      />
     </div>
   );
 }

@@ -244,28 +244,53 @@ export default function DonationForm({ getContrastClass, onClose, onDonationSucc
       return;
     }
 
-    // Check if editing is within 24 hours
-    const entries = JSON.parse(localStorage.getItem('donationEntries') || '[]');
-    const entry = entries.find(e => e.referenceNumber === editReferenceNumber);
-    
-    if (!entry) {
-      alert('Reference number not found');
-      return;
+    try {
+      // Import the centralized database
+      const { centralizedDB } = await import('../utils/centralizedDatabase');
+      
+      // Get the entry from centralized database
+      const entry = await centralizedDB.getDonationByReference(editReferenceNumber.trim());
+      
+      if (!entry) {
+        alert('Reference number not found. Please check your reference number and try again.');
+        return;
+      }
+
+      // Check if editing is within 24 hours
+      const submissionTime = new Date(entry.created_at || entry.submissionDate + ' ' + entry.submissionTime);
+      const now = new Date();
+      const hoursDiff = (now.getTime() - submissionTime.getTime()) / (1000 * 60 * 60);
+
+      if (hoursDiff > 24) {
+        alert('Sorry, entries can only be edited within 24 hours of submission');
+        return;
+      }
+
+      // Convert database format to form format
+      const formDataEntry = {
+        parentName: entry.parent_name || entry.parentName || '',
+        studentName: entry.student_name || entry.studentName || '',
+        donationMode: entry.donation_mode || entry.donationMode || 'ewallet',
+        amount: entry.amount ? entry.amount.toString() : '',
+        date: entry.submission_date || entry.date || new Date().toISOString().split('T')[0],
+        time: entry.submission_time || entry.time || '',
+        handedTo: entry.handed_to || entry.handedTo || '',
+        items: entry.items || '',
+        receipt: null, // Files can't be restored, user will need to re-upload if needed
+        photo: null,
+        referenceNumber: entry.reference_number || entry.referenceNumber
+      };
+
+      // Load the entry for editing
+      setFormData(formDataEntry);
+      setShowEditForm(false);
+      setEditReferenceNumber('');
+      
+      alert('Entry loaded successfully! You can now edit the donation details. Note: You will need to re-upload any files if you want to change them.');
+    } catch (error) {
+      console.error('Error loading entry for editing:', error);
+      alert('Error loading entry. Please try again or contact support if the issue persists.');
     }
-
-    const submissionTime = new Date(entry.submissionDate + ' ' + entry.submissionTime);
-    const now = new Date();
-    const hoursDiff = (now.getTime() - submissionTime.getTime()) / (1000 * 60 * 60);
-
-    if (hoursDiff > 24) {
-      alert('Sorry, entries can only be edited within 24 hours of submission');
-      return;
-    }
-
-    // Load the entry for editing
-    setFormData(entry);
-    setShowEditForm(false);
-    setEditReferenceNumber('');
   };
 
   const downloadAcknowledgement = () => {

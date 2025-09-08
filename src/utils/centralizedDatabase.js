@@ -337,6 +337,135 @@ class CentralizedDatabase {
     }
   }
 
+  // Get donation by reference number
+  async getDonationByReference(referenceNumber) {
+    try {
+      if (this.isOnline) {
+        const { data, error } = await supabase
+          .from('donations')
+          .select('*')
+          .eq('reference_number', referenceNumber)
+          .single();
+
+        if (error) {
+          console.error('Error fetching donation from Supabase:', error);
+          // Fallback to localStorage
+          const localDonations = JSON.parse(localStorage.getItem('donationEntries') || '[]');
+          return localDonations.find(d => d.referenceNumber === referenceNumber || d.reference_number === referenceNumber);
+        }
+
+        return data;
+      } else {
+        // Return from local cache when offline
+        const localDonations = JSON.parse(localStorage.getItem('donationEntries') || '[]');
+        return localDonations.find(d => d.referenceNumber === referenceNumber || d.reference_number === referenceNumber);
+      }
+    } catch (error) {
+      console.error('Error getting donation by reference:', error);
+      // Fallback to localStorage
+      try {
+        const localDonations = JSON.parse(localStorage.getItem('donationEntries') || '[]');
+        return localDonations.find(d => d.referenceNumber === referenceNumber || d.reference_number === referenceNumber);
+      } catch (e) {
+        console.error('Error reading localStorage in getDonationByReference:', e);
+        return null;
+      }
+    }
+  }
+
+  // Update donation
+  async updateDonation(referenceNumber, updatedData) {
+    try {
+      const updatePayload = {
+        parent_name: updatedData.parentName,
+        student_name: updatedData.studentName,
+        donation_mode: updatedData.donationMode,
+        amount: updatedData.amount,
+        e_signature: updatedData.eSignature,
+        allocation: updatedData.allocation || {},
+        attachment_file: updatedData.attachmentFile || null,
+        attachment_filename: updatedData.attachmentFilename || null,
+        has_receipt: !!updatedData.receipt,
+        has_photo: !!updatedData.photo,
+        updated_at: new Date().toISOString()
+      };
+
+      if (this.isOnline) {
+        const { data, error } = await supabase
+          .from('donations')
+          .update(updatePayload)
+          .eq('reference_number', referenceNumber)
+          .select();
+
+        if (error) {
+          console.error('Error updating donation in Supabase:', error);
+          return { success: false, error: error.message };
+        }
+
+        // Update local cache
+        this.updateLocalCache('donations', data[0]);
+        return { success: true, data: data[0] };
+      } else {
+        // Store for later sync when online
+        this.addToPendingSync('update_donation', { referenceNumber, data: updatePayload });
+        
+        // Update local cache
+        const localDonations = JSON.parse(localStorage.getItem('donationEntries') || '[]');
+        const index = localDonations.findIndex(d => d.referenceNumber === referenceNumber || d.reference_number === referenceNumber);
+        if (index !== -1) {
+          localDonations[index] = { ...localDonations[index], ...updatePayload };
+          localStorage.setItem('donationEntries', JSON.stringify(localDonations));
+        }
+        
+        return { success: true, offline: true };
+      }
+    } catch (error) {
+      console.error('Error updating donation:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Delete donation
+  async deleteDonation(referenceNumber) {
+    try {
+      if (this.isOnline) {
+        const { error } = await supabase
+          .from('donations')
+          .delete()
+          .eq('reference_number', referenceNumber);
+
+        if (error) {
+          console.error('Error deleting donation from Supabase:', error);
+          return { success: false, error: error.message };
+        }
+
+        // Remove from local cache
+        const localDonations = JSON.parse(localStorage.getItem('donationEntries') || '[]');
+        const filteredDonations = localDonations.filter(d => 
+          d.referenceNumber !== referenceNumber && d.reference_number !== referenceNumber
+        );
+        localStorage.setItem('donationEntries', JSON.stringify(filteredDonations));
+        
+        return { success: true };
+      } else {
+        // Store for later sync when online
+        this.addToPendingSync('delete_donation', { referenceNumber });
+        
+        // Remove from local cache
+        const localDonations = JSON.parse(localStorage.getItem('donationEntries') || '[]');
+        const filteredDonations = localDonations.filter(d => 
+          d.referenceNumber !== referenceNumber && d.reference_number !== referenceNumber
+        );
+        localStorage.setItem('donationEntries', JSON.stringify(filteredDonations));
+        
+        return { success: true, offline: true };
+      }
+    } catch (error) {
+      console.error('Error deleting donation:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
   // Get donation statistics
   async getDonationStats() {
     try {

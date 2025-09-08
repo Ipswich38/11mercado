@@ -22,12 +22,16 @@ import {
   DollarSign,
   Database,
   RotateCw,
-  Download
+  Download,
+  Edit3,
+  Trash2,
+  Plus
 } from 'lucide-react';
 import { useAdminSession } from '../utils/adminSessionManager';
 import { consolidateAllData, exportDataForDebug } from '../utils/dataSync';
 import { centralizedDB, getAllDonationsFromCentralDB, getDonationStatsFromCentralDB } from '../utils/centralizedDatabase';
 import RealTimeUserCounter from './RealTimeUserCounter';
+import SecureConfirmation from './SecureConfirmation';
 
 export default function AdminDashboard({ getContrastClass, onClose, onShowTutorial, onNavigate }) {
   const [stats, setStats] = useState(null);
@@ -43,6 +47,20 @@ export default function AdminDashboard({ getContrastClass, onClose, onShowTutori
   const [centralizedDonations, setCentralizedDonations] = useState([]);
   const [donationStats, setDonationStats] = useState(null);
   const [treasurerNotifications, setTreasurerNotifications] = useState([]);
+  
+  // CRUD state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showSecureConfirm, setShowSecureConfirm] = useState(false);
+  const [editingDonation, setEditingDonation] = useState(null);
+  const [confirmAction, setConfirmAction] = useState(null);
+  const [editForm, setEditForm] = useState({
+    parentName: '',
+    studentName: '',
+    donationMode: 'ewallet',
+    amount: '',
+    eSignature: '',
+    allocation: { generalSPTA: 0, mercadoPTA: 0 }
+  });
   
   const {
     getAdminStats,
@@ -154,6 +172,101 @@ export default function AdminDashboard({ getContrastClass, onClose, onShowTutori
       const aiResponse = generateAIResponse(input, stats, errors);
       setChatMessages(prev => [...prev, { role: 'assistant', content: aiResponse, timestamp: Date.now() }]);
     }, 1000);
+  };
+
+  // CRUD Operations
+  const handleEditDonation = (donation) => {
+    setEditingDonation(donation);
+    setEditForm({
+      parentName: donation.parent_name || donation.parentName || '',
+      studentName: donation.student_name || donation.studentName || '',
+      donationMode: donation.donation_mode || donation.donationMode || 'ewallet',
+      amount: donation.amount ? donation.amount.toString() : '',
+      eSignature: donation.e_signature || donation.eSignature || '',
+      allocation: donation.allocation || { generalSPTA: 0, mercadoPTA: 0 }
+    });
+    setShowEditModal(true);
+  };
+
+  const handleDeleteDonation = (donation) => {
+    setConfirmAction({
+      type: 'delete',
+      donation,
+      title: 'Delete Donation Record',
+      message: `Are you sure you want to permanently delete the donation from ${donation.parent_name || donation.parentName}? This action cannot be undone and will affect all financial records and reports.`
+    });
+    setShowSecureConfirm(true);
+  };
+
+  const handleUpdateDonation = () => {
+    setConfirmAction({
+      type: 'update',
+      title: 'Update Donation Record',
+      message: `You are about to modify critical financial records for ${editingDonation?.parent_name || editingDonation?.parentName}. This will change official donation data across the entire system. Please ensure all information is accurate.`
+    });
+    setShowSecureConfirm(true);
+  };
+
+  const executeSecureAction = async () => {
+    try {
+      if (confirmAction?.type === 'delete') {
+        const result = await centralizedDB.deleteDonation(
+          confirmAction.donation.reference_number || confirmAction.donation.referenceNumber
+        );
+        if (result.success) {
+          alert('Donation record deleted successfully from system database');
+          loadData(); // Refresh all data
+        } else {
+          alert('Error deleting donation: ' + result.error);
+        }
+      } else if (confirmAction?.type === 'update') {
+        const updatedData = {
+          parentName: editForm.parentName,
+          studentName: editForm.studentName,
+          donationMode: editForm.donationMode,
+          amount: editForm.amount,
+          eSignature: editForm.eSignature,
+          allocation: editForm.allocation
+        };
+        
+        const result = await centralizedDB.updateDonation(
+          editingDonation.reference_number || editingDonation.referenceNumber, 
+          updatedData
+        );
+        if (result.success) {
+          alert('Donation record updated successfully in system database');
+          setShowEditModal(false);
+          setEditingDonation(null);
+          loadData(); // Refresh all data
+        } else {
+          alert('Error updating donation: ' + result.error);
+        }
+      }
+    } catch (error) {
+      console.error('Error executing admin secure action:', error);
+      alert('A critical error occurred while modifying financial records. Please contact system administrator.');
+    }
+    
+    setConfirmAction(null);
+    setShowSecureConfirm(false);
+  };
+
+  const handleEditFormChange = (field, value) => {
+    setEditForm(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleAllocationChange = (field, value) => {
+    const numValue = parseFloat(value) || 0;
+    setEditForm(prev => ({
+      ...prev,
+      allocation: {
+        ...prev.allocation,
+        [field]: numValue
+      }
+    }));
   };
 
   const generateAIResponse = (input, currentStats, currentErrors) => {
@@ -802,7 +915,7 @@ What would you like to know about?`;
                               )}
                             >
                               <div className="flex items-center justify-between">
-                                <div>
+                                <div className="flex-1">
                                   <div className={getContrastClass("font-medium text-gray-900", "font-medium text-yellow-400")}>
                                     {donation.parent_name || donation.parentName}
                                   </div>
@@ -815,12 +928,36 @@ What would you like to know about?`;
                                     </div>
                                   ) : null}
                                 </div>
-                                <div className="text-right">
-                                  <div className={getContrastClass("font-bold text-gray-900", "font-bold text-yellow-400")}>
-                                    {donation.amount ? `₱${parseFloat(donation.amount).toLocaleString()}` : 'In-kind'}
+                                <div className="flex items-center gap-3">
+                                  <div className="text-right">
+                                    <div className={getContrastClass("font-bold text-gray-900", "font-bold text-yellow-400")}>
+                                      {donation.amount ? `₱${parseFloat(donation.amount).toLocaleString()}` : 'In-kind'}
+                                    </div>
+                                    <div className={getContrastClass("text-xs text-gray-500", "text-xs text-yellow-300")}>
+                                      {donation.submission_date || donation.submissionDate}
+                                    </div>
                                   </div>
-                                  <div className={getContrastClass("text-xs text-gray-500", "text-xs text-yellow-300")}>
-                                    {donation.submission_date || donation.submissionDate}
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      onClick={() => handleEditDonation(donation)}
+                                      className={getContrastClass(
+                                        "p-1 rounded text-blue-600 hover:bg-blue-100 transition-colors",
+                                        "p-1 rounded text-yellow-400 hover:bg-yellow-400/20 transition-colors"
+                                      )}
+                                      title="Edit Donation"
+                                    >
+                                      <Edit3 size={14} />
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteDonation(donation)}
+                                      className={getContrastClass(
+                                        "p-1 rounded text-red-600 hover:bg-red-100 transition-colors",
+                                        "p-1 rounded text-red-400 hover:bg-red-400/20 transition-colors"
+                                      )}
+                                      title="Delete Donation"
+                                    >
+                                      <Trash2 size={14} />
+                                    </button>
                                   </div>
                                 </div>
                               </div>
@@ -1281,6 +1418,158 @@ What would you like to know about?`;
           </div>
         </div>
       )}
+
+      {/* Edit Donation Modal */}
+      {showEditModal && editingDonation && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-60 p-4">
+          <div className={getContrastClass(
+            "bg-white rounded-2xl p-6 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto",
+            "bg-gray-900 rounded-2xl p-6 w-full max-w-lg shadow-2xl border-2 border-yellow-400 max-h-[90vh] overflow-y-auto"
+          )}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className={getContrastClass(
+                "text-lg font-semibold text-slate-900",
+                "text-lg font-semibold text-yellow-400"
+              )}>
+                Admin Edit: Donation Record
+              </h3>
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditingDonation(null);
+                }}
+                className={getContrastClass(
+                  "text-gray-500 hover:text-gray-700",
+                  "text-gray-400 hover:text-gray-200"
+                )}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div className={getContrastClass(
+                "bg-red-50 border border-red-200 rounded-lg p-3 mb-4",
+                "bg-red-900/20 border border-red-400 rounded-lg p-3 mb-4"
+              )}>
+                <div className="flex items-center gap-2">
+                  <AlertTriangle size={16} className="text-red-500" />
+                  <span className={getContrastClass("text-red-800 font-medium text-sm", "text-red-400 font-medium text-sm")}>
+                    Administrator Override
+                  </span>
+                </div>
+                <p className={getContrastClass("text-red-700 text-xs mt-1", "text-red-300 text-xs mt-1")}>
+                  You are editing critical financial data. Changes will affect all reports and statistics.
+                </p>
+              </div>
+
+              <div>
+                <label className={getContrastClass("block text-sm font-medium text-gray-700 mb-2", "block text-sm font-medium text-yellow-400 mb-2")}>
+                  Parent/Guardian Name *
+                </label>
+                <input
+                  type="text"
+                  value={editForm.parentName}
+                  onChange={(e) => handleEditFormChange('parentName', e.target.value)}
+                  className={`w-full p-3 rounded-lg border ${getContrastClass('border-gray-300 bg-white text-gray-900', 'border-gray-600 bg-gray-900 text-yellow-200')} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                />
+              </div>
+
+              <div>
+                <label className={getContrastClass("block text-sm font-medium text-gray-700 mb-2", "block text-sm font-medium text-yellow-400 mb-2")}>
+                  Student Name *
+                </label>
+                <input
+                  type="text"
+                  value={editForm.studentName}
+                  onChange={(e) => handleEditFormChange('studentName', e.target.value)}
+                  className={`w-full p-3 rounded-lg border ${getContrastClass('border-gray-300 bg-white text-gray-900', 'border-gray-600 bg-gray-900 text-yellow-200')} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                />
+              </div>
+
+              <div>
+                <label className={getContrastClass("block text-sm font-medium text-gray-700 mb-2", "block text-sm font-medium text-yellow-400 mb-2")}>
+                  Donation Mode *
+                </label>
+                <select
+                  value={editForm.donationMode}
+                  onChange={(e) => handleEditFormChange('donationMode', e.target.value)}
+                  className={`w-full p-3 rounded-lg border ${getContrastClass('border-gray-300 bg-white text-gray-900', 'border-gray-600 bg-gray-900 text-yellow-200')} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                >
+                  <option value="ewallet">E-Wallet</option>
+                  <option value="bank">Bank Transfer</option>
+                  <option value="cash">Cash</option>
+                  <option value="inkind">In-Kind</option>
+                </select>
+              </div>
+
+              <div>
+                <label className={getContrastClass("block text-sm font-medium text-gray-700 mb-2", "block text-sm font-medium text-yellow-400 mb-2")}>
+                  Amount *
+                </label>
+                <div className="relative">
+                  <span className={getContrastClass("absolute left-3 top-3 text-gray-500", "absolute left-3 top-3 text-yellow-300")}>₱</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={editForm.amount}
+                    onChange={(e) => handleEditFormChange('amount', e.target.value)}
+                    className={`w-full pl-8 p-3 rounded-lg border ${getContrastClass('border-gray-300 bg-white text-gray-900', 'border-gray-600 bg-gray-900 text-yellow-200')} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className={getContrastClass("block text-sm font-medium text-gray-700 mb-2", "block text-sm font-medium text-yellow-400 mb-2")}>
+                  E-Signature *
+                </label>
+                <input
+                  type="text"
+                  value={editForm.eSignature}
+                  onChange={(e) => handleEditFormChange('eSignature', e.target.value)}
+                  className={`w-full p-3 rounded-lg border ${getContrastClass('border-gray-300 bg-white text-gray-900', 'border-gray-600 bg-gray-900 text-yellow-200')} focus:outline-none focus:ring-2 focus:ring-blue-500 font-cursive`}
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={handleUpdateDonation}
+                  className="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors"
+                >
+                  Admin Update Record
+                </button>
+                <button
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditingDonation(null);
+                  }}
+                  className={getContrastClass(
+                    "px-4 py-3 rounded-lg font-medium bg-gray-500 hover:bg-gray-600 text-white",
+                    "px-4 py-3 rounded-lg font-medium bg-gray-700 border border-yellow-400 hover:bg-gray-600 text-yellow-400"
+                  )}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Secure Confirmation Modal */}
+      <SecureConfirmation
+        isOpen={showSecureConfirm}
+        onClose={() => {
+          setShowSecureConfirm(false);
+          setConfirmAction(null);
+        }}
+        onConfirm={executeSecureAction}
+        title={confirmAction?.title || ''}
+        message={confirmAction?.message || ''}
+        actionType={confirmAction?.type || 'update'}
+        confirmationCode="FINANCE2025"
+        getContrastClass={getContrastClass}
+      />
     </div>
   );
 }

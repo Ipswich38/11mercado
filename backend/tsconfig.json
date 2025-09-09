@@ -1,0 +1,77 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2020"],
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": false,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["*"],
+      "@/orchestrator/*": ["orchestrator/*"],
+      "@/api/*": ["api/*"],
+      "@/safety/*": ["safety/*"],
+      "@/features/*": ["features/*"],
+      "@/models/*": ["models/*"],
+      "@/vector/*": ["vector/*"],
+      "@/mlops/*": ["mlops/*"],
+      "@/events/*": ["events/*"],
+      "@/types/*": ["types/*"]
+    },
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "removeComments": false,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "strictPropertyInitialization": false,
+    "noImplicitAny": false,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "exactOptionalPropertyTypes": false,
+    "noImplicitOverride": true,
+    "useUnknownInCatchVariables": true,
+    "noPropertyAccessFromIndexSignature": false,
+    "allowUnusedLabels": false,
+    "allowUnreachableCode": false
+  },
+  "include": [
+    "src/**/*",
+    "tests/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "coverage",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ],
+  "ts-node": {
+    "register": {
+      "baseUrl": "./src",
+      "paths": {
+        "@/*": ["*"],
+        "@/orchestrator/*": ["orchestrator/*"],
+        "@/api/*": ["api/*"],
+        "@/safety/*": ["safety/*"],
+        "@/features/*": ["features/*"],
+        "@/models/*": ["models/*"],
+        "@/vector/*": ["vector/*"],
+        "@/mlops/*": ["mlops/*"],
+        "@/events/*": ["events/*"],
+        "@/types/*": ["types/*"]
+      }
+    }
+  }
+}

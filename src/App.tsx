@@ -19,6 +19,7 @@ import OfficersApp from './components/OfficersApp';
 import CSANSCILinks from './components/CSANSCILinks';
 import DonationTiles from './components/DonationTiles';
 import AIChatBot from './components/AIChatBot';
+import TabbedChatInterface from './components/TabbedChatInterface';
 import DonationForm from './components/DonationForm';
 import EnhancedDonationForm from './components/EnhancedDonationForm';
 import DonationTrackingSpreadsheet from './components/DonationTrackingSpreadsheet';
@@ -619,7 +620,7 @@ export default function MobileApp() {
           getContrastClass={getContrastClass}
         />;
       case 'pta-chat':
-        return <AIChatBot 
+        return <TabbedChatInterface 
           getContrastClass={getContrastClass}
           onClose={() => setActiveApp('home')}
         />;
@@ -902,7 +903,7 @@ export default function MobileApp() {
       'officers': 'Meet the Officers',
       'csansci-links': 'School Links',
       'donation-tiles': 'Donation Progress',
-      'pta-chat': 'DepEd PTA Assistant',
+      'pta-chat': 'AI Chat Hub',
       'contact-us': 'Contact Us',
       'projects': 'PTA Projects',
       'admin-monitor': 'Admin Monitor',

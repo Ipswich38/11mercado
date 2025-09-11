@@ -371,24 +371,56 @@ export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastC
 
       {/* Row 1: Weather App + Donation Form */}
       <div className="grid grid-cols-2 gap-4 mb-4">
-        <div
-          onClick={() => onAppSelect('weather')}
-          className={getContrastClass(
-            `bg-gradient-to-br from-[#017374] to-[#015a5a] backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border border-white/20`,
-            `bg-gray-900/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border-2 border-[#017374]/50`
-          )}
-        >
-          <div className="text-white mb-4">
-            <Cloud size={24} />
-          </div>
-          <h3 className="text-white font-semibold text-lg mb-2 leading-tight">
-            Weather App
-          </h3>
-          <p className="text-white/80 text-sm mb-3">
-            Local weather information
-          </p>
-          <div className="text-white/60 text-xs">
-            Live Updates
+        <div className="relative overflow-hidden">
+          <div
+            onClick={() => onAppSelect('weather')}
+            className={getContrastClass(
+              `relative backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border border-white/20`,
+              `relative bg-gray-900/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border-2 border-[#017374]/50`
+            )}
+          >
+            {/* Video Background */}
+            <div className="absolute inset-0 rounded-3xl overflow-hidden">
+              <video 
+                autoPlay 
+                loop 
+                muted 
+                playsInline
+                preload="metadata"
+                className="absolute inset-0 w-full h-full object-cover"
+                style={{ 
+                  filter: 'brightness(0.4) blur(0.5px)',
+                  transform: 'scale(1.1)'
+                }}
+                onLoadStart={() => console.log('🎬 Weather video loading...')}
+                onCanPlay={() => console.log('✅ Weather video ready to play')}
+                onError={(e) => console.warn('⚠️ Weather video load error:', e)}
+              >
+                <source src="/backgrounds/Weather.mp4" type="video/mp4" />
+                {/* Fallback for when video fails to load */}
+                <div className="absolute inset-0 bg-gradient-to-br from-[#017374] to-[#015a5a]"></div>
+              </video>
+              {/* Dark overlay for better text readability */}
+              <div className="absolute inset-0 bg-black/40 rounded-3xl"></div>
+              {/* Gradient overlay for extra text contrast */}
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-600/70 to-cyan-700/70 rounded-3xl"></div>
+            </div>
+            
+            {/* Content with enhanced readability */}
+            <div className="relative z-10">
+              <div className="text-white mb-4 drop-shadow-lg">
+                <Cloud size={24} />
+              </div>
+              <h3 className="text-white font-bold text-lg mb-2 leading-tight drop-shadow-lg text-shadow-md">
+                Weather App
+              </h3>
+              <p className="text-white/90 text-sm mb-3 drop-shadow-md font-medium">
+                Local weather information
+              </p>
+              <div className="text-white/80 text-xs font-medium drop-shadow-sm">
+                Live Updates
+              </div>
+            </div>
           </div>
         </div>
 

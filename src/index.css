@@ -19,6 +19,19 @@
     padding-bottom: env(safe-area-inset-bottom, 0);
   }
 
+  /* Text shadow utilities for video overlay text readability */
+  .text-shadow-sm {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  }
+  
+  .text-shadow-md {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9), 0 1px 2px rgba(0, 0, 0, 0.6);
+  }
+  
+  .text-shadow-lg {
+    text-shadow: 0 3px 6px rgba(0, 0, 0, 0.9), 0 1px 3px rgba(0, 0, 0, 0.7);
+  }
+
   /* Custom scrollbar hiding utility */
   .scrollbar-hide {
     /* Firefox */

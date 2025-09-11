@@ -216,25 +216,55 @@ export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastC
 
       {/* STEM Resources - Full Width */}
       <div className="mb-4">
-        <div className="relative">
+        <div className="relative overflow-hidden">
           <div
             onClick={() => onAppSelect('stem-tools')}
             className={getContrastClass(
-              `bg-gradient-to-br from-success-500 to-success-600 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border border-white/20`,
-              `bg-gray-900/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border-2 border-success-500/50`
+              `relative backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border border-white/20`,
+              `relative bg-gray-900/90 backdrop-blur-md p-6 rounded-3xl shadow-xl cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl active:scale-95 border-2 border-success-500/50`
             )}
           >
-            <div className="text-white mb-4">
-              <Calculator size={24} />
+            {/* Video Background */}
+            <div className="absolute inset-0 rounded-3xl overflow-hidden">
+              <video 
+                autoPlay 
+                loop 
+                muted 
+                playsInline
+                preload="metadata"
+                className="absolute inset-0 w-full h-full object-cover"
+                style={{ 
+                  filter: 'brightness(0.4) blur(0.5px)',
+                  transform: 'scale(1.1)'
+                }}
+                onLoadStart={() => console.log('🎬 STEM Resources video loading...')}
+                onCanPlay={() => console.log('✅ STEM Resources video ready to play')}
+                onError={(e) => console.warn('⚠️ Video load error:', e)}
+              >
+                <source src="/backgrounds/STEM RESOURCES CARD.mp4" type="video/mp4" />
+                {/* Fallback for when video fails to load */}
+                <div className="absolute inset-0 bg-gradient-to-br from-success-500 to-success-600"></div>
+              </video>
+              {/* Dark overlay for better text readability */}
+              <div className="absolute inset-0 bg-black/40 rounded-3xl"></div>
+              {/* Gradient overlay for extra text contrast */}
+              <div className="absolute inset-0 bg-gradient-to-br from-success-600/70 to-success-700/70 rounded-3xl"></div>
             </div>
-            <h3 className="text-white font-semibold text-lg mb-2 leading-tight">
-              STEM Resources
-            </h3>
-            <p className="text-white/80 text-sm mb-3">
-              AI tools and educational resources
-            </p>
-            <div className="text-white/60 text-xs">
-              10 Resources
+            
+            {/* Content with enhanced readability */}
+            <div className="relative z-10">
+              <div className="text-white mb-4 drop-shadow-lg">
+                <Calculator size={24} />
+              </div>
+              <h3 className="text-white font-bold text-lg mb-2 leading-tight drop-shadow-lg text-shadow-md">
+                STEM Resources
+              </h3>
+              <p className="text-white/90 text-sm mb-3 drop-shadow-md font-medium">
+                AI tools and educational resources
+              </p>
+              <div className="text-white/80 text-xs font-medium drop-shadow-sm">
+                10 Resources
+              </div>
             </div>
           </div>
           <button
@@ -242,10 +272,10 @@ export default function MiniAppsGrid({ onAppSelect, donationDrives, getContrastC
               e.stopPropagation();
               onShowTutorial('stem-tools');
             }}
-            className="absolute top-4 right-4 p-2 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors"
+            className="absolute top-4 right-4 p-2 rounded-full bg-black/30 backdrop-blur-sm hover:bg-black/50 transition-colors border border-white/20 z-20"
             title="Show Tutorial"
           >
-            <HelpCircle size={16} className="text-white" />
+            <HelpCircle size={16} className="text-white drop-shadow-lg" />
           </button>
         </div>
       </div>

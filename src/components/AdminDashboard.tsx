@@ -25,11 +25,15 @@ import {
   Download,
   Edit3,
   Trash2,
-  Plus
+  Plus,
+  FolderPlus,
+  ThumbsUp,
+  ThumbsDown
 } from 'lucide-react';
 import { useAdminSession } from '../utils/adminSessionManager';
 import { consolidateAllData, exportDataForDebug } from '../utils/dataSync';
 import { centralizedDB, getAllDonationsFromCentralDB, getDonationStatsFromCentralDB } from '../utils/centralizedDatabase';
+import { getAllProjectProposals, getProjectVotes, getProjectStats } from '../utils/centralizedProjectsDB';
 import RealTimeUserCounter from './RealTimeUserCounter';
 import SecureConfirmation from './SecureConfirmation';
 
@@ -47,6 +51,8 @@ export default function AdminDashboard({ getContrastClass, onClose, onShowTutori
   const [centralizedDonations, setCentralizedDonations] = useState([]);
   const [donationStats, setDonationStats] = useState(null);
   const [treasurerNotifications, setTreasurerNotifications] = useState([]);
+  const [projectProposals, setProjectProposals] = useState([]);
+  const [projectStats, setProjectStats] = useState(null);
   
   // CRUD state
   const [showEditModal, setShowEditModal] = useState(false);
@@ -85,6 +91,26 @@ export default function AdminDashboard({ getContrastClass, onClose, onShowTutori
       // Load treasurer notifications for duplicate receipts
       const notifications = JSON.parse(localStorage.getItem('treasurerNotifications') || '[]');
       setTreasurerNotifications(notifications);
+      
+      // Load project proposals and stats
+      try {
+        const proposals = await getAllProjectProposals();
+        const stats = await getProjectStats();
+        setProjectProposals(proposals);
+        setProjectStats(stats);
+        console.log(`✅ Loaded ${proposals.length} project proposals from database`);
+      } catch (error) {
+        console.warn('⚠️ Failed to load project data:', error);
+        setProjectProposals([]);
+        setProjectStats({
+          totalProposals: 0,
+          pendingProposals: 0,
+          approvedProposals: 0,
+          rejectedProposals: 0,
+          totalVotes: 0,
+          averageVotesPerProposal: 0
+        });
+      }
     } catch (error) {
       console.error('Error loading admin data:', error);
     }
@@ -418,6 +444,7 @@ What would you like to know about?`;
     { id: 'errors', name: 'Error Logs', icon: AlertTriangle },
     { id: 'activities', name: 'Activities', icon: Activity },
     { id: 'donations', name: 'Donation Tracking', icon: FileSpreadsheet },
+    { id: 'projects', name: 'Project Voting', icon: FolderPlus },
     { id: 'treasurer', name: 'Treasurer Alerts', icon: AlertTriangle },
     { id: 'receipts', name: 'Receipt Recovery', icon: Receipt },
     { id: 'datasync', name: 'Data Sync & Consolidation', icon: Database }
@@ -973,6 +1000,202 @@ What would you like to know about?`;
                         )}
                     </div>
                   </div>
+                </div>
+              )}
+
+              {selectedTab === 'projects' && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h2 className={getContrastClass("text-xl font-semibold text-gray-900", "text-xl font-semibold text-yellow-400")}>
+                      Project Voting Management
+                    </h2>
+                    <div className="flex items-center gap-4">
+                      <div className={getContrastClass(
+                        "bg-white/70 backdrop-blur-md rounded-xl px-4 py-2 border border-white/30",
+                        "bg-gray-800/70 backdrop-blur-md rounded-xl px-4 py-2 border border-yellow-400/30"
+                      )}>
+                        <div className="flex items-center gap-6 text-sm">
+                          <div className="flex items-center gap-2">
+                            <FolderPlus size={16} className={getContrastClass("text-blue-600", "text-blue-400")} />
+                            <span className={getContrastClass("text-gray-700", "text-gray-300")}>
+                              Total: {projectStats?.totalProposals || 0}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <ThumbsUp size={16} className={getContrastClass("text-green-600", "text-green-400")} />
+                            <span className={getContrastClass("text-gray-700", "text-gray-300")}>
+                              Approved: {projectStats?.approvedProposals || 0}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Clock size={16} className={getContrastClass("text-orange-600", "text-orange-400")} />
+                            <span className={getContrastClass("text-gray-700", "text-gray-300")}>
+                              Pending: {projectStats?.pendingProposals || 0}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {projectProposals && projectProposals.length > 0 ? (
+                    <div className="grid gap-4">
+                      {projectProposals.map((proposal) => (
+                        <div
+                          key={proposal.id}
+                          className={getContrastClass(
+                            "bg-white/70 backdrop-blur-md rounded-2xl p-6 border border-white/30",
+                            "bg-gray-800/70 backdrop-blur-md rounded-2xl p-6 border border-yellow-400/30"
+                          )}
+                        >
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <h3 className={getContrastClass("text-lg font-semibold text-gray-900", "text-lg font-semibold text-yellow-400")}>
+                                  {proposal.title}
+                                </h3>
+                                <span className={
+                                  proposal.status === 'approved' 
+                                    ? getContrastClass("px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800", "px-3 py-1 rounded-full text-xs font-medium bg-green-900/30 text-green-400")
+                                    : proposal.status === 'rejected'
+                                    ? getContrastClass("px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800", "px-3 py-1 rounded-full text-xs font-medium bg-red-900/30 text-red-400")
+                                    : getContrastClass("px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800", "px-3 py-1 rounded-full text-xs font-medium bg-orange-900/30 text-orange-400")
+                                }>
+                                  {proposal.status?.toUpperCase() || 'PENDING'}
+                                </span>
+                              </div>
+                              <p className={getContrastClass("text-gray-600 mb-3", "text-gray-300 mb-3")}>
+                                {proposal.description}
+                              </p>
+                              <div className="flex items-center gap-4 text-sm">
+                                <span className={getContrastClass("text-gray-500", "text-gray-400")}>
+                                  Proposed by: <strong>{proposal.proposed_by}</strong>
+                                </span>
+                                <span className={getContrastClass("text-gray-500", "text-gray-400")}>
+                                  {new Date(proposal.created_at).toLocaleDateString()}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-4 gap-4">
+                            <div className={getContrastClass(
+                              "bg-green-50 rounded-xl p-4 border border-green-200",
+                              "bg-green-900/20 rounded-xl p-4 border border-green-400/30"
+                            )}>
+                              <div className="flex items-center gap-2 mb-2">
+                                <ThumbsUp size={16} className={getContrastClass("text-green-600", "text-green-400")} />
+                                <span className={getContrastClass("text-sm font-medium text-green-800", "text-sm font-medium text-green-400")}>
+                                  Yes Votes
+                                </span>
+                              </div>
+                              <div className={getContrastClass("text-2xl font-bold text-green-900", "text-2xl font-bold text-green-300")}>
+                                {proposal.yes_votes || 0}
+                              </div>
+                            </div>
+
+                            <div className={getContrastClass(
+                              "bg-red-50 rounded-xl p-4 border border-red-200",
+                              "bg-red-900/20 rounded-xl p-4 border border-red-400/30"
+                            )}>
+                              <div className="flex items-center gap-2 mb-2">
+                                <ThumbsDown size={16} className={getContrastClass("text-red-600", "text-red-400")} />
+                                <span className={getContrastClass("text-sm font-medium text-red-800", "text-sm font-medium text-red-400")}>
+                                  No Votes
+                                </span>
+                              </div>
+                              <div className={getContrastClass("text-2xl font-bold text-red-900", "text-2xl font-bold text-red-300")}>
+                                {proposal.no_votes || 0}
+                              </div>
+                            </div>
+
+                            <div className={getContrastClass(
+                              "bg-blue-50 rounded-xl p-4 border border-blue-200",
+                              "bg-blue-900/20 rounded-xl p-4 border border-blue-400/30"
+                            )}>
+                              <div className="flex items-center gap-2 mb-2">
+                                <Users size={16} className={getContrastClass("text-blue-600", "text-blue-400")} />
+                                <span className={getContrastClass("text-sm font-medium text-blue-800", "text-sm font-medium text-blue-400")}>
+                                  Total Votes
+                                </span>
+                              </div>
+                              <div className={getContrastClass("text-2xl font-bold text-blue-900", "text-2xl font-bold text-blue-300")}>
+                                {proposal.total_votes || 0}/43
+                              </div>
+                            </div>
+
+                            <div className={getContrastClass(
+                              "bg-purple-50 rounded-xl p-4 border border-purple-200",
+                              "bg-purple-900/20 rounded-xl p-4 border border-purple-400/30"
+                            )}>
+                              <div className="flex items-center gap-2 mb-2">
+                                <Eye size={16} className={getContrastClass("text-purple-600", "text-purple-400")} />
+                                <span className={getContrastClass("text-sm font-medium text-purple-800", "text-sm font-medium text-purple-400")}>
+                                  Progress
+                                </span>
+                              </div>
+                              <div className={getContrastClass("text-sm font-bold text-purple-900", "text-sm font-bold text-purple-300")}>
+                                {((proposal.yes_votes || 0) / 22 * 100).toFixed(0)}%
+                                <div className={getContrastClass("text-xs text-purple-600 mt-1", "text-xs text-purple-400 mt-1")}>
+                                  to approval
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="mt-4 pt-4 border-t border-gray-200 flex items-center justify-between">
+                            <button
+                              onClick={async () => {
+                                try {
+                                  const votes = await getProjectVotes(proposal.id);
+                                  alert(`Voters (${votes.length}):\n${votes.map(v => `${v.parent_name} (${v.student_name}) - ${v.vote_type.toUpperCase()}`).join('\n') || 'No votes yet'}`);
+                                } catch (error) {
+                                  console.error('Error fetching votes:', error);
+                                  alert('Error fetching voter details');
+                                }
+                              }}
+                              className={getContrastClass(
+                                "px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center gap-2",
+                                "px-4 py-2 rounded-xl bg-blue-400 text-black hover:bg-blue-300 transition-colors flex items-center gap-2"
+                              )}
+                            >
+                              <Eye size={16} />
+                              View Voters
+                            </button>
+                            
+                            <div className="flex items-center gap-2">
+                              {proposal.is_approved ? (
+                                <div className="flex items-center gap-2 text-green-600">
+                                  <CheckCircle size={16} />
+                                  <span className="text-sm font-medium">Approved</span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-2 text-orange-600">
+                                  <Clock size={16} />
+                                  <span className="text-sm font-medium">
+                                    Needs {Math.max(0, 22 - (proposal.yes_votes || 0))} more votes
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className={getContrastClass(
+                      "bg-white/70 backdrop-blur-md rounded-2xl p-8 border border-white/30 text-center",
+                      "bg-gray-800/70 backdrop-blur-md rounded-2xl p-8 border border-yellow-400/30 text-center"
+                    )}>
+                      <FolderPlus size={48} className={getContrastClass("mx-auto mb-4 text-gray-400", "mx-auto mb-4 text-yellow-400")} />
+                      <h3 className={getContrastClass("text-lg font-semibold text-gray-900 mb-2", "text-lg font-semibold text-yellow-400 mb-2")}>
+                        No Project Proposals Yet
+                      </h3>
+                      <p className={getContrastClass("text-gray-600", "text-gray-300")}>
+                        When parents submit project proposals for voting, they'll appear here for monitoring.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 

@@ -57,4 +57,27 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey)
    - login_timestamp (timestamp)
    - last_activity (timestamp)
    - session_data (jsonb)
+
+4. project_proposals table:
+   - id (uuid, primary key)
+   - title (text)
+   - description (text)
+   - proposed_by (text)
+   - submission_timestamp (timestamp)
+   - status (text) - 'pending', 'approved', 'rejected'
+   - yes_votes (integer)
+   - no_votes (integer)
+   - total_votes (integer)
+   - is_approved (boolean) - true when >= 22 yes votes
+   - created_at (timestamp)
+   - updated_at (timestamp)
+
+5. project_votes table:
+   - id (uuid, primary key)
+   - proposal_id (uuid, foreign key to project_proposals)
+   - parent_name (text)
+   - student_name (text)
+   - vote_type (text) - 'yes' or 'no'
+   - submission_timestamp (timestamp)
+   - created_at (timestamp)
 */

@@ -17,14 +17,29 @@ import {
   Trash2,
   Plus
 } from 'lucide-react';
-import { getAllDonationsFromCentralDB, getDonationStatsFromCentralDB, centralizedDB } from '../utils/centralizedDatabase';
+import {
+  getAllDonationsFromCentralDB,
+  getDonationStatsFromCentralDB,
+  centralizedDB,
+  getAllExpensesFromCentralDB,
+  getExpenseStatsFromCentralDB,
+  getFinancialOverviewFromCentralDB,
+  submitExpenseToCentralDB,
+  updateExpenseInCentralDB,
+  deleteExpenseFromCentralDB
+} from '../utils/centralizedDatabase';
 import SecureConfirmation from './SecureConfirmation';
 
 export default function FinancialOfficerDashboard({ getContrastClass, onLogout, userInfo }) {
   const [donations, setDonations] = useState([]);
   const [donationStats, setDonationStats] = useState(null);
+  const [expenses, setExpenses] = useState([]);
+  const [expenseStats, setExpenseStats] = useState(null);
+  const [financialOverview, setFinancialOverview] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedDonation, setSelectedDonation] = useState(null);
+  const [selectedExpense, setSelectedExpense] = useState(null);
+  const [activeTab, setActiveTab] = useState('overview');
   
   // CRUD state
   const [showEditModal, setShowEditModal] = useState(false);
@@ -40,6 +55,23 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
     allocation: { generalSPTA: 0, mercadoPTA: 0 }
   });
 
+  // Expense CRUD state
+  const [showExpenseModal, setShowExpenseModal] = useState(false);
+  const [showEditExpenseModal, setShowEditExpenseModal] = useState(false);
+  const [editingExpense, setEditingExpense] = useState(null);
+  const [expenseForm, setExpenseForm] = useState({
+    expenseName: '',
+    category: 'office_supplies',
+    amount: '',
+    description: '',
+    vendorName: '',
+    receiptNumber: '',
+    expenseDate: '',
+    paymentMethod: 'cash',
+    fundSource: 'general',
+    notes: ''
+  });
+
   useEffect(() => {
     loadData();
     const interval = setInterval(loadData, 30000); // Refresh every 30 seconds
@@ -49,10 +81,15 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
   const loadData = async () => {
     try {
       console.log('💰 Loading Finance Dashboard data...');
-      
-      const donationsData = await getAllDonationsFromCentralDB();
-      const statsData = await getDonationStatsFromCentralDB();
-      
+
+      const [donationsData, statsData, expensesData, expenseStatsData, overviewData] = await Promise.all([
+        getAllDonationsFromCentralDB(),
+        getDonationStatsFromCentralDB(),
+        getAllExpensesFromCentralDB(),
+        getExpenseStatsFromCentralDB(),
+        getFinancialOverviewFromCentralDB()
+      ]);
+
       // Ensure donations is always an array
       const safeDonations = Array.isArray(donationsData) ? donationsData : [];
       const safeStats = statsData || {
@@ -61,14 +98,43 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
         totalGeneralSPTA: 0,
         totalMercadoPTA: 0
       };
-      
+
+      // Ensure expenses is always an array
+      const safeExpenses = Array.isArray(expensesData) ? expensesData : [];
+      const safeExpenseStats = expenseStatsData || {
+        totalExpenses: 0,
+        totalAmount: 0,
+        approvedAmount: 0,
+        pendingAmount: 0,
+        generalFundExpenses: 0,
+        mercadoFundExpenses: 0,
+        approvedCount: 0,
+        pendingCount: 0,
+        rejectedCount: 0,
+        categoryBreakdown: {}
+      };
+
+      const safeOverview = overviewData || {
+        totalIncome: 0,
+        totalExpenses: 0,
+        netBalance: 0,
+        generalFundBalance: 0,
+        mercadoFundBalance: 0,
+        pendingExpenses: 0,
+        expenseCount: 0,
+        donationCount: 0
+      };
+
       setDonations(safeDonations);
       setDonationStats(safeStats);
+      setExpenses(safeExpenses);
+      setExpenseStats(safeExpenseStats);
+      setFinancialOverview(safeOverview);
       setIsLoading(false);
-      
-      console.log(`✅ Finance Dashboard loaded ${safeDonations.length} donations`);
-      console.log(`💰 Total amount: ₱${safeStats.totalAmount}`);
-      
+
+      console.log(`✅ Finance Dashboard loaded ${safeDonations.length} donations and ${safeExpenses.length} expenses`);
+      console.log(`💰 Net Balance: ₱${safeOverview.netBalance?.toLocaleString() || '0'}`);
+
     } catch (error) {
       console.error('Error loading Finance Dashboard data:', error);
       setIsLoading(false);
@@ -79,6 +145,29 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
         totalAmount: 0,
         totalGeneralSPTA: 0,
         totalMercadoPTA: 0
+      });
+      setExpenses([]);
+      setExpenseStats({
+        totalExpenses: 0,
+        totalAmount: 0,
+        approvedAmount: 0,
+        pendingAmount: 0,
+        generalFundExpenses: 0,
+        mercadoFundExpenses: 0,
+        approvedCount: 0,
+        pendingCount: 0,
+        rejectedCount: 0,
+        categoryBreakdown: {}
+      });
+      setFinancialOverview({
+        totalIncome: 0,
+        totalExpenses: 0,
+        netBalance: 0,
+        generalFundBalance: 0,
+        mercadoFundBalance: 0,
+        pendingExpenses: 0,
+        expenseCount: 0,
+        donationCount: 0
       });
     }
   };
@@ -248,7 +337,7 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
           eSignature: editForm.eSignature,
           allocation: editForm.allocation
         };
-        
+
         const result = await centralizedDB.updateDonation(editingDonation.reference_number, updatedData);
         if (result.success) {
           alert('Donation updated successfully');
@@ -258,12 +347,20 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
         } else {
           alert('Error updating donation: ' + result.error);
         }
+      } else if (confirmAction?.type === 'delete_expense') {
+        const result = await deleteExpenseFromCentralDB(confirmAction.expense.reference_number);
+        if (result.success) {
+          alert('Expense deleted successfully');
+          loadData();
+        } else {
+          alert('Error deleting expense: ' + result.error);
+        }
       }
     } catch (error) {
       console.error('Error executing secure action:', error);
       alert('An error occurred. Please try again.');
     }
-    
+
     setConfirmAction(null);
     setShowSecureConfirm(false);
   };
@@ -284,6 +381,112 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
         [field]: numValue
       }
     }));
+  };
+
+  // EXPENSE CRUD FUNCTIONS
+  const handleCreateExpense = () => {
+    setExpenseForm({
+      expenseName: '',
+      category: 'office_supplies',
+      amount: '',
+      description: '',
+      vendorName: '',
+      receiptNumber: '',
+      expenseDate: new Date().toISOString().split('T')[0],
+      paymentMethod: 'cash',
+      fundSource: 'general',
+      notes: ''
+    });
+    setEditingExpense(null);
+    setShowExpenseModal(true);
+  };
+
+  const handleEditExpense = (expense) => {
+    setEditingExpense(expense);
+    setExpenseForm({
+      expenseName: expense.expense_name || '',
+      category: expense.category || 'office_supplies',
+      amount: expense.amount ? expense.amount.toString() : '',
+      description: expense.description || '',
+      vendorName: expense.vendor_name || '',
+      receiptNumber: expense.receipt_number || '',
+      expenseDate: expense.expense_date || '',
+      paymentMethod: expense.payment_method || 'cash',
+      fundSource: expense.fund_source || 'general',
+      notes: expense.notes || ''
+    });
+    setShowEditExpenseModal(true);
+  };
+
+  const handleDeleteExpense = (expense) => {
+    setConfirmAction({
+      type: 'delete_expense',
+      expense,
+      title: 'Delete Expense',
+      message: `Are you sure you want to permanently delete the expense "${expense.expense_name}"? This action cannot be undone and will affect financial records.`
+    });
+    setShowSecureConfirm(true);
+  };
+
+  const handleExpenseFormChange = (field, value) => {
+    setExpenseForm(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleSubmitExpense = async () => {
+    try {
+      const expenseData = {
+        ...expenseForm,
+        expenseDate: expenseForm.expenseDate || new Date().toISOString().split('T')[0],
+        createdBy: userInfo?.firstName || 'Finance Officer'
+      };
+
+      if (editingExpense) {
+        const result = await updateExpenseInCentralDB(editingExpense.reference_number, expenseData);
+        if (result.success) {
+          alert('Expense updated successfully');
+          setShowEditExpenseModal(false);
+          setEditingExpense(null);
+          loadData();
+        } else {
+          alert('Error updating expense: ' + result.error);
+        }
+      } else {
+        const result = await submitExpenseToCentralDB(expenseData);
+        if (result.success) {
+          alert('Expense created successfully');
+          setShowExpenseModal(false);
+          loadData();
+        } else {
+          alert('Error creating expense: ' + result.error);
+        }
+      }
+    } catch (error) {
+      console.error('Error submitting expense:', error);
+      alert('An error occurred. Please try again.');
+    }
+  };
+
+  const executeExpenseAction = async () => {
+    try {
+      if (confirmAction?.type === 'delete_expense') {
+        const result = await deleteExpenseFromCentralDB(confirmAction.expense.reference_number);
+        if (result.success) {
+          alert('Expense deleted successfully');
+          loadData();
+        } else {
+          alert('Error deleting expense: ' + result.error);
+        }
+      }
+    } catch (error) {
+      console.error('Error executing expense action:', error);
+      alert('An error occurred. Please try again.');
+    }
+
+    setConfirmAction(null);
+    setShowSecureConfirm(false);
   };
 
   if (isLoading) {
@@ -359,8 +562,37 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
       {/* Main Content */}
       <main className="p-4 space-y-6">
         
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Navigation Tabs */}
+        <div className="flex gap-2 mb-6">
+          {[
+            { id: 'overview', label: 'Financial Overview', icon: '📊' },
+            { id: 'donations', label: 'Donations', icon: '💰' },
+            { id: 'expenses', label: 'Expenses', icon: '🧾' }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={getContrastClass(
+                `flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${
+                  activeTab === tab.id
+                    ? 'bg-blue-500 text-white shadow-lg'
+                    : 'bg-white/60 text-slate-600 hover:bg-white/80'
+                }`,
+                `flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all ${
+                  activeTab === tab.id
+                    ? 'bg-yellow-500 text-black shadow-lg'
+                    : 'bg-gray-800 text-yellow-400 border border-yellow-400/50 hover:bg-gray-700'
+                }`
+              )}
+            >
+              <span className="text-lg">{tab.icon}</span>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Financial Overview Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <div className={getContrastClass(
             "bg-white/60 backdrop-blur-md rounded-3xl p-6 shadow-xl border border-white/20",
             "bg-gray-900 rounded-3xl p-6 shadow-xl border-2 border-yellow-400"
@@ -368,10 +600,10 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
             <div className="flex items-center justify-between">
               <div>
                 <p className={getContrastClass("text-slate-600", "text-yellow-200")}>
-                  Total Amount
+                  Total Income
                 </p>
                 <p className={getContrastClass("text-2xl font-bold text-slate-900", "text-2xl font-bold text-yellow-400")}>
-                  ₱{donationStats?.totalAmount?.toLocaleString() || '0'}
+                  ₱{financialOverview?.totalIncome?.toLocaleString() || '0'}
                 </p>
               </div>
               <DollarSign className={getContrastClass("text-green-500", "text-yellow-400")} size={32} />
@@ -385,13 +617,13 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
             <div className="flex items-center justify-between">
               <div>
                 <p className={getContrastClass("text-slate-600", "text-yellow-200")}>
-                  Total Donations
+                  Total Expenses
                 </p>
-                <p className={getContrastClass("text-2xl font-bold text-slate-900", "text-2xl font-bold text-yellow-400")}>
-                  {donationStats?.totalDonations || 0}
+                <p className={getContrastClass("text-2xl font-bold text-slate-900", "text-2xl font-bold text-red-500")}>
+                  ₱{financialOverview?.totalExpenses?.toLocaleString() || '0'}
                 </p>
               </div>
-              <Users className={getContrastClass("text-blue-500", "text-yellow-400")} size={32} />
+              <Receipt className={getContrastClass("text-red-500", "text-red-400")} size={32} />
             </div>
           </div>
 
@@ -402,10 +634,33 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
             <div className="flex items-center justify-between">
               <div>
                 <p className={getContrastClass("text-slate-600", "text-yellow-200")}>
-                  General SPTA
+                  Net Balance
+                </p>
+                <p className={getContrastClass(
+                  `text-2xl font-bold ${(financialOverview?.netBalance || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`,
+                  `text-2xl font-bold ${(financialOverview?.netBalance || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`
+                )}>
+                  ₱{financialOverview?.netBalance?.toLocaleString() || '0'}
+                </p>
+              </div>
+              <TrendingUp className={getContrastClass(
+                (financialOverview?.netBalance || 0) >= 0 ? "text-green-500" : "text-red-500",
+                (financialOverview?.netBalance || 0) >= 0 ? "text-green-400" : "text-red-400"
+              )} size={32} />
+            </div>
+          </div>
+
+          <div className={getContrastClass(
+            "bg-white/60 backdrop-blur-md rounded-3xl p-6 shadow-xl border border-white/20",
+            "bg-gray-900 rounded-3xl p-6 shadow-xl border-2 border-yellow-400"
+          )}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className={getContrastClass("text-slate-600", "text-yellow-200")}>
+                  General Fund Balance
                 </p>
                 <p className={getContrastClass("text-2xl font-bold text-slate-900", "text-2xl font-bold text-yellow-400")}>
-                  ₱{donationStats?.totalGeneralSPTA?.toLocaleString() || '0'}
+                  ₱{financialOverview?.generalFundBalance?.toLocaleString() || '0'}
                 </p>
               </div>
               <PieChart className={getContrastClass("text-purple-500", "text-yellow-400")} size={32} />
@@ -419,10 +674,10 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
             <div className="flex items-center justify-between">
               <div>
                 <p className={getContrastClass("text-slate-600", "text-yellow-200")}>
-                  11Mercado PTA
+                  11Mercado Fund Balance
                 </p>
                 <p className={getContrastClass("text-2xl font-bold text-slate-900", "text-2xl font-bold text-yellow-400")}>
-                  ₱{donationStats?.totalMercadoPTA?.toLocaleString() || '0'}
+                  ₱{financialOverview?.mercadoFundBalance?.toLocaleString() || '0'}
                 </p>
               </div>
               <TrendingUp className={getContrastClass("text-orange-500", "text-yellow-400")} size={32} />

@@ -684,6 +684,12 @@ class CentralizedDatabase {
           await supabase.from('donations').insert([item.data]);
         } else if (item.type === 'drive') {
           await supabase.from('donation_drives').insert([item.data]);
+        } else if (item.type === 'expense') {
+          await supabase.from('expenses').insert([item.data]);
+        } else if (item.type === 'update_expense') {
+          await supabase.from('expenses').update(item.data.data).eq('reference_number', item.data.referenceNumber);
+        } else if (item.type === 'delete_expense') {
+          await supabase.from('expenses').delete().eq('reference_number', item.data.referenceNumber);
         }
       } catch (error) {
         console.error('Error syncing item:', error);
@@ -713,6 +719,10 @@ class CentralizedDatabase {
         const existing = JSON.parse(localStorage.getItem('donationDrives') || '[]');
         existing.push(data);
         localStorage.setItem('donationDrives', JSON.stringify(existing));
+      } else if (type === 'expenses') {
+        const existing = JSON.parse(localStorage.getItem('expenseEntries') || '[]');
+        existing.push(data);
+        localStorage.setItem('expenseEntries', JSON.stringify(existing));
       }
     } catch (error) {
       console.error('Error updating local cache:', error);
@@ -744,20 +754,358 @@ class CentralizedDatabase {
 
       if (drivesError) throw drivesError;
 
+      // Get all expenses
+      const { data: expenses, error: expensesError } = await supabase
+        .from('expenses')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (expensesError) throw expensesError;
+
       // Update local cache
       localStorage.setItem('donationEntries', JSON.stringify(donations || []));
       localStorage.setItem('donationDrives', JSON.stringify(drives || []));
+      localStorage.setItem('expenseEntries', JSON.stringify(expenses || []));
 
       // Trigger UI update
       window.dispatchEvent(new CustomEvent('centralizedDataSync', {
-        detail: { donations: donations || [], drives: drives || [] }
+        detail: {
+          donations: donations || [],
+          drives: drives || [],
+          expenses: expenses || []
+        }
       }));
 
-      console.log(`Synced ${donations?.length || 0} donations and ${drives?.length || 0} drives from database`);
-      return { success: true, donations: donations || [], drives: drives || [] };
+      console.log(`Synced ${donations?.length || 0} donations, ${drives?.length || 0} drives, and ${expenses?.length || 0} expenses from database`);
+      return {
+        success: true,
+        donations: donations || [],
+        drives: drives || [],
+        expenses: expenses || []
+      };
     } catch (error) {
       console.error('Force sync failed:', error);
       return { success: false, error: error.message };
+    }
+  }
+
+  // EXPENSE MANAGEMENT METHODS
+
+  // Generate expense reference number
+  generateExpenseReference() {
+    const timestamp = Date.now();
+    return `EXP-${timestamp}`;
+  }
+
+  // Submit expense to centralized database
+  async submitExpense(expenseData) {
+    try {
+      const expense = {
+        reference_number: expenseData.referenceNumber || this.generateExpenseReference(),
+        expense_name: expenseData.expenseName,
+        category: expenseData.category,
+        amount: parseFloat(expenseData.amount) || 0,
+        description: expenseData.description || '',
+        vendor_name: expenseData.vendorName || null,
+        receipt_number: expenseData.receiptNumber || null,
+        expense_date: expenseData.expenseDate,
+        approval_status: expenseData.approvalStatus || 'pending',
+        approved_by: expenseData.approvedBy || null,
+        approval_date: expenseData.approvalDate || null,
+        payment_method: expenseData.paymentMethod || null,
+        fund_source: expenseData.fundSource || 'general',
+        attachment_file: expenseData.attachmentFile || null,
+        attachment_filename: expenseData.attachmentFilename || null,
+        has_receipt: !!expenseData.attachmentFile,
+        notes: expenseData.notes || null,
+        created_by: expenseData.createdBy || 'System',
+        created_at: new Date().toISOString()
+      };
+
+      if (this.isOnline) {
+        const { data, error } = await supabase
+          .from('expenses')
+          .insert([expense])
+          .select();
+
+        if (error) {
+          console.error('Error submitting expense:', error);
+          this.addToPendingSync('expense', expense);
+          return { success: false, error: error.message };
+        }
+
+        this.updateLocalCache('expenses', data[0]);
+        return { success: true, data: data[0] };
+      } else {
+        this.addToPendingSync('expense', expense);
+        this.updateLocalCache('expenses', expense);
+        return { success: true, data: expense, offline: true };
+      }
+    } catch (error) {
+      console.error('Error submitting expense:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Get all expenses from centralized database
+  async getAllExpenses() {
+    try {
+      if (this.isOnline) {
+        const { data, error } = await supabase
+          .from('expenses')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error fetching expenses:', error);
+          return JSON.parse(localStorage.getItem('expenseEntries') || '[]');
+        }
+
+        localStorage.setItem('expenseEntries', JSON.stringify(data || []));
+        return data || [];
+      } else {
+        return JSON.parse(localStorage.getItem('expenseEntries') || '[]');
+      }
+    } catch (error) {
+      console.error('Error getting expenses:', error);
+      return JSON.parse(localStorage.getItem('expenseEntries') || '[]');
+    }
+  }
+
+  // Get expense by reference number
+  async getExpenseByReference(referenceNumber) {
+    try {
+      if (this.isOnline) {
+        const { data, error } = await supabase
+          .from('expenses')
+          .select('*')
+          .eq('reference_number', referenceNumber)
+          .single();
+
+        if (error) {
+          console.error('Error fetching expense:', error);
+          const localExpenses = JSON.parse(localStorage.getItem('expenseEntries') || '[]');
+          return localExpenses.find(e => e.reference_number === referenceNumber);
+        }
+
+        return data;
+      } else {
+        const localExpenses = JSON.parse(localStorage.getItem('expenseEntries') || '[]');
+        return localExpenses.find(e => e.reference_number === referenceNumber);
+      }
+    } catch (error) {
+      console.error('Error getting expense by reference:', error);
+      return null;
+    }
+  }
+
+  // Update expense
+  async updateExpense(referenceNumber, updatedData) {
+    try {
+      const updatePayload = {
+        expense_name: updatedData.expenseName,
+        category: updatedData.category,
+        amount: parseFloat(updatedData.amount) || 0,
+        description: updatedData.description,
+        vendor_name: updatedData.vendorName,
+        receipt_number: updatedData.receiptNumber,
+        expense_date: updatedData.expenseDate,
+        approval_status: updatedData.approvalStatus,
+        approved_by: updatedData.approvedBy,
+        approval_date: updatedData.approvalDate,
+        payment_method: updatedData.paymentMethod,
+        fund_source: updatedData.fundSource,
+        attachment_file: updatedData.attachmentFile,
+        attachment_filename: updatedData.attachmentFilename,
+        has_receipt: !!updatedData.attachmentFile,
+        notes: updatedData.notes,
+        updated_at: new Date().toISOString()
+      };
+
+      if (this.isOnline) {
+        const { data, error } = await supabase
+          .from('expenses')
+          .update(updatePayload)
+          .eq('reference_number', referenceNumber)
+          .select();
+
+        if (error) {
+          console.error('Error updating expense:', error);
+          return { success: false, error: error.message };
+        }
+
+        this.updateLocalCache('expenses', data[0]);
+        return { success: true, data: data[0] };
+      } else {
+        this.addToPendingSync('update_expense', { referenceNumber, data: updatePayload });
+
+        const localExpenses = JSON.parse(localStorage.getItem('expenseEntries') || '[]');
+        const index = localExpenses.findIndex(e => e.reference_number === referenceNumber);
+        if (index !== -1) {
+          localExpenses[index] = { ...localExpenses[index], ...updatePayload };
+          localStorage.setItem('expenseEntries', JSON.stringify(localExpenses));
+        }
+
+        return { success: true, offline: true };
+      }
+    } catch (error) {
+      console.error('Error updating expense:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Delete expense
+  async deleteExpense(referenceNumber) {
+    try {
+      if (this.isOnline) {
+        const { error } = await supabase
+          .from('expenses')
+          .delete()
+          .eq('reference_number', referenceNumber);
+
+        if (error) {
+          console.error('Error deleting expense:', error);
+          return { success: false, error: error.message };
+        }
+
+        const localExpenses = JSON.parse(localStorage.getItem('expenseEntries') || '[]');
+        const filteredExpenses = localExpenses.filter(e => e.reference_number !== referenceNumber);
+        localStorage.setItem('expenseEntries', JSON.stringify(filteredExpenses));
+
+        return { success: true };
+      } else {
+        this.addToPendingSync('delete_expense', { referenceNumber });
+
+        const localExpenses = JSON.parse(localStorage.getItem('expenseEntries') || '[]');
+        const filteredExpenses = localExpenses.filter(e => e.reference_number !== referenceNumber);
+        localStorage.setItem('expenseEntries', JSON.stringify(filteredExpenses));
+
+        return { success: true, offline: true };
+      }
+    } catch (error) {
+      console.error('Error deleting expense:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Get expense statistics
+  async getExpenseStats() {
+    try {
+      const expenses = await this.getAllExpenses();
+
+      const stats = {
+        totalExpenses: expenses.length,
+        totalAmount: expenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0),
+        approvedAmount: expenses
+          .filter(e => e.approval_status === 'approved')
+          .reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0),
+        pendingAmount: expenses
+          .filter(e => e.approval_status === 'pending')
+          .reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0),
+        generalFundExpenses: expenses
+          .filter(e => e.fund_source === 'general' && e.approval_status === 'approved')
+          .reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0),
+        mercadoFundExpenses: expenses
+          .filter(e => e.fund_source === 'mercado' && e.approval_status === 'approved')
+          .reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0),
+        approvedCount: expenses.filter(e => e.approval_status === 'approved').length,
+        pendingCount: expenses.filter(e => e.approval_status === 'pending').length,
+        rejectedCount: expenses.filter(e => e.approval_status === 'rejected').length,
+        categoryBreakdown: expenses.reduce((acc, e) => {
+          acc[e.category] = (acc[e.category] || 0) + (parseFloat(e.amount) || 0);
+          return acc;
+        }, {}),
+        recentExpenses: expenses.slice(0, 10)
+      };
+
+      return stats;
+    } catch (error) {
+      console.error('Error calculating expense stats:', error);
+      return {
+        totalExpenses: 0,
+        totalAmount: 0,
+        approvedAmount: 0,
+        pendingAmount: 0,
+        generalFundExpenses: 0,
+        mercadoFundExpenses: 0,
+        approvedCount: 0,
+        pendingCount: 0,
+        rejectedCount: 0,
+        categoryBreakdown: {},
+        recentExpenses: []
+      };
+    }
+  }
+
+  // Get financial overview with automatic calculations
+  async getFinancialOverview() {
+    try {
+      const donationStats = await this.getDonationStats();
+      const expenseStats = await this.getExpenseStats();
+
+      const overview = {
+        totalIncome: donationStats.totalAmount,
+        totalExpenses: expenseStats.approvedAmount,
+        netBalance: donationStats.totalAmount - expenseStats.approvedAmount,
+        generalFundBalance: donationStats.totalGeneralSPTA - expenseStats.generalFundExpenses,
+        mercadoFundBalance: donationStats.totalMercadoPTA - expenseStats.mercadoFundExpenses,
+        pendingExpenses: expenseStats.pendingAmount,
+        expenseCount: expenseStats.totalExpenses,
+        donationCount: donationStats.totalDonations,
+        lastUpdated: new Date().toISOString()
+      };
+
+      return overview;
+    } catch (error) {
+      console.error('Error getting financial overview:', error);
+      return {
+        totalIncome: 0,
+        totalExpenses: 0,
+        netBalance: 0,
+        generalFundBalance: 0,
+        mercadoFundBalance: 0,
+        pendingExpenses: 0,
+        expenseCount: 0,
+        donationCount: 0,
+        lastUpdated: new Date().toISOString()
+      };
+    }
+  }
+
+  // Search expenses
+  async searchExpenses(searchTerm) {
+    try {
+      if (this.isOnline) {
+        const { data, error } = await supabase
+          .from('expenses')
+          .select('*')
+          .or(`expense_name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%,vendor_name.ilike.%${searchTerm}%,reference_number.ilike.%${searchTerm}%`)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error searching expenses:', error);
+          const localExpenses = JSON.parse(localStorage.getItem('expenseEntries') || '[]');
+          return localExpenses.filter(e =>
+            e.expense_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            e.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            e.vendor_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            e.reference_number?.toLowerCase().includes(searchTerm.toLowerCase())
+          );
+        }
+
+        return data;
+      } else {
+        const localExpenses = JSON.parse(localStorage.getItem('expenseEntries') || '[]');
+        return localExpenses.filter(e =>
+          e.expense_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          e.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          e.vendor_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          e.reference_number?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      }
+    } catch (error) {
+      console.error('Error searching expenses:', error);
+      return [];
     }
   }
 
@@ -766,13 +1114,19 @@ class CentralizedDatabase {
     try {
       const donations = await this.getAllDonations();
       const drives = await this.getAllDonationDrives();
-      
+      const expenses = await this.getAllExpenses();
+      const overview = await this.getFinancialOverview();
+
       const exportData = {
         donations,
         drives,
+        expenses,
+        financialOverview: overview,
         exportTimestamp: new Date().toISOString(),
         totalDonations: donations.length,
-        totalAmount: donations.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0)
+        totalExpenses: expenses.length,
+        totalDonationAmount: donations.reduce((sum, d) => sum + (parseFloat(d.amount) || 0), 0),
+        totalExpenseAmount: expenses.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0)
       };
 
       const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
@@ -803,3 +1157,13 @@ export const getDonationStatsFromCentralDB = () => centralizedDB.getDonationStat
 export const searchDonationsInCentralDB = (searchTerm) => centralizedDB.searchDonations(searchTerm);
 export const exportCentralDBData = () => centralizedDB.exportAllData();
 export const forceSyncFromCentralDB = () => centralizedDB.forceSyncFromDatabase();
+
+// Expense management helper functions
+export const submitExpenseToCentralDB = (expenseData) => centralizedDB.submitExpense(expenseData);
+export const getAllExpensesFromCentralDB = () => centralizedDB.getAllExpenses();
+export const getExpenseStatsFromCentralDB = () => centralizedDB.getExpenseStats();
+export const getFinancialOverviewFromCentralDB = () => centralizedDB.getFinancialOverview();
+export const searchExpensesInCentralDB = (searchTerm) => centralizedDB.searchExpenses(searchTerm);
+export const updateExpenseInCentralDB = (referenceNumber, updatedData) => centralizedDB.updateExpense(referenceNumber, updatedData);
+export const deleteExpenseFromCentralDB = (referenceNumber) => centralizedDB.deleteExpense(referenceNumber);
+export const getExpenseByReferenceFromCentralDB = (referenceNumber) => centralizedDB.getExpenseByReference(referenceNumber);

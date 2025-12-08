@@ -685,165 +685,411 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
           </div>
         </div>
 
-        {/* Export Actions */}
-        <div className={getContrastClass(
-          "bg-white/60 backdrop-blur-md rounded-3xl p-6 shadow-xl border border-white/20",
-          "bg-gray-900 rounded-3xl p-6 shadow-xl border-2 border-yellow-400"
-        )}>
-          <h2 className={getContrastClass(
-            "text-xl font-semibold text-slate-900 mb-4",
-            "text-xl font-semibold text-yellow-400 mb-4"
-          )}>
-            Export Data
-          </h2>
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={exportToCSV}
-              className={getContrastClass(
-                "flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors",
-                "flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
-              )}
-            >
-              <Download size={16} />
-              Export CSV
-            </button>
-            
-            <button
-              onClick={exportToExcel}
-              className={getContrastClass(
-                "flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors",
-                "flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-              )}
-            >
-              <FileSpreadsheet size={16} />
-              Export Excel
-            </button>
-          </div>
-        </div>
-
-        {/* Donations List */}
-        <div className={getContrastClass(
-          "bg-white/60 backdrop-blur-md rounded-3xl p-6 shadow-xl border border-white/20",
-          "bg-gray-900 rounded-3xl p-6 shadow-xl border-2 border-yellow-400"
-        )}>
-          <h2 className={getContrastClass(
-            "text-xl font-semibold text-slate-900 mb-4",
-            "text-xl font-semibold text-yellow-400 mb-4"
-          )}>
-            Recent Donations ({donations.length})
-          </h2>
-          
-          {donations.length === 0 ? (
-            <div className="text-center py-8">
-              <Database className={getContrastClass("text-gray-400", "text-gray-600")} size={48} />
-              <p className={getContrastClass("text-gray-600 mt-2", "text-gray-400 mt-2")}>
-                No donations found
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3 max-h-96 overflow-y-auto">
-              {donations.map((donation, index) => (
-                <div
-                  key={donation.id || index}
+        {/* Tab Content */}
+        {activeTab === 'overview' && (
+          <div className="space-y-6">
+            {/* Export Actions */}
+            <div className={getContrastClass(
+              "bg-white/60 backdrop-blur-md rounded-3xl p-6 shadow-xl border border-white/20",
+              "bg-gray-900 rounded-3xl p-6 shadow-xl border-2 border-yellow-400"
+            )}>
+              <h2 className={getContrastClass(
+                "text-xl font-semibold text-slate-900 mb-4",
+                "text-xl font-semibold text-yellow-400 mb-4"
+              )}>
+                Quick Actions
+              </h2>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={exportToCSV}
                   className={getContrastClass(
-                    "bg-white/40 backdrop-blur-sm rounded-xl p-4 border border-white/30 hover:bg-white/60 transition-all cursor-pointer",
-                    "bg-gray-800/60 backdrop-blur-sm rounded-xl p-4 border border-yellow-400/30 hover:bg-gray-800/80 transition-all cursor-pointer"
+                    "flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors",
+                    "flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
                   )}
-                  onClick={() => setSelectedDonation(donation)}
                 >
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Receipt size={16} className={getContrastClass("text-blue-500", "text-yellow-400")} />
-                        <span className={getContrastClass(
-                          "text-sm font-medium text-slate-700",
-                          "text-sm font-medium text-yellow-300"
-                        )}>
-                          {donation.reference_number}
-                        </span>
-                        <span className={getContrastClass(
-                          "text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full",
-                          "text-xs bg-yellow-400/20 text-yellow-300 px-2 py-1 rounded-full border border-yellow-400/50"
-                        )}>
-                          {donation.donation_mode}
-                        </span>
-                      </div>
-                      
-                      <h3 className={getContrastClass(
-                        "font-semibold text-slate-900",
-                        "font-semibold text-yellow-400"
-                      )}>
+                  <Download size={16} />
+                  Export CSV
+                </button>
+
+                <button
+                  onClick={exportToExcel}
+                  className={getContrastClass(
+                    "flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors",
+                    "flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                  )}
+                >
+                  <FileSpreadsheet size={16} />
+                  Export Excel
+                </button>
+
+                <button
+                  onClick={handleCreateExpense}
+                  className={getContrastClass(
+                    "flex items-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg transition-colors",
+                    "flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+                  )}
+                >
+                  <Plus size={16} />
+                  Add Expense
+                </button>
+              </div>
+            </div>
+
+            {/* Recent Activity Summary */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Recent Donations Summary */}
+              <div className={getContrastClass(
+                "bg-white/60 backdrop-blur-md rounded-3xl p-6 shadow-xl border border-white/20",
+                "bg-gray-900 rounded-3xl p-6 shadow-xl border-2 border-yellow-400"
+              )}>
+                <h3 className={getContrastClass(
+                  "text-lg font-semibold text-slate-900 mb-4",
+                  "text-lg font-semibold text-yellow-400 mb-4"
+                )}>
+                  Recent Donations ({donations.length})
+                </h3>
+
+                {donations.slice(0, 5).map((donation, index) => (
+                  <div key={index} className="flex justify-between items-center py-2 border-b border-gray-200/50 last:border-0">
+                    <div>
+                      <p className={getContrastClass("font-medium text-sm", "font-medium text-sm text-yellow-400")}>
                         {donation.parent_name}
-                      </h3>
-                      <p className={getContrastClass(
-                        "text-sm text-slate-600",
-                        "text-sm text-yellow-200"
-                      )}>
-                        Student: {donation.student_name}
                       </p>
-                      <p className={getContrastClass(
-                        "text-xs text-slate-500",
-                        "text-xs text-yellow-300"
-                      )}>
+                      <p className={getContrastClass("text-xs text-gray-600", "text-xs text-yellow-300")}>
                         {donation.submission_date}
                       </p>
                     </div>
-                    
-                    <div className="text-right">
-                      <div className={getContrastClass(
-                        "text-xl font-bold text-slate-900",
-                        "text-xl font-bold text-yellow-400"
-                      )}>
-                        ₱{donation.amount?.toLocaleString() || '0'}
+                    <p className={getContrastClass("font-bold text-green-600", "font-bold text-green-400")}>
+                      ₱{donation.amount?.toLocaleString() || '0'}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Recent Expenses Summary */}
+              <div className={getContrastClass(
+                "bg-white/60 backdrop-blur-md rounded-3xl p-6 shadow-xl border border-white/20",
+                "bg-gray-900 rounded-3xl p-6 shadow-xl border-2 border-yellow-400"
+              )}>
+                <h3 className={getContrastClass(
+                  "text-lg font-semibold text-slate-900 mb-4",
+                  "text-lg font-semibold text-yellow-400 mb-4"
+                )}>
+                  Recent Expenses ({expenses.length})
+                </h3>
+
+                {expenses.slice(0, 5).map((expense, index) => (
+                  <div key={index} className="flex justify-between items-center py-2 border-b border-gray-200/50 last:border-0">
+                    <div>
+                      <p className={getContrastClass("font-medium text-sm", "font-medium text-sm text-yellow-400")}>
+                        {expense.expense_name}
+                      </p>
+                      <p className={getContrastClass("text-xs text-gray-600", "text-xs text-yellow-300")}>
+                        {expense.expense_date} • {expense.approval_status}
+                      </p>
+                    </div>
+                    <p className={getContrastClass("font-bold text-red-600", "font-bold text-red-400")}>
+                      ₱{expense.amount?.toLocaleString() || '0'}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'donations' && (
+          <div className={getContrastClass(
+            "bg-white/60 backdrop-blur-md rounded-3xl p-6 shadow-xl border border-white/20",
+            "bg-gray-900 rounded-3xl p-6 shadow-xl border-2 border-yellow-400"
+          )}>
+            <h2 className={getContrastClass(
+              "text-xl font-semibold text-slate-900 mb-4",
+              "text-xl font-semibold text-yellow-400 mb-4"
+            )}>
+              All Donations ({donations.length})
+            </h2>
+
+            {donations.length === 0 ? (
+              <div className="text-center py-8">
+                <Database className={getContrastClass("text-gray-400", "text-gray-600")} size={48} />
+                <p className={getContrastClass("text-gray-600 mt-2", "text-gray-400 mt-2")}>
+                  No donations found
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {donations.map((donation, index) => (
+                  <div
+                    key={donation.id || index}
+                    className={getContrastClass(
+                      "bg-white/40 backdrop-blur-sm rounded-xl p-4 border border-white/30 hover:bg-white/60 transition-all cursor-pointer",
+                      "bg-gray-800/60 backdrop-blur-sm rounded-xl p-4 border border-yellow-400/30 hover:bg-gray-800/80 transition-all cursor-pointer"
+                    )}
+                    onClick={() => setSelectedDonation(donation)}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Receipt size={16} className={getContrastClass("text-blue-500", "text-yellow-400")} />
+                          <span className={getContrastClass(
+                            "text-sm font-medium text-slate-700",
+                            "text-sm font-medium text-yellow-300"
+                          )}>
+                            {donation.reference_number}
+                          </span>
+                          <span className={getContrastClass(
+                            "text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full",
+                            "text-xs bg-yellow-400/20 text-yellow-300 px-2 py-1 rounded-full border border-yellow-400/50"
+                          )}>
+                            {donation.donation_mode}
+                          </span>
+                        </div>
+
+                        <h3 className={getContrastClass(
+                          "font-semibold text-slate-900",
+                          "font-semibold text-yellow-400"
+                        )}>
+                          {donation.parent_name}
+                        </h3>
+                        <p className={getContrastClass(
+                          "text-sm text-slate-600",
+                          "text-sm text-yellow-200"
+                        )}>
+                          Student: {donation.student_name}
+                        </p>
+                        <p className={getContrastClass(
+                          "text-xs text-slate-500",
+                          "text-xs text-yellow-300"
+                        )}>
+                          {donation.submission_date}
+                        </p>
                       </div>
-                      <div className="flex items-center gap-2 mt-2">
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedDonation(donation);
-                          }}
-                          className={getContrastClass(
-                            "text-xs text-blue-600 hover:text-blue-800 p-1",
-                            "text-xs text-yellow-400 hover:text-yellow-300 p-1"
-                          )}
-                          title="View Details"
-                        >
-                          <Eye size={14} />
-                        </button>
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEditDonation(donation);
-                          }}
-                          className={getContrastClass(
-                            "text-xs text-green-600 hover:text-green-800 p-1",
-                            "text-xs text-green-400 hover:text-green-300 p-1"
-                          )}
-                          title="Edit Donation"
-                        >
-                          <Edit3 size={14} />
-                        </button>
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteDonation(donation);
-                          }}
-                          className={getContrastClass(
-                            "text-xs text-red-600 hover:text-red-800 p-1",
-                            "text-xs text-red-400 hover:text-red-300 p-1"
-                          )}
-                          title="Delete Donation"
-                        >
-                          <Trash2 size={14} />
-                        </button>
+
+                      <div className="text-right">
+                        <div className={getContrastClass(
+                          "text-xl font-bold text-slate-900",
+                          "text-xl font-bold text-yellow-400"
+                        )}>
+                          ₱{donation.amount?.toLocaleString() || '0'}
+                        </div>
+                        <div className="flex items-center gap-2 mt-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedDonation(donation);
+                            }}
+                            className={getContrastClass(
+                              "text-xs text-blue-600 hover:text-blue-800 p-1",
+                              "text-xs text-yellow-400 hover:text-yellow-300 p-1"
+                            )}
+                            title="View Details"
+                          >
+                            <Eye size={14} />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditDonation(donation);
+                            }}
+                            className={getContrastClass(
+                              "text-xs text-green-600 hover:text-green-800 p-1",
+                              "text-xs text-green-400 hover:text-green-300 p-1"
+                            )}
+                            title="Edit Donation"
+                          >
+                            <Edit3 size={14} />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteDonation(donation);
+                            }}
+                            className={getContrastClass(
+                              "text-xs text-red-600 hover:text-red-800 p-1",
+                              "text-xs text-red-400 hover:text-red-300 p-1"
+                            )}
+                            title="Delete Donation"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'expenses' && (
+          <div className={getContrastClass(
+            "bg-white/60 backdrop-blur-md rounded-3xl p-6 shadow-xl border border-white/20",
+            "bg-gray-900 rounded-3xl p-6 shadow-xl border-2 border-yellow-400"
+          )}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className={getContrastClass(
+                "text-xl font-semibold text-slate-900",
+                "text-xl font-semibold text-yellow-400"
+              )}>
+                All Expenses ({expenses.length})
+              </h2>
+
+              <button
+                onClick={handleCreateExpense}
+                className={getContrastClass(
+                  "flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors",
+                  "flex items-center gap-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black rounded-lg transition-colors"
+                )}
+              >
+                <Plus size={16} />
+                Add New Expense
+              </button>
             </div>
-          )}
-        </div>
+
+            {expenses.length === 0 ? (
+              <div className="text-center py-8">
+                <Receipt className={getContrastClass("text-gray-400", "text-gray-600")} size={48} />
+                <p className={getContrastClass("text-gray-600 mt-2", "text-gray-400 mt-2")}>
+                  No expenses found
+                </p>
+                <button
+                  onClick={handleCreateExpense}
+                  className={getContrastClass(
+                    "mt-4 flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors mx-auto",
+                    "mt-4 flex items-center gap-2 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black rounded-lg transition-colors mx-auto"
+                  )}
+                >
+                  <Plus size={16} />
+                  Add Your First Expense
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {expenses.map((expense, index) => (
+                  <div
+                    key={expense.id || index}
+                    className={getContrastClass(
+                      "bg-white/40 backdrop-blur-sm rounded-xl p-4 border border-white/30 hover:bg-white/60 transition-all cursor-pointer",
+                      "bg-gray-800/60 backdrop-blur-sm rounded-xl p-4 border border-yellow-400/30 hover:bg-gray-800/80 transition-all cursor-pointer"
+                    )}
+                    onClick={() => setSelectedExpense(expense)}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Receipt size={16} className={getContrastClass("text-red-500", "text-red-400")} />
+                          <span className={getContrastClass(
+                            "text-sm font-medium text-slate-700",
+                            "text-sm font-medium text-yellow-300"
+                          )}>
+                            {expense.reference_number}
+                          </span>
+                          <span className={getContrastClass(
+                            `text-xs px-2 py-1 rounded-full ${
+                              expense.approval_status === 'approved' ? 'bg-green-100 text-green-800' :
+                              expense.approval_status === 'rejected' ? 'bg-red-100 text-red-800' :
+                              'bg-yellow-100 text-yellow-800'
+                            }`,
+                            `text-xs px-2 py-1 rounded-full border ${
+                              expense.approval_status === 'approved' ? 'bg-green-400/20 text-green-300 border-green-400/50' :
+                              expense.approval_status === 'rejected' ? 'bg-red-400/20 text-red-300 border-red-400/50' :
+                              'bg-yellow-400/20 text-yellow-300 border-yellow-400/50'
+                            }`
+                          )}>
+                            {expense.approval_status}
+                          </span>
+                          <span className={getContrastClass(
+                            "text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full",
+                            "text-xs bg-purple-400/20 text-purple-300 px-2 py-1 rounded-full border border-purple-400/50"
+                          )}>
+                            {expense.category}
+                          </span>
+                        </div>
+
+                        <h3 className={getContrastClass(
+                          "font-semibold text-slate-900",
+                          "font-semibold text-yellow-400"
+                        )}>
+                          {expense.expense_name}
+                        </h3>
+                        <p className={getContrastClass(
+                          "text-sm text-slate-600",
+                          "text-sm text-yellow-200"
+                        )}>
+                          {expense.description}
+                        </p>
+                        <p className={getContrastClass(
+                          "text-xs text-slate-500",
+                          "text-xs text-yellow-300"
+                        )}>
+                          {expense.expense_date} • {expense.vendor_name || 'No vendor'}
+                        </p>
+                      </div>
+
+                      <div className="text-right">
+                        <div className={getContrastClass(
+                          "text-xl font-bold text-red-600",
+                          "text-xl font-bold text-red-400"
+                        )}>
+                          ₱{expense.amount?.toLocaleString() || '0'}
+                        </div>
+                        <div className={getContrastClass(
+                          "text-xs text-slate-500 mb-2",
+                          "text-xs text-yellow-300 mb-2"
+                        )}>
+                          {expense.fund_source} fund
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedExpense(expense);
+                            }}
+                            className={getContrastClass(
+                              "text-xs text-blue-600 hover:text-blue-800 p-1",
+                              "text-xs text-yellow-400 hover:text-yellow-300 p-1"
+                            )}
+                            title="View Details"
+                          >
+                            <Eye size={14} />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditExpense(expense);
+                            }}
+                            className={getContrastClass(
+                              "text-xs text-green-600 hover:text-green-800 p-1",
+                              "text-xs text-green-400 hover:text-green-300 p-1"
+                            )}
+                            title="Edit Expense"
+                          >
+                            <Edit3 size={14} />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteExpense(expense);
+                            }}
+                            className={getContrastClass(
+                              "text-xs text-red-600 hover:text-red-800 p-1",
+                              "text-xs text-red-400 hover:text-red-300 p-1"
+                            )}
+                            title="Delete Expense"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
       </main>
 
@@ -1118,6 +1364,354 @@ export default function FinancialOfficerDashboard({ getContrastClass, onLogout, 
                   onClick={() => {
                     setShowEditModal(false);
                     setEditingDonation(null);
+                  }}
+                  className={getContrastClass(
+                    "px-4 py-3 rounded-lg font-medium bg-gray-500 hover:bg-gray-600 text-white",
+                    "px-4 py-3 rounded-lg font-medium bg-gray-700 border border-yellow-400 hover:bg-gray-600 text-yellow-400"
+                  )}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Expense Detail Modal */}
+      {selectedExpense && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className={getContrastClass(
+            "bg-white rounded-2xl p-6 w-full max-w-lg shadow-2xl",
+            "bg-gray-900 rounded-2xl p-6 w-full max-w-lg shadow-2xl border-2 border-yellow-400"
+          )}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className={getContrastClass(
+                "text-lg font-semibold text-slate-900",
+                "text-lg font-semibold text-yellow-400"
+              )}>
+                Expense Details
+              </h3>
+              <button
+                onClick={() => setSelectedExpense(null)}
+                className={getContrastClass(
+                  "text-gray-500 hover:text-gray-700",
+                  "text-gray-400 hover:text-gray-200"
+                )}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className={getContrastClass("text-sm text-gray-600", "text-sm text-yellow-200")}>
+                  Reference Number
+                </label>
+                <p className={getContrastClass("font-medium text-gray-900", "font-medium text-yellow-400")}>
+                  {selectedExpense.reference_number}
+                </p>
+              </div>
+
+              <div>
+                <label className={getContrastClass("text-sm text-gray-600", "text-sm text-yellow-200")}>
+                  Expense Name
+                </label>
+                <p className={getContrastClass("font-medium text-gray-900", "font-medium text-yellow-400")}>
+                  {selectedExpense.expense_name}
+                </p>
+              </div>
+
+              <div>
+                <label className={getContrastClass("text-sm text-gray-600", "text-sm text-yellow-200")}>
+                  Amount
+                </label>
+                <p className={getContrastClass("font-medium text-red-600", "font-medium text-red-400")}>
+                  ₱{selectedExpense.amount?.toLocaleString() || '0'}
+                </p>
+              </div>
+
+              <div>
+                <label className={getContrastClass("text-sm text-gray-600", "text-sm text-yellow-200")}>
+                  Category
+                </label>
+                <p className={getContrastClass("font-medium text-gray-900", "font-medium text-yellow-400")}>
+                  {selectedExpense.category?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                </p>
+              </div>
+
+              <div>
+                <label className={getContrastClass("text-sm text-gray-600", "text-sm text-yellow-200")}>
+                  Description
+                </label>
+                <p className={getContrastClass("font-medium text-gray-900", "font-medium text-yellow-400")}>
+                  {selectedExpense.description}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={getContrastClass("text-sm text-gray-600", "text-sm text-yellow-200")}>
+                    Vendor
+                  </label>
+                  <p className={getContrastClass("font-medium text-gray-900", "font-medium text-yellow-400")}>
+                    {selectedExpense.vendor_name || 'Not specified'}
+                  </p>
+                </div>
+
+                <div>
+                  <label className={getContrastClass("text-sm text-gray-600", "text-sm text-yellow-200")}>
+                    Fund Source
+                  </label>
+                  <p className={getContrastClass("font-medium text-gray-900", "font-medium text-yellow-400")}>
+                    {selectedExpense.fund_source} fund
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className={getContrastClass("text-sm text-gray-600", "text-sm text-yellow-200")}>
+                    Date
+                  </label>
+                  <p className={getContrastClass("font-medium text-gray-900", "font-medium text-yellow-400")}>
+                    {selectedExpense.expense_date}
+                  </p>
+                </div>
+
+                <div>
+                  <label className={getContrastClass("text-sm text-gray-600", "text-sm text-yellow-200")}>
+                    Status
+                  </label>
+                  <p className={getContrastClass(
+                    `font-medium ${
+                      selectedExpense.approval_status === 'approved' ? 'text-green-600' :
+                      selectedExpense.approval_status === 'rejected' ? 'text-red-600' :
+                      'text-yellow-600'
+                    }`,
+                    `font-medium ${
+                      selectedExpense.approval_status === 'approved' ? 'text-green-400' :
+                      selectedExpense.approval_status === 'rejected' ? 'text-red-400' :
+                      'text-yellow-400'
+                    }`
+                  )}>
+                    {selectedExpense.approval_status}
+                  </p>
+                </div>
+              </div>
+
+              {selectedExpense.notes && (
+                <div>
+                  <label className={getContrastClass("text-sm text-gray-600", "text-sm text-yellow-200")}>
+                    Notes
+                  </label>
+                  <p className={getContrastClass("font-medium text-gray-900", "font-medium text-yellow-400")}>
+                    {selectedExpense.notes}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add/Edit Expense Modal */}
+      {(showExpenseModal || showEditExpenseModal) && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className={getContrastClass(
+            "bg-white rounded-2xl p-6 w-full max-w-2xl shadow-2xl max-h-[90vh] overflow-y-auto",
+            "bg-gray-900 rounded-2xl p-6 w-full max-w-2xl shadow-2xl border-2 border-yellow-400 max-h-[90vh] overflow-y-auto"
+          )}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className={getContrastClass(
+                "text-lg font-semibold text-slate-900",
+                "text-lg font-semibold text-yellow-400"
+              )}>
+                {editingExpense ? 'Edit Expense' : 'Add New Expense'}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowExpenseModal(false);
+                  setShowEditExpenseModal(false);
+                  setEditingExpense(null);
+                }}
+                className={getContrastClass(
+                  "text-gray-500 hover:text-gray-700",
+                  "text-gray-400 hover:text-gray-200"
+                )}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className={getContrastClass("block text-sm font-medium text-gray-700 mb-2", "block text-sm font-medium text-yellow-400 mb-2")}>
+                    Expense Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={expenseForm.expenseName}
+                    onChange={(e) => handleExpenseFormChange('expenseName', e.target.value)}
+                    className={`w-full p-3 rounded-lg border ${getContrastClass('border-gray-300 bg-white text-gray-900', 'border-gray-600 bg-gray-900 text-yellow-200')} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    placeholder="e.g., Office Supplies Purchase"
+                  />
+                </div>
+
+                <div>
+                  <label className={getContrastClass("block text-sm font-medium text-gray-700 mb-2", "block text-sm font-medium text-yellow-400 mb-2")}>
+                    Category *
+                  </label>
+                  <select
+                    value={expenseForm.category}
+                    onChange={(e) => handleExpenseFormChange('category', e.target.value)}
+                    className={`w-full p-3 rounded-lg border ${getContrastClass('border-gray-300 bg-white text-gray-900', 'border-gray-600 bg-gray-900 text-yellow-200')} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  >
+                    <option value="office_supplies">Office Supplies</option>
+                    <option value="utilities">Utilities</option>
+                    <option value="transportation">Transportation</option>
+                    <option value="food_catering">Food & Catering</option>
+                    <option value="maintenance">Maintenance</option>
+                    <option value="events">Events</option>
+                    <option value="educational">Educational</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className={getContrastClass("block text-sm font-medium text-gray-700 mb-2", "block text-sm font-medium text-yellow-400 mb-2")}>
+                    Amount *
+                  </label>
+                  <div className="relative">
+                    <span className={getContrastClass("absolute left-3 top-3 text-gray-500", "absolute left-3 top-3 text-yellow-300")}>₱</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={expenseForm.amount}
+                      onChange={(e) => handleExpenseFormChange('amount', e.target.value)}
+                      className={`w-full pl-8 p-3 rounded-lg border ${getContrastClass('border-gray-300 bg-white text-gray-900', 'border-gray-600 bg-gray-900 text-yellow-200')} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className={getContrastClass("block text-sm font-medium text-gray-700 mb-2", "block text-sm font-medium text-yellow-400 mb-2")}>
+                    Fund Source *
+                  </label>
+                  <select
+                    value={expenseForm.fundSource}
+                    onChange={(e) => handleExpenseFormChange('fundSource', e.target.value)}
+                    className={`w-full p-3 rounded-lg border ${getContrastClass('border-gray-300 bg-white text-gray-900', 'border-gray-600 bg-gray-900 text-yellow-200')} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  >
+                    <option value="general">General Fund</option>
+                    <option value="mercado">11Mercado Fund</option>
+                    <option value="special">Special Fund</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className={getContrastClass("block text-sm font-medium text-gray-700 mb-2", "block text-sm font-medium text-yellow-400 mb-2")}>
+                  Description
+                </label>
+                <textarea
+                  value={expenseForm.description}
+                  onChange={(e) => handleExpenseFormChange('description', e.target.value)}
+                  rows={3}
+                  className={`w-full p-3 rounded-lg border ${getContrastClass('border-gray-300 bg-white text-gray-900', 'border-gray-600 bg-gray-900 text-yellow-200')} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  placeholder="Brief description of the expense..."
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className={getContrastClass("block text-sm font-medium text-gray-700 mb-2", "block text-sm font-medium text-yellow-400 mb-2")}>
+                    Vendor Name
+                  </label>
+                  <input
+                    type="text"
+                    value={expenseForm.vendorName}
+                    onChange={(e) => handleExpenseFormChange('vendorName', e.target.value)}
+                    className={`w-full p-3 rounded-lg border ${getContrastClass('border-gray-300 bg-white text-gray-900', 'border-gray-600 bg-gray-900 text-yellow-200')} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    placeholder="e.g., ABC Store"
+                  />
+                </div>
+
+                <div>
+                  <label className={getContrastClass("block text-sm font-medium text-gray-700 mb-2", "block text-sm font-medium text-yellow-400 mb-2")}>
+                    Receipt Number
+                  </label>
+                  <input
+                    type="text"
+                    value={expenseForm.receiptNumber}
+                    onChange={(e) => handleExpenseFormChange('receiptNumber', e.target.value)}
+                    className={`w-full p-3 rounded-lg border ${getContrastClass('border-gray-300 bg-white text-gray-900', 'border-gray-600 bg-gray-900 text-yellow-200')} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    placeholder="e.g., REC-12345"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className={getContrastClass("block text-sm font-medium text-gray-700 mb-2", "block text-sm font-medium text-yellow-400 mb-2")}>
+                    Expense Date *
+                  </label>
+                  <input
+                    type="date"
+                    value={expenseForm.expenseDate}
+                    onChange={(e) => handleExpenseFormChange('expenseDate', e.target.value)}
+                    className={`w-full p-3 rounded-lg border ${getContrastClass('border-gray-300 bg-white text-gray-900', 'border-gray-600 bg-gray-900 text-yellow-200')} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  />
+                </div>
+
+                <div>
+                  <label className={getContrastClass("block text-sm font-medium text-gray-700 mb-2", "block text-sm font-medium text-yellow-400 mb-2")}>
+                    Payment Method
+                  </label>
+                  <select
+                    value={expenseForm.paymentMethod}
+                    onChange={(e) => handleExpenseFormChange('paymentMethod', e.target.value)}
+                    className={`w-full p-3 rounded-lg border ${getContrastClass('border-gray-300 bg-white text-gray-900', 'border-gray-600 bg-gray-900 text-yellow-200')} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  >
+                    <option value="cash">Cash</option>
+                    <option value="bank">Bank Transfer</option>
+                    <option value="ewallet">E-Wallet</option>
+                    <option value="check">Check</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className={getContrastClass("block text-sm font-medium text-gray-700 mb-2", "block text-sm font-medium text-yellow-400 mb-2")}>
+                  Notes
+                </label>
+                <textarea
+                  value={expenseForm.notes}
+                  onChange={(e) => handleExpenseFormChange('notes', e.target.value)}
+                  rows={2}
+                  className={`w-full p-3 rounded-lg border ${getContrastClass('border-gray-300 bg-white text-gray-900', 'border-gray-600 bg-gray-900 text-yellow-200')} focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  placeholder="Additional notes..."
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={handleSubmitExpense}
+                  className={getContrastClass(
+                    "flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors",
+                    "flex-1 bg-yellow-500 hover:bg-yellow-600 text-black font-semibold py-3 px-4 rounded-lg transition-colors"
+                  )}
+                >
+                  {editingExpense ? 'Update Expense' : 'Create Expense'}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowExpenseModal(false);
+                    setShowEditExpenseModal(false);
+                    setEditingExpense(null);
                   }}
                   className={getContrastClass(
                     "px-4 py-3 rounded-lg font-medium bg-gray-500 hover:bg-gray-600 text-white",
